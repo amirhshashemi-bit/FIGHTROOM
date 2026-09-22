@@ -1,0 +1,55 @@
+{
+  "version": "0.1.0",
+  "status": "template-ready",
+  "policy": "source-first; verify before publish; no unauthorized media hosting",
+  "entities": {
+    "fighters": "/fighters/<slug>",
+    "events": "/events/<slug>",
+    "stories": "/stories/<slug>",
+    "news": "/news/<slug>",
+    "products": "/collections/<slug>"
+  },
+  "fighter_fields": [
+    "name",
+    "nickname",
+    "country",
+    "division",
+    "record",
+    "rank",
+    "bio",
+    "career_timeline",
+    "fight_history",
+    "sources",
+    "verification",
+    "rights"
+  ],
+  "event_fields": [
+    "name",
+    "date",
+    "location",
+    "organization",
+    "fight_card",
+    "results",
+    "official_source",
+    "verification"
+  ],
+  "content_fields": [
+    "title",
+    "type",
+    "summary",
+    "script",
+    "caption",
+    "subtitles",
+    "assets",
+    "sources",
+    "rights_status",
+    "verification",
+    "publish_status"
+  ],
+  "publish_gate": [
+    "source_verified",
+    "conflicts_resolved",
+    "rights_reviewed",
+    "human_approval"
+  ]
+}
