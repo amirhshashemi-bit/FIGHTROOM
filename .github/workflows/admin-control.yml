@@ -1,0 +1,71 @@
+name: FIGHTROOM Admin Control
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Administrative action
+        required: true
+        type: choice
+        options:
+          - security_check
+          - checkpoint
+          - enable_premium
+          - disable_premium
+          - maintenance_on
+          - maintenance_off
+      confirmation:
+        description: Type FIGHTROOM to confirm
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  control:
+    if: ${{ inputs.confirmation == 'FIGHTROOM' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Apply control
+        env:
+          ACTION: ${{ inputs.action }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          p = "admin/status.json"
+          with open(p, encoding="utf-8") as f:
+              s = json.load(f)
+          a = os.environ["ACTION"]
+          if a == "enable_premium": s["premiumEnabled"] = True
+          elif a == "disable_premium": s["premiumEnabled"] = False
+          elif a == "maintenance_on": s["maintenance"] = True
+          elif a == "maintenance_off": s["maintenance"] = False
+          s["updatedAt"] = datetime.now(timezone.utc).isoformat()
+          s["lastAction"] = a
+          with open(p, "w", encoding="utf-8") as f:
+              json.dump(s, f, ensure_ascii=False, indent=2); f.write("\n")
+          print(json.dumps(s, ensure_ascii=False))
+          PY
+      - name: Security check
+        if: ${{ inputs.action == 'security_check' }}
+        run: |
+          test -f _headers
+          test -f admin/index.html
+          test -f admin/status.json
+          echo "Security baseline check completed."
+      - name: Commit control change
+        if: ${{ inputs.action != 'security_check' }}
+        run: |
+          git config user.name "FIGHTROOM Admin Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add admin/status.json
+          git commit -m "admin: ${{ inputs.action }}" || echo "No changes to commit"
+          git push
+      - name: Checkpoint
+        if: ${{ inputs.action == 'checkpoint' }}
+        run: |
+          git rev-parse HEAD
