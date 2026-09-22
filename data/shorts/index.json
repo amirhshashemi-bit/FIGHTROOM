@@ -1,0 +1,15 @@
+{
+  "schema": "fightroom.published_shorts.v1",
+  "shorts": [
+    {
+      "request_id": "beneil-dariush-short-20260922",
+      "title": "beneil-dariush-short-20260922",
+      "description": "",
+      "label": "ELOHIM PUBLISHED",
+      "verification": "sha256 verified",
+      "duration_seconds": 25.0,
+      "video_url": "assets/shorts/beneil-dariush-short-20260922.mp4",
+      "poster": ""
+    }
+  ]
+}

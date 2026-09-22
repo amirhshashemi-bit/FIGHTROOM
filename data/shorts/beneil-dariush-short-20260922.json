@@ -1,0 +1,22 @@
+{
+  "schema": "elohim.video_artifact.v1",
+  "request_id": "beneil-dariush-short-20260922",
+  "file": "beneil-dariush-short-20260922.mp4",
+  "sha256": "b9b7b7027666b23760bcc74deff001fb509178777f74b0b43d39edb59437b5a2",
+  "bytes": 1577785,
+  "duration_seconds": 25.0,
+  "width": 1080,
+  "height": 1920,
+  "video_codec": "h264",
+  "audio_codec": "aac",
+  "subtitle_file": "subtitles.srt",
+  "source_url": "https://commons.wikimedia.org/wiki/Special:FilePath/MMA_Holiday_Tour_at_Al_Asad_Air_Base_11_(cropped).jpg",
+  "voice": {
+    "enabled": true,
+    "language": "fa-IR",
+    "voice": "fa-IR-DilaraNeural"
+  },
+  "status": "PUBLISHED_CANDIDATE",
+  "site_path": "assets/shorts/beneil-dariush-short-20260922.mp4",
+  "public_url": "https://amirhshashemi-bit.github.io/FIGHTROOM/assets/shorts/beneil-dariush-short-20260922.mp4"
+}
