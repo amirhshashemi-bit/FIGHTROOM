@@ -1,0 +1,6 @@
+{
+  "maintenance": false,
+  "premiumEnabled": true,
+  "updatedAt": "2026-09-22T00:00:00Z",
+  "note": "Control is performed through authenticated GitHub Actions. Do not store secrets or premium media in this repository."
+}
