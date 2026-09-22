@@ -1,0 +1,38 @@
+{
+  "schema": "fightroom.fighter_page.v1",
+  "slug": "beneil-dariush",
+  "status": "sample-complete",
+  "template": "mother-template-v1",
+  "checked_at": "2026-09-22",
+  "identity": {
+    "name": "Beneil Dariush",
+    "fa_name": "بنیل داریوش",
+    "nickname": "Benny",
+    "division": "Lightweight",
+    "promotion": "UFC",
+    "origin": "Iran",
+    "record": "23-8-1"
+  },
+  "image": {
+    "url": "https://commons.wikimedia.org/wiki/Special:FilePath/MMA_Holiday_Tour_at_Al_Asad_Air_Base_11_(cropped).jpg",
+    "credit": "U.S. Army / DVIDS",
+    "rights": "Public Domain"
+  },
+  "sources": [
+    {
+      "label": "UFC",
+      "url": "https://www.ufc.com/athlete/beneil-dariush"
+    }
+  ],
+  "sections": [
+    "identity",
+    "snapshot",
+    "story",
+    "timeline",
+    "fight_history",
+    "style",
+    "shorts_factory",
+    "sources_rights"
+  ],
+  "publication_gate": "current facts rechecked before final publication"
+}
