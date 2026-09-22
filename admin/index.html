@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>FIGHTROOM — Admin Security Center</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<main class="shell">
+<header class="top"><a href="../" class="brand">F<span>F</span> FIGHTROOM</a><span class="secure">● ADMIN SECURITY CENTER</span></header>
+<section class="gate" id="gate">
+  <div class="lock">🔐</div>
+  <h1>پنل مدیریت</h1>
+  <p>این رابط برای مدیریت محتوا، امنیت و وضعیت سرویس ساخته شده است.</p>
+  <p class="warn">احراز هویت واقعی باید در لایه سرور/Cloudflare Access انجام شود؛ رمز داخل HTML نگهداری نمی‌شود.</p>
+  <button id="continueBtn">ورود به رابط مدیریت</button>
+</section>
+<section class="panel hidden" id="panel">
+  <div class="panel-head"><div><span class="kicker">CONTROL ROOM</span><h1>مرکز فرمان FIGHTROOM</h1></div><span class="status">● HARDENED UI</span></div>
+  <div class="grid">
+    <article><b>🛡️ امنیت</b><strong>فعال</strong><small>CSP • Anti-frame • Noindex Admin</small></article>
+    <article><b>📦 محتوا</b><strong id="assetCount">0</strong><small>دارایی عمومی ثبت‌شده در این رابط</small></article>
+    <article><b>🚨 Kill Switch</b><strong>آماده</strong><small>برای توقف نمایش محتوای ویژه</small><button class="danger" id="kill">فعال‌سازی</button></article>
+    <article><b>🧾 Audit</b><strong id="auditCount">0</strong><small>رویدادهای همین مرورگر</small></article>
+  </div>
+  <div class="sections">
+    <section><h2>سیاست محتوای امن</h2><ul><li>فایل و ویدئوی پولی داخل GitHub Pages قرار نگیرد.</li><li>لینک دانلود مستقیم عمومی برای Assetهای پریمیوم ساخته نشود.</li><li>برای ویدئوهای پولی از URL کوتاه‌عمر و احراز هویت سمت سرور استفاده شود.</li><li>واترمارک اختصاصی خریدار در نسخه واقعی اضافه شود.</li></ul></section>
+    <section><h2>اقدامات مدیریتی</h2><div class="actions"><button data-action="publish">انتشار/به‌روزرسانی محتوا</button><button data-action="review">بررسی حقوق و منبع</button><button data-action="security">اجرای چک امنیتی</button><button data-action="backup">ثبت Checkpoint</button></div></section>
+    <section><h2>Audit Log</h2><pre id="log">در انتظار رویداد...</pre></section>
+  </div>
+</section>
+</main>
+<script src="admin.js"></script>
+</body>
+</html>
