@@ -1,0 +1,3 @@
+Contact: mailto:security@fightroom.example
+Policy: /security-policy
+Expires: 2027-09-22T00:00:00Z
