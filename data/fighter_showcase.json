@@ -18,7 +18,8 @@
       "stat": "8 SUB • 5 KO",
       "source": "https://www.ufc.com/athlete/beneil-dariush",
       "source_label": "UFC",
-      "verification": "HIGH"
+      "verification": "HIGH",
+      "detail_anchor": "#fighter-detail"
     },
     {
       "name": "Gegard Mousasi",
