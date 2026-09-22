@@ -1,0 +1,74 @@
+{
+  "schema": "fightroom.ufc.fighter.sample.v1",
+  "status": "sample-ready",
+  "source": "https://www.ufc.com/athletes/all",
+  "checked_at": "2026-09-22",
+  "reconciliation": {
+    "official_source_count": 3216,
+    "extracted_canonical_profiles": 3213,
+    "unresolved_slots": 3,
+    "publish_status": "HOLD"
+  },
+  "fighters": [
+    {
+      "name": "Islam Makhachev",
+      "nickname": "",
+      "country": "Russia / Dagestan",
+      "division": "Welterweight",
+      "record": "29-1-0",
+      "status": "Active • Title Holder",
+      "highlight": "UFC welterweight champion; moved up after vacating the lightweight title.",
+      "profile_url": "https://www.ufc.com/athlete/islam-makhachev",
+      "verification": "PASS",
+      "confidence": "HIGH"
+    },
+    {
+      "name": "Alexander Volkanovski",
+      "nickname": "The Great",
+      "country": "Australia",
+      "division": "Featherweight",
+      "record": "28-4-0",
+      "status": "Active • Title Holder",
+      "highlight": "Former long-reigning featherweight champion who regained the title in 2025.",
+      "profile_url": "https://www.ufc.com/athlete/alexander-volkanovski",
+      "verification": "PASS",
+      "confidence": "HIGH"
+    },
+    {
+      "name": "Valentina Shevchenko",
+      "nickname": "Bullet",
+      "country": "Kyrgyzstan",
+      "division": "Women's Flyweight",
+      "record": "26-4-1",
+      "status": "Active • Title Holder",
+      "highlight": "Former and current UFC women's flyweight champion; seven successful defenses in her first reign.",
+      "profile_url": "https://www.ufc.com/athlete/valentina-shevchenko",
+      "verification": "PASS",
+      "confidence": "HIGH"
+    },
+    {
+      "name": "Petr Yan",
+      "nickname": "No Mercy",
+      "country": "Russia",
+      "division": "Bantamweight",
+      "record": "20-5-0",
+      "status": "Active • Title Holder",
+      "highlight": "Reclaimed the UFC bantamweight title with a unanimous decision over Merab Dvalishvili in December 2025.",
+      "profile_url": "https://www.ufc.com/athlete/petr-yan",
+      "verification": "PASS",
+      "confidence": "HIGH"
+    },
+    {
+      "name": "Justin Gaethje",
+      "nickname": "The Highlight",
+      "country": "United States",
+      "division": "Lightweight",
+      "record": "28-5-0",
+      "status": "Active • Title Holder",
+      "highlight": "Two-time interim lightweight champion and BMF champion; captured undisputed lightweight gold in 2026.",
+      "profile_url": "https://www.ufc.com/athlete/justin-gaethje",
+      "verification": "PASS",
+      "confidence": "HIGH"
+    }
+  ]
+}
