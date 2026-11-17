@@ -72,9 +72,9 @@ export async function loadFighterBVH(THREE,file,fighter){
  if(!fighter?.externalModel)throw new Error('Import a compatible animated GLB character before adding BVH motion');
  const [{BVHLoader},SkeletonUtils]=await Promise.all([import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/BVHLoader.js'),import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js')]);
  const loader=new BVHLoader(),parsed=loader.parse(await file.text());
- const sourceSkeleton=parsed.skeleton?.skeleton,targetMesh=[];
+ const sourceSkeleton=parsed.skeleton?.bones?parsed.skeleton:parsed.skeleton?.skeleton,targetMesh=[];
  fighter.externalModel.traverse(node=>{if(node.isSkinnedMesh&&node.skeleton)targetMesh.push(node)});
- if(!sourceSkeleton?.bones?.length||!parsed.clip)throw new Error('BVH file contains no usable skeleton or animation');
+ if(!sourceSkeleton?.bones?.length||!parsed.clip)throw new Error('BVH file contains no usable skeleton or animation: '+file.name);
  if(!targetMesh.length)throw new Error('Target GLB has no skinned mesh');
  const target=targetMesh.sort((a,b)=>b.skeleton.bones.length-a.skeleton.bones.length)[0];
  const rig=inspectHumanoidRig(fighter.externalModel);
@@ -83,12 +83,7 @@ export async function loadFighterBVH(THREE,file,fighter){
  const mapping=validateRetargetMap(names);
  if(!mapping.compatible)throw new Error('BVH skeleton mapping incomplete: '+mapping.mappedCount+' bones mapped');
  const sourceHip=sourceSkeleton.bones.find(b=>semanticBone(b.name)==='hips')?.name||sourceSkeleton.bones[0].name;
- parsed.skeleton.updateMatrixWorld(true);
- const sourceY=sourceSkeleton.bones.map(b=>b.getWorldPosition(new THREE.Vector3()).y);
- const sourceHeight=Math.max(...sourceY)-Math.min(...sourceY);
- const targetHeight=new THREE.Box3().setFromObject(fighter.externalModel).getSize(new THREE.Vector3()).y;
- const retargetScale=sourceHeight>0&&targetHeight>0?targetHeight/sourceHeight:1;
- const clip=SkeletonUtils.retargetClip(target,sourceSkeleton,parsed.clip,{names,hip:sourceHip,fps:30,scale:retargetScale,hipInfluence:new THREE.Vector3(0,1,0),useFirstFramePosition:false,preserveBoneMatrix:true,preserveBonePositions:true});
+ const clip=SkeletonUtils.retargetClip(target,sourceSkeleton,parsed.clip,{names,hip:sourceHip,fps:30,preserveHipPosition:true,useFirstFramePosition:false,preserveMatrix:true,preservePosition:true});
  clip.name=file.name.replace(/\.bvh$/i,'').replace(/[^a-z0-9_-]/gi,'-').toLowerCase();
  if(!clip.tracks?.length)throw new Error('Retarget produced an empty animation clip');
  if(!fighter.mixer)fighter.mixer=new THREE.AnimationMixer(fighter.externalModel);
@@ -99,5 +94,5 @@ export async function loadFighterBVH(THREE,file,fighter){
  const clipName=clip.name.toLowerCase();
  const action=Object.keys(aliases).find(key=>(aliases[key]||[key]).some(alias=>clipName.includes(alias)));
  if(action)playFighterClip(THREE,fighter,action);
- return {clip:clip.name,tracks:clip.tracks.length,mappedBones:mapping.mappedCount,scale:retargetScale,rig};
+ return {clip:clip.name,tracks:clip.tracks.length,mappedBones:mapping.mappedCount,rig};
 }
