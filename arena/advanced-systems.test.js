@@ -43,3 +43,10 @@ test('mobile quality profile and frame-time assessment',()=>{
  assert.equal(assessFrameTimes([16,17,16,18,17,16,17,16,18,17]).valid,true);
  assert.equal(assessFrameTimes([16,17]).valid,false);
 });
+
+test('combat contact probes resolve head, torso and lower-leg volumes independently',()=>{
+ const base={attacker:[-1,1.2,0],defender:[0,0,0],front:true,evading:false};
+ assert.equal(classifyContact({...base,attackPoint:[-.18,1.7,0],attackRadius:.18}).zone,'head');
+ assert.equal(classifyContact({...base,attackPoint:[-.18,1.2,0],attackRadius:.18}).zone,'body');
+ assert.equal(classifyContact({...base,attackPoint:[-.18,.35,0],attackRadius:.20}).zone,'leg');
+});
