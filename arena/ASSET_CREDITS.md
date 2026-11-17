@@ -2,7 +2,7 @@
 
 ## Motion capture sources evaluated
 
-The project has a GLB import and animation-mapping pipeline. The sources below have been checked for stated terms, but no third-party motion files are committed to this repository yet.
+The project has a GLB import and animation-mapping pipeline. A CC0 anatomical base-body GLB with general locomotion clips is committed, but no third-party MMA-specific motion-capture pack is committed or verified yet. The sources below have been checked for stated terms.
 
 - Open Motion Project / ACCAD, The Ohio State University — CC BY 3.0. Attribution: “Open Motion Project by ACCAD / The Ohio State University.” Source: https://accad.ohio-state.edu/research/motion-lab/mocap-system-and-data
 - 100STYLE Dataset — CC BY 4.0. Attribution: Ian Mason, Sebastian Starke and Taku Komura (2022). Access and export through KinemIQ: https://kinemiq.app/free-motion-capture-data/
