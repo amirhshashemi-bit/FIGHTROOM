@@ -8,11 +8,11 @@ const aliases={
  advance:['advance','walk','forward','move'],
  retreat:['retreat','backward','back walk','walk_back'],
  jab:['jab'],cross:['cross'],hook:['hook','uppercut'],low:['low kick','low-kick'],high:['roundhouse','high kick','kick'],
- guard:['block','guard'],dodge:['dodge','slip','evade'],takedown:['takedown','double leg','double_leg','sprawl'],
+ guard:['block','guard'],dodge:['dodge','slip','evade'],takedown:['takedown','double leg','double_leg','sprawl'],clinch:['clinch','tie up'],sprawl:['sprawl'],frame:['frame','frames'],escape:['escape','get out'],sweep:['sweep','reversal'],pass:['pass','guard pass'],mount:['mount'], 'back-take':['back take','back control'], 'defend-submission':['submission defense','defend submission'],
  'ground-pound':['ground pound','ground-and-pound'], 'stand-up':['get up','stand up','get-up'],submission:['submission','ground control','armbar'],
  'spinning-backfist':['spinning backfist','spinning-backfist'], 'superman-punch':['superman punch','superman-punch'],
  'switch-kick':['switch kick','switch-kick'], 'question-mark-kick':['question mark kick','question-mark-kick'],
- 'spinning-elbow':['spinning elbow','spinning-elbow'], 'flying-knee':['flying knee','flying-knee'], 'ground-control':['ground control','top control','bottom guard'],
+ 'spinning-elbow':['spinning elbow','spinning-elbow'], 'flying-knee':['flying knee','flying-knee'], 'ground-control':['ground control','top control','bottom guard','side control','mount','back control'],
 };
 export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  const loader=new GLTFLoader(),buffer=await file.arrayBuffer();
@@ -67,7 +67,7 @@ export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
 
 export async function loadFighterBVH(THREE,file,fighter){
  if(!fighter?.externalModel)throw new Error('Import a compatible animated GLB character before adding BVH motion');
- const loader=new BVHLoader(),parsed=loader.parse(await file.arrayBuffer());
+ const loader=new BVHLoader(),parsed=loader.parse(await file.text());
  const sourceSkeleton=parsed.skeleton?.skeleton,targetMesh=[];
  fighter.externalModel.traverse(node=>{if(node.isSkinnedMesh&&node.skeleton)targetMesh.push(node)});
  if(!sourceSkeleton?.bones?.length||!parsed.clip)throw new Error('BVH file contains no usable skeleton or animation');
