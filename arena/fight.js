@@ -46,7 +46,7 @@ function fighter(profile,side){const name=profile.name,skin=material(profile.ski
  const belt=new THREE.Mesh(new THREE.BoxGeometry(.43,.055,.29),material(0xc2a56c,.5,.35));rig.add(belt);belt.position.y=1.02;
  const eyes=[];const eyeMat=material(profile.eye??0x151515,.35);for(const s of [-1,1]){const e=sphere(rig,'eye',.018,eyeMat,V(s*.07,1.68,.17));eyes.push(e)}
  for(const sideKey of ['L','R']){for(const part of ['upperArm','foreArm']){const m=limbs[part+sideKey];m.scale.x=proportions.arms;m.scale.z=proportions.arms}for(const part of ['thigh','shin']){const m=limbs[part+sideKey];m.scale.x=proportions.legs;m.scale.z=proportions.legs}}
- const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,skin};
+ const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,frameTimer:0,skin};
  return state}
 player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('kwame-boateng'),1);
 function pose(f,t,moveSpeed,dt){
@@ -77,7 +77,7 @@ function setAction(f,type,animationClip=null){
   f.groundState=result.attackerState;def.groundState=result.defenderState;
   f.stamina=result.attackerStamina;def.stamina=result.defenderStamina;
   if(type==='clinch'){const mid=(f.root.position.x+def.root.position.x)/2;f.root.position.x=mid-(f.side<0?.38:-.38);def.root.position.x=mid+(f.side<0?.38:-.38)}
-  if(type==='frame')f.guard=true;
+  if(type==='frame'){f.guard=true;f.frameTimer=.65;}
   playFighterClip(THREE,f,type==='defend-submission'?'submission':type);
   document.getElementById('status').textContent=type.toUpperCase().replaceAll('-',' ')+' · GRAPPLING';
   updateUI();return;
@@ -95,7 +95,7 @@ function setAction(f,type,animationClip=null){
  }
  if(type==='guard'){f.guard=true;playFighterClip(THREE,f,'guard');return}
  if(type==='dodge'){if(f.stamina>10){f.stamina-=10;f.dodge=.30;playFighterClip(THREE,f,'dodge');const v=currentMoveVector();f.evadeVector=v.lengthSq()>.01?v.clone():V(f===player?-1:1,0,0)}return}
- if(f.groundState!=='standing')return;
+ if(f.groundState!=='standing'&&!(type==='takedown'&&f.groundState==='clinch'))return;
  const spec=MOVES[type];if(!spec||f.stamina<spec.cost)return;
  f.stamina-=spec.cost;f.action=type;f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;playFighterClip(THREE,f,animationClip||type);
 }
@@ -231,6 +231,7 @@ function tickFighter(f,dt){
  }
  f.stamina=clamp(f.stamina+dt*(f.submitting?0:f.guard?2.1:4+f.profile.cardio*.035),0,100);
  f.hitFlash=Math.max(0,f.hitFlash-dt);f.knock=Math.max(0,f.knock-dt);f.dodge=Math.max(0,f.dodge-dt);f.stun=Math.max(0,(f.stun||0)-dt);
+ if(f.frameTimer>0){f.frameTimer=Math.max(0,f.frameTimer-dt);if(f.frameTimer===0)f.guard=false;}
  if(f.action){
   f.actionTime+=dt;const p=f.actionTime/f.actionDuration,spec=MOVES[f.action];
   if(p>=spec.active[0]&&p<=spec.active[1]&&!f.energy){applyHit(f,f===player?enemy:player,f.action);f.energy=1}
