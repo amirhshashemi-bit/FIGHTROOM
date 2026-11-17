@@ -48,7 +48,7 @@ test('real ACCAD BVH captures retarget onto the committed humanoid GLB', async (
     path.resolve('assets/mocap/accad/Male2_E19_DodgeLeft.bvh')
   ];
   await page.locator('#p-mocap-file').setInputFiles(files);
-  await expect(page.locator('#status')).toContainText('BVH RETARGETED', { timeout: 45000 });
+  await expect(page.locator('#mocap-status')).toContainText('BVH RETARGETED', { timeout: 45000 });
   await expect(page.locator('#status')).toContainText('7 FILE(S)');
   await page.waitForTimeout(1800);
   await page.screenshot({ path: 'artifacts/arena-accad-mocap-retarget.png', fullPage: true });
