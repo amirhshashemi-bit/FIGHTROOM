@@ -8,9 +8,9 @@ An isolated browser-based MMA combat prototype inside the FIGHTROOM repository. 
 Visit `/arena/` on the deployed FIGHTROOM site. Three.js is loaded from jsDelivr; an internet connection is required.
 
 ## Current scope
-- 24 original fictional fighters across 12 weight divisions, with height, reach, stance, style, power, speed, wrestling and cardio attributes
+- 30 original fictional fighters across 12 weight divisions (including six new fictional additions: three men and three women), with height, reach, stance, style, power, speed, wrestling and cardio attributes
 - Distinct skin, hair, shorts and glove palettes; no real athlete names or identifiable likenesses
-- FIGHTER FORGE custom fighter editor: name, country (localized ISO country selector), height, weight, reach, skin/eye/hair/shorts/glove colors, stance, fighting style, shoulder/chest/arm/leg proportions and combat attributes
+- FIGHTER FORGE custom fighter editor: name, country (localized ISO country selector), gender selection (male/female), height, weight, reach, skin/eye/hair/shorts/glove colors, stance, fighting style, shoulder/chest/arm/leg proportions and combat attributes
 - Body metrics derive visual proportions from height, weight and body sliders; reach affects procedural arm extension as well as strike range
 - Two signature-move loadout slots for owned moves; starter jab/cross can be equipped and triggered with keyboard 1/2 or mobile buttons; locked premium entries remain unavailable
 - Custom fighter profiles saved locally in the browser and selectable as a playable corner fighter
@@ -61,3 +61,9 @@ See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requ
 - The workflow writes only to `arena/assets/models/` on `arena-combat-foundation`; it does not modify `main`.
 - This asset retrieval is not the same as completing the 24 fighters. The source is an anatomical male base with general locomotion clips. Do not enable it as the default visible fighter until clothing/coverage, rig compatibility, proportions, and Android performance are reviewed. It does not contain a verified MMA move set.
 - The workflow is triggered by its first feature-branch push and can also be run manually through GitHub Actions if the push trigger is not available.
+
+
+## Roster expansion and gender-aware creator (pre-alpha 0.5)
+- Roster expanded from 24 to 30 original fictional fighters: three new men and three new women.
+- Each new fighter has a distinct country, division, stance, style, combat attributes, color palette and body-proportion profile.
+- The custom fighter creator now saves a male/female selection. The procedural model uses a subtle shoulder/arm/hip silhouette adjustment; it remains a low-detail placeholder, not a professional anatomical mesh.
