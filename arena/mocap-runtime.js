@@ -1,6 +1,4 @@
 import { inspectHumanoidRig, applyCharacterMorphs } from './character-rig.js';
-import { BVHLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/BVHLoader.js';
-import * as SkeletonUtils from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
 import { buildRetargetNameMap, validateRetargetMap, semanticBone } from './mocap-retarget.js';
 // Load externally supplied, properly licensed humanoid GLB motion-capture packs.
 const aliases={
@@ -67,6 +65,7 @@ export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
 
 export async function loadFighterBVH(THREE,file,fighter){
  if(!fighter?.externalModel)throw new Error('Import a compatible animated GLB character before adding BVH motion');
+ const [{BVHLoader},SkeletonUtils]=await Promise.all([import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/BVHLoader.js'),import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js')]);
  const loader=new BVHLoader(),parsed=loader.parse(await file.text());
  const sourceSkeleton=parsed.skeleton?.skeleton,targetMesh=[];
  fighter.externalModel.traverse(node=>{if(node.isSkinnedMesh&&node.skeleton)targetMesh.push(node)});
