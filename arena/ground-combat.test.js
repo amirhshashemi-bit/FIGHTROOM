@@ -14,6 +14,7 @@ test('premium wrestling entries fail closed while free defense remains usable', 
   assert.equal(resolveGrappleAction({action:'clinch'}).reason,'premium-required');
   assert.equal(resolveGrappleAction({action:'takedown',attackerState:'clinch',defenderState:'clinch'}).reason,'premium-required');
   assert.equal(resolveGrappleAction({action:'sprawl',attackerState:'standing',defenderState:'clinch'}).ok,true);
+  assert.deepEqual([resolveGrappleAction({action:'sprawl',attackerState:'clinch',defenderState:'clinch'}).attackerState,resolveGrappleAction({action:'sprawl',attackerState:'clinch',defenderState:'clinch'}).defenderState],['standing','standing']);
   assert.equal(resolveGrappleAction({action:'escape',attackerState:'bottom-guard'}).ok,true);
   assert.equal(GRAPPLE_ACTIONS['defend-submission'].premium,false);
 });
