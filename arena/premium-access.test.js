@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PREMIUM_COMBAT_ACTIONS, PREMIUM_PRODUCT_ID, validatePremiumEntitlement, resolvePremiumAccess } from './premium-access.js';
+import { PREMIUM_COMBAT_ACTIONS, PREMIUM_PRODUCT_ID, canUseCombatAction, validatePremiumEntitlement, resolvePremiumAccess } from './premium-access.js';
 import { MOVE_CATALOG } from './character-creator.js';
 
 const valid = {
@@ -26,6 +26,13 @@ test('catalog keeps basic signatures standard and locks advanced moves behind pr
   assert.equal(MOVE_CATALOG.find(m=>m.id==='signature-jab').premium,false);
   assert.equal(MOVE_CATALOG.find(m=>m.id==='signature-cross').premium,false);
   for (const id of ['spinning-backfist','superman-punch','switch-kick','question-mark-kick','spinning-elbow','flying-knee','double-leg-chain','armbar-transition']) assert.equal(MOVE_CATALOG.find(m=>m.id===id).premium,true,id);
+});
+test('standard actions remain open while grappling and special actions fail closed', () => {
+  assert.equal(canUseCombatAction('jab', false), true);
+  assert.equal(canUseCombatAction('guard', false), true);
+  assert.equal(canUseCombatAction('takedown', false), false);
+  assert.equal(canUseCombatAction('spinning-backfist', false), false);
+  assert.equal(canUseCombatAction('submission', true), true);
 });
 test('premium action list includes grappling and advanced techniques', () => {
   for (const action of ['takedown','ground-pound','submission','spinning-backfist','flying-knee']) {
