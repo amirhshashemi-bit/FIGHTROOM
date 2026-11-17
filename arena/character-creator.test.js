@@ -40,3 +40,12 @@ test('country selector provides a broad ISO country list and flag rendering',()=
  assert.ok(options.some(c=>c.code==='IR'));
  assert.equal(countryFlag('IR'),'🇮🇷');
 });
+
+test('custom fighter gender is normalized and affects body silhouette metrics',()=>{
+ const male=normalizeCustomFighter({gender:'male'});
+ const female=normalizeCustomFighter({gender:'female'});
+ assert.equal(male.gender,'male');
+ assert.equal(female.gender,'female');
+ assert.ok(getBodyMetrics(female).hips>getBodyMetrics(male).hips);
+ assert.ok(getBodyMetrics(female).shoulders<getBodyMetrics(male).shoulders);
+});
