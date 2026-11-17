@@ -220,11 +220,15 @@ function tickFighter(f,dt){
 let cpuDecisionSeed=1;
 function cpu(dt){
  if(ended||bout.phase!=='fight'||enemy.hp<=0)return;
- if(enemy.groundState!=='standing'||player.groundState!=='standing'){enemy.guard=false;enemy.move.set(0,0,0);return}
+ if(enemy.groundState!=='standing'||player.groundState!=='standing'){
+  enemy.guard=false;enemy.move.set(0,0,0);enemy.aiThink-=dt;
+  if(enemy.aiThink<=0){enemy.aiThink=.8;if(enemy.groundState==='top-control')setAction(enemy,'ground-pound');else if(['mount','back-control'].includes(enemy.groundState))setAction(enemy,'submission');else if(enemy.groundState!=='standing')setAction(enemy,'stand-up')}
+  return;
+ }
  enemy.aiThink-=dt;
  if(enemy.aiThink<=0&&!enemy.action&&enemy.knock<=0&&enemy.stun<=0){
   const d=distance(enemy,player);enemy.aiThink=.24;
-  const decision=chooseCpuAction({distance:d,playerAttacking:!!player.action,playerGuarding:player.guard,stamina:enemy.stamina,seed:cpuDecisionSeed++});
+  const decision=chooseCpuAction({distance:d,playerAttacking:!!player.action,playerGuarding:player.guard,stamina:enemy.stamina,wrestling:enemy.profile.wrestling,seed:cpuDecisionSeed++});
   enemy.guard=decision.action==='guard';
   if(decision.action==='approach')enemy.move.set(-1,0,0);
   else if(decision.action==='retreat')enemy.move.set(1,0,0);
