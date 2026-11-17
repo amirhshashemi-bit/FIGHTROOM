@@ -1,4 +1,7 @@
 import { inspectHumanoidRig, applyCharacterMorphs } from './character-rig.js';
+import { BVHLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/BVHLoader.js';
+import * as SkeletonUtils from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
+import { buildRetargetNameMap, validateRetargetMap } from './mocap-retarget.js';
 // Load externally supplied, properly licensed humanoid GLB motion-capture packs.
 const aliases={
  idle:['idle','stance','fight idle','fighting stance'],
@@ -16,8 +19,6 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  const gltf=await loader.parseAsync(buffer,'');
  if(!gltf.scene)throw new Error('GLB has no scene');
  if(!gltf.animations?.length)throw new Error('GLB has no animation clips');
- if(fighter.externalModel)fighter.root.remove(fighter.externalModel);
- fighter.rig.visible=false;
  const model=gltf.scene;model.name='FIGHTROOM_MOCAP_CHARACTER';
  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  fighter.root.add(model);
@@ -25,6 +26,9 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  if(size.y>0){const scale=1.78/size.y;model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale)}
  fighter.externalModel=model;
  const rigReport=inspectHumanoidRig(model);
+ if(!rigReport.compatible)throw new Error('Incompatible humanoid rig: '+rigReport.foundCore+'/7 core landmarks detected');
+ if(fighter.externalModel)fighter.root.remove(fighter.externalModel);
+ fighter.rig.visible=false;
  const appliedMorphs=applyCharacterMorphs(model,fighter.profile);
  fighter.rigReport=rigReport;
  fighter.appliedMorphs=appliedMorphs;
@@ -60,4 +64,30 @@ export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
  if(!fighter?.mixer)return;
  if(!fighter.action)playFighterClip(THREE,fighter,fighter.guard?'guard':fighter.dodge>0?'dodge':moveSpeed>.2?'advance':'idle');
  fighter.mixer.update(dt);
+}
+
+export async function loadFighterBVH(THREE,file,fighter){
+ if(!fighter?.externalModel)throw new Error('Import a compatible animated GLB character before adding BVH motion');
+ const loader=new BVHLoader(),parsed=loader.parse(await file.arrayBuffer());
+ const sourceSkeleton=parsed.skeleton?.skeleton,targetMesh=[];
+ fighter.externalModel.traverse(node=>{if(node.isSkinnedMesh&&node.skeleton)targetMesh.push(node)});
+ if(!sourceSkeleton?.bones?.length||!parsed.clip)throw new Error('BVH file contains no usable skeleton or animation');
+ if(!targetMesh.length)throw new Error('Target GLB has no skinned mesh');
+ const target=targetMesh.sort((a,b)=>b.skeleton.bones.length-a.skeleton.bones.length)[0];
+ const rig=inspectHumanoidRig(fighter.externalModel);
+ if(!rig.compatible)throw new Error('Target GLB humanoid rig is incomplete');
+ const names=buildRetargetNameMap(target.skeleton.bones.map(b=>b.name),sourceSkeleton.bones.map(b=>b.name));
+ const mapping=validateRetargetMap(names);
+ if(!mapping.compatible)throw new Error('BVH skeleton mapping incomplete: '+mapping.mappedCount+' bones mapped');
+ const clip=SkeletonUtils.retargetClip(target,sourceSkeleton,parsed.clip,{names,fps:30,useFirstFramePosition:false,preserveBoneMatrix:true,preserveBonePositions:true});
+ clip.name=file.name.replace(/\\.bvh$/i,'').replace(/[^a-z0-9_-]/gi,'-').toLowerCase();
+ if(!clip.tracks?.length)throw new Error('Retarget produced an empty animation clip');
+ if(!fighter.mixer)fighter.mixer=new THREE.AnimationMixer(fighter.externalModel);
+ fighter.clips=[...(fighter.clips||[]),clip];
+ fighter.clipActions=fighter.clipActions||new Map();
+ fighter.clipActions.set(clip.name,fighter.mixer.clipAction(clip));
+ fighter.currentClip=null;
+ const action=Object.keys(aliases).find(key=>hasFighterClip(fighter,key));
+ if(action)playFighterClip(THREE,fighter,action);
+ return {clip:clip.name,tracks:clip.tracks.length,mappedBones:mapping.mappedCount,rig};
 }
