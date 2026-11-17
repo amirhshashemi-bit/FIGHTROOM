@@ -2,11 +2,19 @@ import * as THREE from 'three';
 import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
 import { chooseCpuAction } from './combat-ai.js';
+import { classifyContact } from './hitboxes.js';
+import { transitionGround, submissionProgress } from './ground-combat.js';
+import { createBout, tickBout, nextRound, stoppage } from './referee.js';
+import { buildVenue } from './venue-builder.js';
+import { createFightAudio } from './audio.js';
+import { qualityProfile } from './performance.js';
 
 const mount=document.getElementById('view');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090f18);scene.fog=new THREE.Fog(0x090f18,13,27);
 const camera=new THREE.PerspectiveCamera(38,1,.1,80);camera.position.set(0,5.6,11.7);camera.lookAt(0,1.1,0);
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;mount.appendChild(renderer.domElement);
+const quality=qualityProfile({width:innerWidth,height:innerHeight,deviceMemory:navigator.deviceMemory||4,hardwareConcurrency:navigator.hardwareConcurrency||4,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});
+const renderer=new THREE.WebGLRenderer({antialias:quality.antialias,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,quality.pixelRatio));renderer.shadowMap.enabled=quality.shadows;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;mount.appendChild(renderer.domElement);
+const audio=createFightAudio();let audioEnabled=false;
 const hemi=new THREE.HemisphereLight(0xb8d5f5,0x171b24,2.1);scene.add(hemi);
 function areaLight(color,intensity,pos){const l=new THREE.DirectionalLight(color,intensity);l.position.set(...pos);l.castShadow=true;l.shadow.mapSize.set(1024,1024);scene.add(l)}
 areaLight(0xffd6a2,3.2,[-4,8,5]);areaLight(0x75bfff,2.4,[5,6,-4]);
@@ -16,6 +24,7 @@ for(let i=0;i<8;i++){const a=i*Math.PI/4;const post=new THREE.Mesh(new THREE.Cyl
 for(let y of [0.35,1.15,1.95]){const pts=[];for(let i=0;i<=8;i++){const a=i*Math.PI/4;pts.push(new THREE.Vector3(Math.cos(a)*4.83,y,Math.sin(a)*4.83))}const g=new THREE.BufferGeometry().setFromPoints(pts);scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:0x9daab6,transparent:true,opacity:.45})));}
 const matLine=new THREE.Mesh(new THREE.PlaneGeometry(10,10),new THREE.MeshStandardMaterial({color:0x303d4c,roughness:1,transparent:true,opacity:.18}));matLine.rotation.x=-Math.PI/2;matLine.position.y=-.05;scene.add(matLine);
 const clock=new THREE.Clock();let elapsed=0,ended=false,roundSeconds=300,player,enemy;
+let bout=createBout({rounds:3,roundSeconds:300,restSeconds:60}),restCountdown=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const lerp=(a,b,t)=>a+(b-a)*t;const V=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
 function material(color,roughness=.65,metalness=0){return new THREE.MeshStandardMaterial({color,roughness,metalness})}
 const skinA=material(0xb97855),skinB=material(0x80533f),shortA=material(0x171f2a),shortB=material(0x12314a),gloveA=material(0xa92732),gloveB=material(0x176ba6),wrap=material(0xe5e7e9),hairA=material(0x17171a),hairB=material(0x211a17);
@@ -28,7 +37,7 @@ function fighter(name,side,skin,shorts,gloves,hair){const root=new THREE.Group()
  const limbs={};for(const s of ['L','R']){limbs['upperArm'+s]=capsule(rig,'upperArm'+s,.075,.32,skin);limbs['foreArm'+s]=capsule(rig,'foreArm'+s,.064,.29,skin);limbs['glove'+s]=sphere(rig,'glove'+s,.105,gloves,V());limbs['thigh'+s]=capsule(rig,'thigh'+s,.105,.39,skin);limbs['shin'+s]=capsule(rig,'shin'+s,.075,.36,skin);limbs['foot'+s]=new THREE.Mesh(new THREE.BoxGeometry(.16,.09,.29),material(0x17191e));limbs['foot'+s].castShadow=true;rig.add(limbs['foot'+s]);}
  const belt=new THREE.Mesh(new THREE.BoxGeometry(.43,.055,.29),material(0xc2a56c,.5,.35));rig.add(belt);belt.position.y=1.02;
  const eyes=[];for(const s of [-1,1]){const e=sphere(rig,'eye',.018,material(0x151515),V(s*.07,1.68,.17));eyes.push(e)}
- const state={name,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,skin};
+ const state={name,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',skin};
  return state}
 player=fighter('PLAYER',-1,skinA,shortA,gloveA,hairA);enemy=fighter('CPU',1,skinB,shortB,gloveB,hairB);
 function pose(f,t,moveSpeed,dt){animateFighter(f,t,moveSpeed,dt)}
@@ -40,7 +49,16 @@ function currentMoveVector(){
  const v=V(x,0,z);return v.lengthSq()>1?v.normalize():v;
 }
 function setAction(f,type){
- if(ended||f.action||f.knock>0||f.stun>0)return;
+ if(ended||bout.phase!=='fight'||f.action||f.knock>0||f.stun>0)return;
+ if(type==='submission'||type==='ground-pound'||type==='stand-up'){
+  const def=f===player?enemy:player;
+  if(type==='submission'&&['top-control','mount','back-control'].includes(f.groundState)){
+   const tr=transitionGround(f.groundState,'submission',{stamina:f.stamina});
+   if(tr.ok){const progress=submissionProgress({control:72,attackerStamina:f.stamina,defenderStamina:def.stamina,defenderEscape:def.stamina*.22});f.stamina=Math.max(0,f.stamina-tr.staminaCost);if(progress>=55){endFight(f===player?'PLAYER WINS — SUBMISSION':'CPU WINS — SUBMISSION');return}document.getElementById('status').textContent='SUBMISSION ATTEMPT'}
+  }else if(type==='ground-pound'&&f.groundState==='top-control'){def.hp=Math.max(0,def.hp-5);def.stun=Math.max(def.stun,.12);audio.impact()}
+  else if(type==='stand-up'&&f.groundState!=='standing'){f.groundState='standing';def.groundState='standing';f.stamina=Math.max(0,f.stamina-10)}
+  updateUI();return;
+ }
  if(type==='guard'){f.guard=true;return}
  if(type==='dodge'){if(f.stamina>10){f.stamina-=10;f.dodge=.30;const v=currentMoveVector();f.evadeVector=v.lengthSq()>.01?v.clone():V(f===player?-1:1,0,0)}return}
  const spec=MOVES[type];if(!spec||f.stamina<spec.cost)return;
@@ -78,12 +96,20 @@ function inFront(att,def){
  return dx*forward.x+dz*forward.z>.35;
 }
 function applyHit(att,def,type){
+ const zone=MOVES[type]?.zone||'head',direction=Math.sign(def.root.position.x-att.root.position.x)||1;
+ const targetY=zone==='head'?1.7:zone==='leg'?.47:1.2;
+ const contact=classifyContact({attacker:[att.root.position.x,1.2,att.root.position.z],defender:[def.root.position.x,0,def.root.position.z],attackPoint:[def.root.position.x-direction*.18,targetY,def.root.position.z],attackRadius:zone==='leg'?.20:.18,front:inFront(att,def),evading:def.dodge>0});
+ if(!contact.hit||contact.zone!==zone)return false;
  const defenderZone=def.stun>0?'exposed':def.guard?'braced':'neutral';
  const result=resolveStrike({move:type,distance:distance(att,def),inFront:inFront(att,def),guard:def.guard,evading:def.dodge>0,defenderStamina:def.stamina,defenderZone});
  if(['invalid','miss','evaded'].includes(result.result))return false;
  def.hp=Math.max(0,def.hp-result.damage);def.stamina=Math.max(0,def.stamina-result.staminaLoss);
  def.hitFlash=result.result==='blocked'?.09:.18;def.stun=Math.max(def.stun||0,result.stun||0);
- if(type==='takedown'&&result.result==='hit'){def.knock=Math.max(def.knock,.72);def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*.18}
+ if(result.result==='blocked')audio.block();else{audio.strike();audio.impact()}
+ if(type==='takedown'&&result.result==='hit'){
+  const a=transitionGround('standing','clinch',{stamina:att.stamina}),d=transitionGround('standing','clinch',{stamina:def.stamina});
+  if(a.ok&&d.ok){att.groundState='top-control';def.groundState='bottom-guard';att.stamina=Math.max(0,att.stamina-14);def.knock=Math.max(def.knock,.72);def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*.18}
+ }
  else if(result.knockback)def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*result.knockback;
  return true;
 }
@@ -98,7 +124,7 @@ function tickFighter(f,dt){
 }
 let cpuDecisionSeed=1;
 function cpu(dt){
- if(ended||enemy.hp<=0)return;
+ if(ended||bout.phase!=='fight'||enemy.hp<=0)return;
  enemy.aiThink-=dt;
  if(enemy.aiThink<=0&&!enemy.action&&enemy.knock<=0&&enemy.stun<=0){
   const d=distance(enemy,player);enemy.aiThink=.24;
@@ -117,8 +143,11 @@ function resolveFighterSpacing(){
  enemy.root.position.x=clamp(enemy.root.position.x,-3.8,3.8);enemy.root.position.z=clamp(enemy.root.position.z,-3.4,3.4);
 }
 function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina)}}
-function endFight(text){ended=true;const r=document.getElementById('result');r.classList.remove('hidden');r.innerHTML=text+'<br><small>Refresh the page to start a new bout.</small>';document.getElementById('status').textContent='BOUT COMPLETE'}
-let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended){roundSeconds-=dt;if(roundSeconds<=0)endFight(player.hp>enemy.hp?'PLAYER WINS ON POINTS':'CPU WINS ON POINTS');if(player.hp<=0)endFight('CPU WINS — TKO');if(enemy.hp<=0)endFight('PLAYER WINS — TKO');
+function endFight(text){ended=true;audio.bell();const r=document.getElementById('result');r.classList.remove('hidden');r.innerHTML=text+'<br><small>Refresh the page to start a new bout.</small>';document.getElementById('status').textContent='BOUT COMPLETE'}
+let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended){
+ if(bout.phase==='fight'){bout=tickBout(bout,dt);roundSeconds=bout.remaining;if(bout.phase==='between-rounds'){restCountdown=bout.restSeconds;document.getElementById('status').textContent='ROUND BREAK';audio.bell()}if(bout.phase==='decision')endFight(player.hp>enemy.hp?'PLAYER WINS ON POINTS':player.hp<enemy.hp?'CPU WINS ON POINTS':'DRAW')}
+ else if(bout.phase==='between-rounds'){restCountdown-=dt;if(restCountdown<=0){bout=nextRound(bout);roundSeconds=bout.remaining;document.getElementById('round').textContent='ROUND '+bout.round;audio.bell()}}
+ if(stoppage({health:player.hp})==='ko-tko')endFight('CPU WINS — TKO');if(stoppage({health:enemy.hp})==='ko-tko')endFight('PLAYER WINS — TKO');
  const input=currentMoveVector(),moving=input.lengthSq()>.001;
  const speed=player.guard?1.05:player.stun>0?0:2.0;
  if(moving&&!player.action&&player.knock<=0&&player.stun<=0){
@@ -136,4 +165,9 @@ let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock
  }
  const secs=Math.max(0,Math.ceil(roundSeconds));document.getElementById('clock').textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');
  renderer.render(scene,camera)}
+const venueConfigs={'las-vegas':['charcoal','warm-white'],'abu-dhabi':['sandstone','gold-amber'],london:['slate','cool-white'],tokyo:['graphite','ice-blue'],rio:['deep-green','tropical-green'],paris:['navy','tricolor-white'],bangkok:['crimson','hot-amber'],'new-york':['midnight','theatre-spot'],toronto:['ice','cold-white'],sydney:['ocean','ocean-blue']};
+let activeVenue=null;
+function selectVenue(id){if(activeVenue){scene.remove(activeVenue);activeVenue.traverse(o=>{o.geometry?.dispose?.();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose?.());else o.material?.dispose?.()})}const cfg=venueConfigs[id]||venueConfigs['las-vegas'];activeVenue=buildVenue(THREE,scene,{id,canvas:cfg[0],lighting:cfg[1]})}
+selectVenue('las-vegas');document.getElementById('venue-select')?.addEventListener('change',e=>selectVenue(e.target.value));
+document.getElementById('sound-toggle')?.addEventListener('click',()=>{audioEnabled=!audioEnabled;audio.setEnabled(audioEnabled);document.getElementById('sound-toggle').textContent=audioEnabled?'SOUND ON':'SOUND OFF'});
 loop();updateUI();
