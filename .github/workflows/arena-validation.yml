@@ -1,6 +1,6 @@
 name: Arena combat validation
 concurrency:
-  group: arena-validation-${{ github.head_ref || github.ref }}
+  group: arena-validation-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 on:
   pull_request:
