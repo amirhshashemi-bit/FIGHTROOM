@@ -25,3 +25,13 @@ Do not mark motion capture as installed until a real source file is checked into
 - Status: reviewed, **not downloaded or committed**. It is a male base only, not a complete roster or production-ready fighter. Clothing, female base, shape morphs, and clip compatibility remain to be built and tested.
 - MakeHuman asset license details: https://static.makehumancommunity.org/about/license.html
 - Candidate generation pipeline (MIT code; CC0 MakeHuman assets claimed by upstream): https://github.com/olatunde85/3d-gen — verify each asset and upstream terms before shipping.
+
+
+## Candidate: CharacterCreator CC0 animated base body
+- Source repository: https://github.com/kblood/CharacterCreator
+- Pinned source commit: `852e48f316b90a0937234886630e4fb4cdfd1f78`
+- Exact asset: `output/base_body_anim.glb` (8,212,156 bytes; Git blob `bdbdab04eb85903e46c56ff56c7a1ea0cbe9c78b`).
+- Upstream license notes identify generated output GLBs as CC0-1.0. The generator code is GPL-3.0-or-later and is not copied into FIGHTROOM.
+- Direct download: https://raw.githubusercontent.com/kblood/CharacterCreator/852e48f316b90a0937234886630e4fb4cdfd1f78/output/base_body_anim.glb
+- Status: verified in upstream Git tree and linked from FIGHTROOM creator panel; not copied into FIGHTROOM repository because the GitHub content connector cannot retrieve binary blobs. This is a male anatomical base with general locomotion clips, not a complete dressed MMA fighter asset. Further clothing, female base, and MMA clip integration are required.
+- License notes: https://github.com/kblood/CharacterCreator/blob/852e48f316b90a0937234886630e4fb4cdfd1f78/LICENSE-NOTES.md
