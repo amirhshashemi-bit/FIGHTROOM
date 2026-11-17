@@ -133,7 +133,9 @@ function applyHit(att,def,type){
  if(type==='takedown'&&result.result==='hit'){
   const a=transitionGround(att.groundState,'clinch',{stamina:att.stamina}),d=transitionGround(def.groundState,'clinch',{stamina:def.stamina});
   const finish=a.ok&&d.ok?transitionGround('clinch','takedown',{stamina:att.stamina}):{ok:false};
-  if(finish.ok){att.groundState='top-control';def.groundState='bottom-guard';att.stamina=Math.max(0,att.stamina-finish.staminaCost);def.knock=Math.max(def.knock,.72);def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*.18}
+  const wrestlingEdge=att.profile.wrestling-def.profile.wrestling;
+  if(finish.ok&&wrestlingEdge>=-12){att.groundState='top-control';def.groundState='bottom-guard';att.stamina=Math.max(0,att.stamina-finish.staminaCost);def.knock=Math.max(def.knock,.72);def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*.18}
+  else{def.stun=Math.max(def.stun,.18);document.getElementById('status').textContent='TAKEDOWN DEFENDED'}
  }
  else if(result.knockback)def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*result.knockback;
  return true;
