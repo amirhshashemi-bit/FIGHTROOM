@@ -83,7 +83,12 @@ export async function loadFighterBVH(THREE,file,fighter){
  const mapping=validateRetargetMap(names);
  if(!mapping.compatible)throw new Error('BVH skeleton mapping incomplete: '+mapping.mappedCount+' bones mapped');
  const sourceHip=sourceSkeleton.bones.find(b=>semanticBone(b.name)==='hips')?.name||sourceSkeleton.bones[0].name;
- const clip=SkeletonUtils.retargetClip(target,sourceSkeleton,parsed.clip,{names,hip:sourceHip,fps:30,useFirstFramePosition:false,preserveBoneMatrix:true,preserveBonePositions:true});
+ parsed.skeleton.updateMatrixWorld(true);
+ const sourceY=sourceSkeleton.bones.map(b=>b.getWorldPosition(new THREE.Vector3()).y);
+ const sourceHeight=Math.max(...sourceY)-Math.min(...sourceY);
+ const targetHeight=new THREE.Box3().setFromObject(fighter.externalModel).getSize(new THREE.Vector3()).y;
+ const retargetScale=sourceHeight>0&&targetHeight>0?targetHeight/sourceHeight:1;
+ const clip=SkeletonUtils.retargetClip(target,sourceSkeleton,parsed.clip,{names,hip:sourceHip,fps:30,scale:retargetScale,hipInfluence:new THREE.Vector3(0,1,0),useFirstFramePosition:false,preserveBoneMatrix:true,preserveBonePositions:true});
  clip.name=file.name.replace(/\.bvh$/i,'').replace(/[^a-z0-9_-]/gi,'-').toLowerCase();
  if(!clip.tracks?.length)throw new Error('Retarget produced an empty animation clip');
  if(!fighter.mixer)fighter.mixer=new THREE.AnimationMixer(fighter.externalModel);
@@ -94,5 +99,5 @@ export async function loadFighterBVH(THREE,file,fighter){
  const clipName=clip.name.toLowerCase();
  const action=Object.keys(aliases).find(key=>(aliases[key]||[key]).some(alias=>clipName.includes(alias)));
  if(action)playFighterClip(THREE,fighter,action);
- return {clip:clip.name,tracks:clip.tracks.length,mappedBones:mapping.mappedCount,rig};
+ return {clip:clip.name,tracks:clip.tracks.length,mappedBones:mapping.mappedCount,scale:retargetScale,rig};
 }
