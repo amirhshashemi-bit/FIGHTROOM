@@ -137,7 +137,7 @@ document.querySelectorAll('[data-custom-move]').forEach(btn=>btn.addEventListene
 async function importMocap(input,which){
  const file=input.files?.[0];if(!file)return;
  const f=which==='player'?player:enemy;
- try{const info=await loadFighterGLB(THREE,GLTFLoader,file,f);f.root.scale.y=1;document.getElementById('status').textContent=which.toUpperCase()+' MOCAP LOADED · '+info.clips.length+' CLIPS';}
+ try{const info=await loadFighterGLB(THREE,GLTFLoader,file,f);f.root.scale.y=1;document.getElementById('status').textContent=which.toUpperCase()+' MOCAP · '+info.clips.length+' CLIPS · RIG '+(info.rig.compatible?'COMPATIBLE':'PARTIAL')+' ('+info.rig.foundCore+'/7) · MORPHS '+info.appliedMorphs.length;}
  catch(error){document.getElementById('status').textContent='MOCAP IMPORT FAILED: '+error.message;console.error(error)}
 }
 document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
