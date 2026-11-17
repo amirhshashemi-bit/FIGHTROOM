@@ -14,7 +14,7 @@ export function parseGlbJson(input) {
 
 const clean = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const aliases = {
-  hips: ['hips','pelvis','root','mixamorighips'],
+  hips: ['hips','pelvis','mixamorighips'],
   spine: ['spine','spine1','spine01','mixamorigspine','mixamorigspine1'],
   head: ['head','mixamorighead'],
   leftUpperArm: ['leftarm','upperarml','upperarml','mixamorigleftarm'],
@@ -25,7 +25,7 @@ const aliases = {
 const actionAliases = {
   idle: ['idle','stance','fight idle','fighting stance'],
   advance: ['advance','walk','forward','move'],
-  retreat: ['retreat','backward','back walk'],
+  retreat: ['retreat','backward','back walk','walk_back','walkback'],
   jab: ['jab'], cross: ['cross'], hook: ['hook','uppercut'],
   lowKick: ['low kick','low-kick'], highKick: ['roundhouse','high kick','kick'],
   guard: ['block','guard'], dodge: ['dodge','slip','evade'],
