@@ -21,37 +21,30 @@ jobs:
           curl --fail --location --retry 3 --retry-delay 2 \
             "https://accad.ohio-state.edu/sites/accad.osu.edu/files/Male2_bvh.zip" \
             -o /tmp/Male2_bvh.zip
-          unzip -q /tmp/Male2_bvh.zip -d /tmp/accad
-          mkdir -p arena/assets/mocap/accad
-          files=(
-            Male2_A1_Stand.bvh
-            Male2_B3_Walk.bvh
-            Male2_E1_JabLeft.bvh
-            Male2_E2_JabRight.bvh
-            Male2_E3_CrossLeft.bvh
-            Male2_E4_CrossRight.bvh
-            Male2_E5_HookLeft.bvh
-            Male2_E6_HookRight.bvh
-            Male2_E11_BackfistLeft.bvh
-            Male2_E12_BackfistRight.bvh
-            Male2_G2_FrontKick.bvh
-            Male2_G8_RoundhouseLeft.bvh
-            Male2_G9_RoundhouseRight.bvh
-            Male2_G17_PushKickLeft.bvh
-            Male2_G18_PushKickRight.bvh
-            Male2_E13_BlockLeftHigh.bvh
-            Male2_E15_BlockLeftMiddle.bvh
-            Male2_E19_DodgeLeft.bvh
-            Male2_E20_DodgeRight.bvh
-            Male2_A9_Lie.bvh
-            Male2_A10_LieToCrouch.bvh
-            Male2_A11_Crawl.bvh
-          )
-          for f in "${files[@]}"; do
-            src="$(find /tmp/accad -type f -name "$f" -print -quit)"
-            test -n "$src"
-            cp "$src" "arena/assets/mocap/accad/$f"
-          done
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          archive=ZipFile('/tmp/Male2_bvh.zip')
+          names=archive.namelist()
+          print('Archive entries:',len(names))
+          wanted=[
+            'Male2_A1_Stand.bvh','Male2_B3_Walk.bvh',
+            'Male2_E1_JabLeft.bvh','Male2_E2_JabRight.bvh',
+            'Male2_E3_CrossLeft.bvh','Male2_E4_CrossRight.bvh',
+            'Male2_E5_HookLeft.bvh','Male2_E6_HookRight.bvh',
+            'Male2_E11_BackfistLeft.bvh','Male2_E12_BackfistRight.bvh',
+            'Male2_G2_FrontKick.bvh','Male2_G8_RoundhouseLeft.bvh','Male2_G9_RoundhouseRight.bvh',
+            'Male2_G17_PushKickLeft.bvh','Male2_G18_PushKickRight.bvh',
+            'Male2_E13_BlockLeftHigh.bvh','Male2_E15_BlockLeftMiddle.bvh',
+            'Male2_E19_DodgeLeft.bvh','Male2_E20_DodgeRight.bvh',
+            'Male2_A9_Lie.bvh','Male2_A10_LieToCrouch.bvh','Male2_A11_Crawl.bvh']
+          out=Path('arena/assets/mocap/accad');out.mkdir(parents=True,exist_ok=True)
+          for wanted_name in wanted:
+              match=next((n for n in names if n.rsplit('/',1)[-1]==wanted_name),None)
+              if not match: raise SystemExit('Missing expected ACCAD clip: '+wanted_name)
+              (out/wanted_name).write_bytes(archive.read(match))
+          print('Extracted selected BVH clips:',len(wanted))
+          PY
       - name: Validate selected clips and write attribution manifest
         run: |
           set -euo pipefail
