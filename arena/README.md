@@ -1,6 +1,6 @@
 # FIGHTROOM ARENA — Combat Lab
 
-**Build:** 0.2.0-prealpha · **Status:** playable browser prototype, not release-ready
+**Build:** 0.4.0-prealpha · **Status:** playable browser prototype, not release-ready
 
 An isolated browser-based MMA combat prototype inside the FIGHTROOM repository. The existing content marketplace remains intact.
 
@@ -10,7 +10,7 @@ Visit `/arena/` on the deployed FIGHTROOM site. Three.js is loaded from jsDelivr
 ## Current scope
 - 24 original fictional fighters across 12 weight divisions, with height, reach, stance, style, power, speed, wrestling and cardio attributes
 - Distinct skin, hair, shorts and glove palettes; no real athlete names or identifiable likenesses
-- FIGHTER FORGE custom fighter editor: name, height, weight, reach, skin/eye/hair/shorts/glove colors, stance, fighting style, shoulder/chest/arm/leg proportions and combat attributes
+- FIGHTER FORGE custom fighter editor: name, country (localized ISO country selector), height, weight, reach, skin/eye/hair/shorts/glove colors, stance, fighting style, shoulder/chest/arm/leg proportions and combat attributes
 - Body metrics derive visual proportions from height, weight and body sliders; reach affects procedural arm extension as well as strike range
 - Two signature-move loadout slots for owned moves; starter jab/cross can be equipped and triggered with keyboard 1/2 or mobile buttons; locked premium entries remain unavailable
 - Custom fighter profiles saved locally in the browser and selectable as a playable corner fighter
@@ -38,3 +38,15 @@ See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requ
 - If the asset contains supported morph targets (shoulders, chest, arms, legs), the custom fighter proportions are applied to those targets.
 - Assets without morph targets remain loadable; the runtime reports zero applied morphs and does not fabricate body customization.
 - This is a compatibility foundation, not a universal retargeter. Clip retargeting between unrelated skeletons and production anatomical base meshes remain future work.
+
+
+## Country selection (pre-alpha 0.4)
+- The custom fighter profile now stores a normalized ISO country code and display name.
+- The creator presents a broad ISO country/territory selector localized through the browser `Intl.DisplayNames` API, including country flags where emoji glyphs are supported.
+- The selected country appears in the fighter profile/HUD and roster option labels. Existing 24 fictional roster members keep their assigned countries.
+
+## Professional character asset source review
+- A CC0 rigged male base mesh is available from Innerscene, adapted from MakeHuman: 163-bone skeleton, skin weights, embedded textures, approximately 109k triangles. Source/download page: https://www.innerscene.com/tools/library/3d-parts/male-base-mesh-3d-person-rigged-a-pose-380e6d89
+- This source is a neutral A-pose male base only; it is not a complete fight-ready 24-character pack, and the download has not been committed to this repository. It needs clothing, female counterpart(s), body morphs, and animation retarget/validation before production use.
+- MakeHuman core graphics assets are CC0; source code licensing is separate. Asset terms are documented by MakeHuman Community: https://static.makehumancommunity.org/about/license.html
+- Ara 3D Gen is another open-source character generation pipeline using CC0 MakeHuman data and exports GLB/FBX; evaluate the exact source assets and export pipeline before adopting. https://github.com/olatunde85/3d-gen
