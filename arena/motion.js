@@ -33,7 +33,7 @@ export function animateFighter(f,t,moveSpeed,dt){
  const locomotion=clamp(moveSpeed/2.2,0,1),cycle=t*8.6+f.side,stride=locomotion*Math.sin(cycle);
  const bob=Math.sin(t*2.7+f.side)*.012+Math.abs(Math.sin(cycle))*.018*locomotion;
  const guard=f.guard?1:0,hit=f.hitFlash>0?Math.sin(clamp(f.hitFlash/.16,0,1)*Math.PI)*.18:0;
- const dodge=f.dodge>0?Math.sin(clamp(f.dodge/.28,0,1)*Math.PI)*.32:0,down=f.knock>0?1:0;
+ const dodge=f.dodge>0?Math.sin(clamp(f.dodge/.28,0,1)*Math.PI)*.32:0,grounded=['top-control','bottom-guard','side-control','mount','back-control','submission','ground-and-pound'].includes(f.groundState),down=f.knock>0||grounded?1:0;
  const torsoY=1.25+bob-m.level-down*.38,torsoZ=m.lean+hit-down*.18-dodge*.45;
  const b=f.body,l=f.limbs;
  point(b.torso,V(0,torsoY,torsoZ),dt);point(b.pelvis,V(0,.91+bob-m.level*.45,down*.12),dt);
@@ -42,7 +42,7 @@ export function animateFighter(f,t,moveSpeed,dt){
  point(b.hair,V(0,1.79+bob-m.level*.7,torsoZ*.8+hit*.55-.015),dt);
  point(b.shorts,V(0,.94+bob-m.level*.45,down*.12),dt);
  b.torso.rotation.y=m.turn+stride*.035;b.torso.rotation.z=torsoZ*.2;b.torso.rotation.x=down?-.65:m.kick*.12;
- f.rig.position.y=mix(0,-.32,down);f.rig.rotation.x=mix(0,-.34,down);
+ f.rig.position.y=mix(0,-.32,down);f.rig.rotation.x=mix(0,-.34,down);f.rig.rotation.z=grounded?(f.groundState==='bottom-guard'?.18:-.18):0;
  const arm=side=>{
   const left=side==='L',sgn=left?-1:1,ext=left?m.left:m.right;
   const shoulder=V(sgn*.28,1.42+bob-m.level*.5,torsoZ*.35);
