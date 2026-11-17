@@ -1,4 +1,7 @@
 name: Arena combat validation
+concurrency:
+  group: arena-validation-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 on:
   pull_request:
     paths:
