@@ -1,12 +1,14 @@
 // Paired fighter staging for clinch and ground exchanges.
-// Coordinates are intentionally deterministic so browser QA can verify spacing.
+// Coordinates are deterministic so browser QA can verify spacing.
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const GROUNDED=new Set(['takedown','top-control','bottom-guard','side-control','mount','back-control','submission','ground-and-pound','stand-up']);
 export function resolveGroundPair(a,b){
  if(!a||!b)return null;
  const as=a.groundState||'standing',bs=b.groundState||'standing';
  if(as==='standing'&&bs==='standing')return null;
- const ax=a.root?.position.x??a.x??0,bx=b.root?.position.x??b.x??0,az=a.root?.position.z??a.z??0,bz=b.root?.position.z??b.z??0;\n const centerX=(ax+bx)*.5,centerZ=(az+bz)*.5;
+ const ax=a.root?.position.x??a.x??0,bx=b.root?.position.x??b.x??0;
+ const az=a.root?.position.z??a.z??0,bz=b.root?.position.z??b.z??0;
+ const centerX=(ax+bx)*.5,centerZ=(az+bz)*.5;
  if(as==='clinch'&&bs==='clinch')return {
   a:{x:centerX-.34,z:centerZ,yaw:a.side<0?Math.PI/2:-Math.PI/2},
   b:{x:centerX+.34,z:centerZ,yaw:b.side<0?Math.PI/2:-Math.PI/2},
@@ -15,11 +17,11 @@ export function resolveGroundPair(a,b){
  const aTop=['top-control','side-control','mount','back-control','ground-and-pound','submission'].includes(as);
  const bTop=['top-control','side-control','mount','back-control','ground-and-pound','submission'].includes(bs);
  if(!GROUNDED.has(as)&&!GROUNDED.has(bs))return null;
- const aIsTop=aTop&&!bTop?true:bTop&&!aTop?false:(a.side< b.side);
+ const aIsTop=aTop&&!bTop?true:bTop&&!aTop?false:(a.side<b.side);
  const top=aIsTop?a:b,bottom=aIsTop?b:a;
  const left=top.side<0;
  const topX=clamp(centerX+(left?-.24:.24),-3.6,3.6);
- const bottomX=clamp(centerX+(left ? .24 : -.24),-3.6,3.6);
+ const bottomX=clamp(centerX+(left?.24:-.24),-3.6,3.6);
  return {
   a:aIsTop?{x:topX,z:centerZ-.18,yaw:top.side<0?Math.PI/2:-Math.PI/2}:{x:bottomX,z:centerZ+.18,yaw:bottom.side<0?Math.PI/2:-Math.PI/2},
   b:aIsTop?{x:bottomX,z:centerZ+.18,yaw:bottom.side<0?Math.PI/2:-Math.PI/2}:{x:topX,z:centerZ-.18,yaw:top.side<0?Math.PI/2:-Math.PI/2},
