@@ -46,9 +46,10 @@ export function animateFighter(f,t,moveSpeed,dt){
  f.rig.position.y=mix(0,-.32,down);f.rig.rotation.x=mix(0,-.34,down);f.rig.rotation.z=grounded?(f.groundState==='bottom-guard'?.18:-.18):0;
  const arm=side=>{
   const left=side==='L',sgn=left?-1:1,ext=left?m.left:m.right;
+  const reach=Math.max(.82,Math.min(1.18,(Number(f.profile?.reach)||180)/180));
   const shoulder=V(sgn*.28,1.42+bob-m.level*.5,torsoZ*.35);
-  const elbow=V(sgn*(.39+ext*.12),1.29+bob+guard*.13,.12+ext*.27+guard*.12);
-  const wrist=V(sgn*(.33+ext*.2),1.28+bob+guard*.27,.34+ext*.52+guard*.12);
+  const elbow=V(sgn*(.39+ext*.12)*reach,1.29+bob+guard*.13,(.12+ext*.27)*reach+guard*.12);
+  const wrist=V(sgn*(.33+ext*.2)*reach,1.28+bob+guard*.27,(.34+ext*.52)*reach+guard*.12);
   if(down){elbow.y=.82;wrist.y=.9;wrist.z=.12}
   segment(l['upperArm'+side],shoulder,elbow,dt);segment(l['foreArm'+side],elbow,wrist,dt);
   point(l['glove'+side],wrist.clone().add(V(0,0,.055)),dt);
