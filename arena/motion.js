@@ -43,23 +43,24 @@ export function animateFighter(f,t,moveSpeed,dt){
  const locomotion=clamp(moveSpeed/2.2,0,1),cycle=t*8.6+f.side,stride=locomotion*Math.sin(cycle);
  const bob=Math.sin(t*2.7+f.side)*.012+Math.abs(Math.sin(cycle))*.018*locomotion;
  const guard=f.guard?1:0,hit=f.hitFlash>0?Math.sin(clamp(f.hitFlash/.16,0,1)*Math.PI)*.18:0;
+ const groundState=f.groundState||'standing',topPosition=['top-control','side-control','mount','back-control','ground-and-pound','submission'].includes(groundState),bottomPosition=['bottom-guard'].includes(groundState);
  const dodge=f.dodge>0?Math.sin(clamp(f.dodge/.28,0,1)*Math.PI)*.32:0,grounded=['top-control','bottom-guard','side-control','mount','back-control','submission','ground-and-pound'].includes(f.groundState),down=f.knock>0||grounded?1:0;
- const torsoY=1.25+bob-m.level-down*.38,torsoZ=m.lean+hit-down*.18-dodge*.45;
+ const torsoY=grounded?(topPosition?.62:.48):1.25+bob-m.level-down*.38,torsoZ=m.lean+hit-down*.18-dodge*.45;
  const b=f.body,l=f.limbs;
- point(b.torso,V(0,torsoY,torsoZ),dt);point(b.pelvis,V(0,.91+bob-m.level*.45,down*.12),dt);
- point(b.neck,V(0,1.52+bob-m.level*.6,torsoZ*.55),dt);
- point(b.head,V(0,1.7+bob-m.level*.7,torsoZ*.8+hit*.55),dt);
- point(b.hair,V(0,1.79+bob-m.level*.7,torsoZ*.8+hit*.55-.015),dt);
- point(b.shorts,V(0,.94+bob-m.level*.45,down*.12),dt);
+ point(b.torso,V(0,torsoY,torsoZ),dt);point(b.pelvis,V(0,grounded?(topPosition?.34:.25):.91+bob-m.level*.45,down*.12),dt);
+ point(b.neck,V(0,grounded?(topPosition?.83:.66):1.52+bob-m.level*.6,torsoZ*.55),dt);
+ point(b.head,V(0,grounded?(topPosition?.91:.75):1.7+bob-m.level*.7,torsoZ*.8+hit*.55),dt);
+ point(b.hair,V(0,grounded?(topPosition?.99:.83):1.79+bob-m.level*.7,torsoZ*.8+hit*.55-.015),dt);
+ point(b.shorts,V(0,grounded?(topPosition?.36:.27):.94+bob-m.level*.45,down*.12),dt);
  b.torso.rotation.y=m.turn+stride*.035;b.torso.rotation.z=torsoZ*.2;b.torso.rotation.x=down?-.65:m.kick*.12;
- f.rig.position.y=mix(0,-.32,down);f.rig.rotation.x=mix(0,-.34,down);f.rig.rotation.z=grounded?(f.groundState==='bottom-guard'?.18:-.18):0;
+ f.rig.position.y=grounded?-.04:mix(0,-.32,down);f.rig.rotation.x=grounded?(bottomPosition?1.18:-1.12):mix(0,-.34,down);f.rig.rotation.z=grounded?(bottomPosition?.28:topPosition?-.12:0):0;
  const arm=side=>{
   const left=side==='L',sgn=left?-1:1,ext=left?m.left:m.right;
   const reach=Math.max(.82,Math.min(1.18,(Number(f.profile?.reach)||180)/180));
-  const shoulder=V(sgn*.28,1.42+bob-m.level*.5,torsoZ*.35);
-  const elbow=V(sgn*(.39+ext*.12)*reach,1.29+bob+guard*.13,(.12+ext*.27)*reach+guard*.12);
-  const wrist=V(sgn*(.33+ext*.2)*reach,1.28+bob+guard*.27,(.34+ext*.52)*reach+guard*.12);
-  if(down){elbow.y=.82;wrist.y=.9;wrist.z=.12}
+  const shoulder=V(sgn*.28,grounded?(topPosition?.70:.59):1.42+bob-m.level*.5,torsoZ*.35);
+  const elbow=V(sgn*(.39+ext*.12)*reach,grounded?(topPosition?.46:.43):1.29+bob+guard*.13,(.12+ext*.27)*reach+guard*.12);
+  const wrist=V(sgn*(.33+ext*.2)*reach,grounded?(topPosition?.42:.52):1.28+bob+guard*.27,(.34+ext*.52)*reach+guard*.12);
+  if(down&&!grounded){elbow.y=.82;wrist.y=.9;wrist.z=.12}
   segment(l['upperArm'+side],shoulder,elbow,dt);segment(l['foreArm'+side],elbow,wrist,dt);
   point(l['glove'+side],wrist.clone().add(V(0,0,.055)),dt);
  };
@@ -67,9 +68,9 @@ export function animateFighter(f,t,moveSpeed,dt){
  const leg=side=>{
   const left=side==='L',sgn=left?-1:1,kick=left?0:m.kick,step=left?stride:-stride;
   const hip=V(sgn*.14,.88+bob-m.level*.25,0);
-  const knee=V(sgn*(.17+kick*.14),.49+bob-kick*.12+Math.max(0,step)*.06,.03+kick*.36+step*.055);
-  const ankle=V(sgn*(.18+kick*.27),.11+bob+kick*.34+Math.max(0,step)*.08,.12+kick*.83+step*.12);
-  if(down){knee.y=.25;ankle.y=.08}
+  const knee=V(sgn*(.17+kick*.14),grounded?(bottomPosition?.30:.27):.49+bob-kick*.12+Math.max(0,step)*.06,.03+kick*.36+step*.055);
+  const ankle=V(sgn*(.18+kick*.27),grounded?.09:.11+bob+kick*.34+Math.max(0,step)*.08,.12+kick*.83+step*.12);
+  if(down&&!grounded){knee.y=.25;ankle.y=.08}
   segment(l['thigh'+side],hip,knee,dt);segment(l['shin'+side],knee,ankle,dt);
   point(l['foot'+side],ankle.clone().add(V(0,-.025,.11)),dt);
   l['foot'+side].rotation.x=-kick*.82+step*.12;l['foot'+side].rotation.y=step*.08;
