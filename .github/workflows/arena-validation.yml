@@ -15,7 +15,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Check combat JavaScript syntax
-        run: node --check arena/fight.js
+      - name: Check ES module syntax
+        run: |
+          node --check arena/fight.js
+          node --check arena/motion.js
+          node --check arena/combat-rules.js
+      - name: Run deterministic combat tests
+        working-directory: arena
+        run: npm test --if-present
       - name: Validate venue catalogue
         run: node -e "const v=require('./arena/data/venues.json'); if(v.venues.length!==10) process.exit(1); console.log('10 venue records validated')"
