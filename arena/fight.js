@@ -9,6 +9,7 @@ import { MOVES, resolveStrike } from './combat-rules.js';
 import { chooseCpuAction } from './combat-ai.js';
 import { classifyContact } from './hitboxes.js';
 import { transitionGround, submissionProgress, resolveGrappleAction, GRAPPLE_ACTIONS } from './ground-combat.js';
+import { stepGroundPair } from './ground-presentation.js';
 import { createBout, tickBout, nextRound, stoppage } from './referee.js';
 import { buildVenue } from './venue-builder.js';
 import { createFightAudio } from './audio.js';
@@ -284,7 +285,7 @@ let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock
   }else player.move.set(0,0,0);
   if(player.dodge>0){player.root.position.x+=player.evadeVector.x*3.4*dt;player.root.position.z+=player.evadeVector.z*3.4*dt}
   cpu(dt);if(enemy.move.lengthSq()&&!enemy.action&&enemy.stun<=0){enemy.root.position.x+=enemy.move.x*(.8+enemy.profile.speed*.004)*dt;enemy.root.position.x=clamp(enemy.root.position.x,.7,3.8);enemy.move.set(enemy.move.x,0,0)}else enemy.move.set(0,0,0);
-  resolveFighterSpacing();tickFighter(player,dt);tickFighter(enemy,dt);
+  const grapplingPhase=stepGroundPair(player,enemy,dt);if(!grapplingPhase)resolveFighterSpacing();tickFighter(player,dt);tickFighter(enemy,dt);
  }else{
   player.move.set(0,0,0);enemy.move.set(0,0,0);player.guard=false;enemy.guard=false;
   player.stamina=clamp(player.stamina+dt*8,0,100);enemy.stamina=clamp(enemy.stamina+dt*8,0,100);
