@@ -44,6 +44,6 @@ export function playFighterClip(THREE,fighter,action){
 }
 export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
  if(!fighter?.mixer)return;
- if(!fighter.action)playFighterClip(THREE,fighter,moveSpeed>.2?'advance':'idle');
+ if(!fighter.action)playFighterClip(THREE,fighter,fighter.guard?'guard':fighter.dodge>0?'dodge':moveSpeed>.2?'advance':'idle');
  fighter.mixer.update(dt);
 }
