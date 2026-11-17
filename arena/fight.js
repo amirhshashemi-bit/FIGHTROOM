@@ -190,8 +190,8 @@ async function importMocap(input,which){
     summary=which.toUpperCase()+' MOCAP MODEL · '+info.clips.length+' CLIPS · RIG '+info.rig.foundCore+'/7 · MORPHS '+info.appliedMorphs.length;
    }
   }
-  document.getElementById('status').textContent=summary+' · '+files.length+' FILE(S)';
- }catch(error){document.getElementById('status').textContent='MOCAP IMPORT FAILED: '+error.message;console.error(error)}
+  document.getElementById('mocap-status').textContent=summary+' · '+files.length+' FILE(S)';
+ }catch(error){document.getElementById('mocap-status').textContent='MOCAP IMPORT FAILED: '+error.message;console.error(error)}
 }
 document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
 document.getElementById('e-mocap-file').addEventListener('change',e=>importMocap(e.target,'enemy'));
