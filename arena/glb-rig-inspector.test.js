@@ -29,7 +29,8 @@ test('maps humanoid joints and only claims actions present in clip names', () =>
     meshes:[{}], skins:[{joints:[0,1,2,3,4,5,6]}],
     animations:[
       {name:'Idle',channels:[{target:{node:0}}]},
-      {name:'Walk Forward',channels:[{target:{node:1}}]},\n      {name:'walk_back',channels:[{target:{node:1}}]},
+      {name:'Walk Forward',channels:[{target:{node:1}}]},
+      {name:'walk_back',channels:[{target:{node:1}}]},
       {name:'Jab',channels:[{target:{node:3}}]}
     ]
   };
@@ -37,7 +38,8 @@ test('maps humanoid joints and only claims actions present in clip names', () =>
   assert.equal(r.humanoidCoreCandidate,true);
   assert.equal(r.coreBonesFound,7);
   assert.equal(r.actionClipMatches.idle,'Idle');
-  assert.equal(r.actionClipMatches.advance,'Walk Forward');\n  assert.equal(r.actionClipMatches.retreat,'walk_back');
+  assert.equal(r.actionClipMatches.advance,'Walk Forward');
+  assert.equal(r.actionClipMatches.retreat,'walk_back');
   assert.equal(r.actionClipMatches.jab,'Jab');
   assert.equal(r.actionClipMatches.cross,null);
   assert.equal(r.mappedActionCount,4);
