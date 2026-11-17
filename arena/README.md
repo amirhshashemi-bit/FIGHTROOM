@@ -79,3 +79,13 @@ See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requ
 
 ## Premium combat implementation (pre-alpha 0.6)
 See [PREMIUM_COMBAT.md](./PREMIUM_COMBAT.md) for the standard/premium move split, entitlement contract and security limits. The premium move set has dedicated timing, stamina, range and damage values and shares the standard contact/guard/evasion resolver. The CPU can now attempt wrestling entries and react to ground-control states. Automated tests cover the new move specifications and fail-closed entitlement behavior.
+
+
+## Grappling expansion (pre-alpha 0.7 work)
+- Added a deterministic paired-position resolver for clinch, takedown outcomes, top control, bottom guard, side control, mount, back control, submission, ground-and-pound, and stand-up recovery.
+- Added premium-gated clinch entries, takedowns, positional passing, sweeps, mount/back takes, ground-and-pound and submissions. Sprawl, frames, escape, submission defense and stand-up recovery remain free so players can defend and avoid a gameplay soft-lock.
+- Mobile touch controls now expose the grappling and defensive actions. A clinch closes the distance before the takedown follow-up; wrestling skill affects takedown success.
+- Seven deterministic grappling tests are included in the Node suite.
+- Browser QA now has a Playwright workflow for desktop and a 390×844 Android-sized touch viewport, including screenshots uploaded as a GitHub Actions artifact.
+- This CI browser run is an emulated viewport, not a physical Android handset test. Real-device input latency, GPU performance, browser compatibility and visual motion review still require a physical device.
+- Grappling positions are gameplay state transitions with procedural fallback poses; they are not yet physically simulated wrestling or real motion-capture clips.
