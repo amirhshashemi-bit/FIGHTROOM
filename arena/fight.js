@@ -62,8 +62,8 @@ function setAction(f,type){
   else if(type==='stand-up'&&f.groundState!=='standing'){f.groundState='standing';def.groundState='standing';f.submitting=false;def.submitting=false;f.stamina=Math.max(0,f.stamina-10)}
   updateUI();return;
  }
- if(type==='guard'){f.guard=true;return}
- if(type==='dodge'){if(f.stamina>10){f.stamina-=10;f.dodge=.30;const v=currentMoveVector();f.evadeVector=v.lengthSq()>.01?v.clone():V(f===player?-1:1,0,0)}return}
+ if(type==='guard'){f.guard=true;playFighterClip(THREE,f,'guard');return}
+ if(type==='dodge'){if(f.stamina>10){f.stamina-=10;f.dodge=.30;playFighterClip(THREE,f,'dodge');const v=currentMoveVector();f.evadeVector=v.lengthSq()>.01?v.clone():V(f===player?-1:1,0,0)}return}
  if(f.groundState!=='standing')return;
  const spec=MOVES[type];if(!spec||f.stamina<spec.cost)return;
  f.stamina-=spec.cost;f.action=type;f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;playFighterClip(THREE,f,type);
@@ -85,7 +85,24 @@ function bindMove(btn){
  const up=e=>{e.preventDefault();touchMove.delete(dir);btn.classList.remove('active')};
  btn.addEventListener('pointerdown',down);['pointerup','pointercancel','lostpointercapture'].forEach(n=>btn.addEventListener(n,up));
 }
+
 document.querySelectorAll('[data-move]').forEach(bindMove);
+function populateRoster(select){select.innerHTML='';for(const p of ROSTER){const o=document.createElement('option');o.value=p.id;o.textContent=p.division+' — '+p.name;select.appendChild(o)}}
+const playerSelect=document.getElementById('player-roster'),enemySelect=document.getElementById('enemy-roster');
+populateRoster(playerSelect);populateRoster(enemySelect);playerSelect.value=player.profile.id;enemySelect.value=enemy.profile.id;
+function disposeFighter(f){scene.remove(f.root);f.root.traverse(o=>{o.geometry?.dispose?.();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose?.());else o.material?.dispose?.()})}
+function replaceFighter(which,id){const next=getFighter(id),old=which==='player'?player:enemy,side=which==='player'?-1:1;disposeFighter(old);const fresh=fighter(next,side);if(which==='player')player=fresh;else enemy=fresh;updateUI()}
+playerSelect.addEventListener('change',e=>replaceFighter('player',e.target.value));
+enemySelect.addEventListener('change',e=>replaceFighter('enemy',e.target.value));
+async function importMocap(input,which){
+ const file=input.files?.[0];if(!file)return;
+ const f=which==='player'?player:enemy;
+ try{const info=await loadFighterGLB(THREE,GLTFLoader,file,f);f.root.scale.y=1;document.getElementById('status').textContent=which.toUpperCase()+' MOCAP LOADED · '+info.clips.length+' CLIPS';}
+ catch(error){document.getElementById('status').textContent='MOCAP IMPORT FAILED: '+error.message;console.error(error)}
+}
+document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
+document.getElementById('e-mocap-file').addEventListener('change',e=>importMocap(e.target,'enemy'));
+updateUI();
 window.addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
  const alias={arrowup:'w',arrowdown:'s',arrowleft:'a',arrowright:'d'};keys.add(alias[k]||k);if(e.repeat)return;
