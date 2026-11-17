@@ -37,7 +37,7 @@ function fighter(name,side,skin,shorts,gloves,hair){const root=new THREE.Group()
  const limbs={};for(const s of ['L','R']){limbs['upperArm'+s]=capsule(rig,'upperArm'+s,.075,.32,skin);limbs['foreArm'+s]=capsule(rig,'foreArm'+s,.064,.29,skin);limbs['glove'+s]=sphere(rig,'glove'+s,.105,gloves,V());limbs['thigh'+s]=capsule(rig,'thigh'+s,.105,.39,skin);limbs['shin'+s]=capsule(rig,'shin'+s,.075,.36,skin);limbs['foot'+s]=new THREE.Mesh(new THREE.BoxGeometry(.16,.09,.29),material(0x17191e));limbs['foot'+s].castShadow=true;rig.add(limbs['foot'+s]);}
  const belt=new THREE.Mesh(new THREE.BoxGeometry(.43,.055,.29),material(0xc2a56c,.5,.35));rig.add(belt);belt.position.y=1.02;
  const eyes=[];for(const s of [-1,1]){const e=sphere(rig,'eye',.018,material(0x151515),V(s*.07,1.68,.17));eyes.push(e)}
- const state={name,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',skin};
+ const state={name,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,skin};
  return state}
 player=fighter('PLAYER',-1,skinA,shortA,gloveA,hairA);enemy=fighter('CPU',1,skinB,shortB,gloveB,hairB);
 function pose(f,t,moveSpeed,dt){animateFighter(f,t,moveSpeed,dt)}
@@ -54,9 +54,9 @@ function setAction(f,type){
   const def=f===player?enemy:player;
   if(type==='submission'&&['top-control','mount','back-control'].includes(f.groundState)){
    const tr=transitionGround(f.groundState,'submission',{stamina:f.stamina});
-   if(tr.ok){const progress=submissionProgress({control:72,attackerStamina:f.stamina,defenderStamina:def.stamina,defenderEscape:def.stamina*.22});f.stamina=Math.max(0,f.stamina-tr.staminaCost);if(progress>=55){endFight(f===player?'PLAYER WINS — SUBMISSION':'CPU WINS — SUBMISSION');return}document.getElementById('status').textContent='SUBMISSION ATTEMPT'}
+   if(tr.ok&&f.stamina>=tr.staminaCost){f.submissionFrom=f.groundState;f.groundState='submission';f.submitting=true;f.submissionProgress=0;f.stamina-=tr.staminaCost;document.getElementById('status').textContent='HOLD SUBMISSION TO FINISH'}
   }else if(type==='ground-pound'&&f.groundState==='top-control'){def.hp=Math.max(0,def.hp-5);def.stun=Math.max(def.stun,.12);audio.impact()}
-  else if(type==='stand-up'&&f.groundState!=='standing'){f.groundState='standing';def.groundState='standing';f.stamina=Math.max(0,f.stamina-10)}
+  else if(type==='stand-up'&&f.groundState!=='standing'){f.groundState='standing';def.groundState='standing';f.submitting=false;def.submitting=false;f.stamina=Math.max(0,f.stamina-10)}
   updateUI();return;
  }
  if(type==='guard'){f.guard=true;return}
@@ -64,7 +64,10 @@ function setAction(f,type){
  const spec=MOVES[type];if(!spec||f.stamina<spec.cost)return;
  f.stamina-=spec.cost;f.action=type;f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;
 }
-function releaseAction(f,type){if(type==='guard')f.guard=false}
+function releaseAction(f,type){
+ if(type==='guard')f.guard=false;
+ if(type==='submission'&&f.submitting){f.submitting=false;if(f.groundState==='submission')f.groundState=f.submissionFrom||'top-control';f.submissionFrom=null}
+}
 function bindAction(btn){
  const a=btn.dataset.action;
  const down=e=>{e.preventDefault();if(btn.setPointerCapture)btn.setPointerCapture(e.pointerId);setAction(player,a);btn.classList.add('active')};
@@ -115,6 +118,13 @@ function applyHit(att,def,type){
  return true;
 }
 function tickFighter(f,dt){
+ if(f.submitting){
+  const def=f===player?enemy:player;
+  const pressure=submissionProgress({control:75,attackerStamina:f.stamina,defenderStamina:def.stamina,defenderEscape:def.stamina*.05});
+  f.submissionProgress+=dt*pressure*.45;f.stamina=Math.max(0,f.stamina-dt*1.5);
+  if(f.submissionProgress>=100){endFight(f===player?'PLAYER WINS — SUBMISSION':'CPU WINS — SUBMISSION');return}
+  if(f.stamina<=0)releaseAction(f,'submission');
+ }
  f.stamina=clamp(f.stamina+dt*(f.guard?2.1:7.2),0,100);
  f.hitFlash=Math.max(0,f.hitFlash-dt);f.knock=Math.max(0,f.knock-dt);f.dodge=Math.max(0,f.dodge-dt);f.stun=Math.max(0,(f.stun||0)-dt);
  if(f.action){
