@@ -21,17 +21,16 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  if(!gltf.animations?.length)throw new Error('GLB has no animation clips');
  const model=gltf.scene;model.name='FIGHTROOM_MOCAP_CHARACTER';
  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ const rigReport=inspectHumanoidRig(model);
+ if(!rigReport.compatible)throw new Error('Incompatible humanoid rig: '+rigReport.foundCore+'/7 core landmarks detected');
+ if(fighter.externalModel)fighter.root.remove(fighter.externalModel);
  fighter.root.add(model);
  const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
  if(size.y>0){const scale=1.78/size.y;model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale)}
  fighter.externalModel=model;
- const rigReport=inspectHumanoidRig(model);
- if(!rigReport.compatible)throw new Error('Incompatible humanoid rig: '+rigReport.foundCore+'/7 core landmarks detected');
- if(fighter.externalModel)fighter.root.remove(fighter.externalModel);
  fighter.rig.visible=false;
  const appliedMorphs=applyCharacterMorphs(model,fighter.profile);
- fighter.rigReport=rigReport;
- fighter.appliedMorphs=appliedMorphs;
+ fighter.rigReport=rigReport;fighter.appliedMorphs=appliedMorphs;
  fighter.mixer=new THREE.AnimationMixer(model);
  fighter.clips=gltf.animations;
  fighter.clipActions=new Map();
