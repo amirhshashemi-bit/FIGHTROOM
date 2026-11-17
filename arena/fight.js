@@ -52,7 +52,8 @@ player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('kwame-boat
 function pose(f,t,moveSpeed,dt){
  if(f.mixer){
   updateFighterMocap(THREE,f,dt,moveSpeed);
-  const unsupported=(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||(f.groundState!=='standing'&&!hasFighterClip(f,'ground-control'));
+  const groundClipMissing=f.groundState==='submission'?!hasFighterClip(f,'submission'):(f.groundState!=='standing'&&!hasFighterClip(f,'ground-control'));
+  const unsupported=(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||groundClipMissing;
   if(!unsupported)return;
   f.externalModel.visible=false;f.rig.visible=true;f.mixer.stopAllAction();f.mixer=null;f.currentAction=null;f.currentClip=null;
  }
