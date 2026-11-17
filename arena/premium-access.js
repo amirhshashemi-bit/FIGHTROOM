@@ -14,6 +14,10 @@ export const PREMIUM_COMBAT_ACTIONS = Object.freeze([
   'flying-knee'
 ]);
 
+export function canUseCombatAction(action, premiumActive) {
+  return !PREMIUM_COMBAT_ACTIONS.includes(action) || premiumActive === true;
+}
+
 export function validatePremiumEntitlement(value, now = Date.now()) {
   if (!value || typeof value !== 'object') return false;
   if (value.productId !== PREMIUM_PRODUCT_ID) return false;
