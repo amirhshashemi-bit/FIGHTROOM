@@ -1,0 +1,94 @@
+name: Import licensed ACCAD martial arts mocap
+on:
+  push:
+    branches: [arena-combat-foundation]
+    paths:
+      - ".github/workflows/import-accad-mocap.yml"
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: arena-combat-foundation
+          fetch-depth: 0
+      - name: Download and extract ACCAD BVH archive
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 2 \
+            "https://accad.ohio-state.edu/sites/accad.osu.edu/files/Male2_bvh.zip" \
+            -o /tmp/Male2_bvh.zip
+          unzip -q /tmp/Male2_bvh.zip -d /tmp/accad
+          mkdir -p arena/assets/mocap/accad
+          files=(
+            Male2_A1_Stand.bvh
+            Male2_B3_Walk.bvh
+            Male2_E1_JabLeft.bvh
+            Male2_E2_JabRight.bvh
+            Male2_E3_CrossLeft.bvh
+            Male2_E4_CrossRight.bvh
+            Male2_E5_HookLeft.bvh
+            Male2_E6_HookRight.bvh
+            Male2_E11_BackfistLeft.bvh
+            Male2_E12_BackfistRight.bvh
+            Male2_G2_FrontKick.bvh
+            Male2_G8_RoundhouseLeft.bvh
+            Male2_G9_RoundhouseRight.bvh
+            Male2_G17_PushKickLeft.bvh
+            Male2_G18_PushKickRight.bvh
+            Male2_E13_BlockLeftHigh.bvh
+            Male2_E15_BlockLeftMiddle.bvh
+            Male2_E19_DodgeLeft.bvh
+            Male2_E20_DodgeRight.bvh
+            Male2_A9_Lie.bvh
+            Male2_A10_LieToCrouch.bvh
+            Male2_A11_Crawl.bvh
+          )
+          for f in "${files[@]}"; do
+            src="$(find /tmp/accad -type f -name "$f" -print -quit)"
+            test -n "$src"
+            cp "$src" "arena/assets/mocap/accad/$f"
+          done
+      - name: Validate selected clips and write attribution manifest
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, re
+          root=Path('arena/assets/mocap/accad')
+          entries=[]
+          for path in sorted(root.glob('*.bvh')):
+              data=path.read_text(errors='strict')
+              required=['HIERARCHY','ROOT Hips','MOTION','Frames:','Frame Time:']
+              if not all(token in data for token in required):
+                  raise SystemExit(f'Invalid BVH structure: {path.name}')
+              frames=int(re.search(r'Frames:\s*(\d+)',data).group(1))
+              bones=re.findall(r'JOINT\s+([^\s{]+)',data)
+              if frames < 2 or not {'Head','LeftArm','RightArm','LeftUpLeg','RightUpLeg'}.issubset(set(bones)):
+                  raise SystemExit(f'Incomplete humanoid motion: {path.name}')
+              entries.append({'file':path.name,'frames':frames,'fps':round(1/float(re.search(r'Frame Time:\s*([0-9.]+)',data).group(1)),3),'bytes':path.stat().st_size,'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'source':'Open Motion Project / ACCAD, The Ohio State University','license':'CC BY 3.0'})
+          (root/'manifest.json').write_text(json.dumps({'asset_pack':'ACCAD Male 2 BVH selected martial arts clips','count':len(entries),'clips':entries},indent=2)+'\n')
+          print('Validated BVH clips:',len(entries))
+          PY
+          cat > arena/assets/mocap/accad/NOTICE.md <<'EOF'
+          # ACCAD motion capture attribution
+          Motion data: Open Motion Project by ACCAD / The Ohio State University.
+          License: Creative Commons Attribution 3.0 Unported (CC BY 3.0).
+          Source: https://accad.ohio-state.edu/research/motion-lab/mocap-system-and-data
+          Original archive: https://accad.ohio-state.edu/sites/accad.osu.edu/files/Male2_bvh.zip
+          The source inventory identifies the selected motions as real motion-capture takes, including boxing punches, kicks, blocks, dodges, stance, lie-down and crawl motions. These are single-performer motions, not paired wrestling/submission capture.
+          FIGHTROOM stores selected source BVH files unmodified. File checksums and frame metadata are in manifest.json.
+          EOF
+          sha256sum arena/assets/mocap/accad/*.bvh > arena/assets/mocap/accad/SHA256SUMS
+      - name: Commit selected licensed source clips
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add arena/assets/mocap/accad
+          if git diff --cached --quiet; then echo "No new mocap assets"; exit 0; fi
+          git commit -m "Import selected ACCAD CC BY 3.0 martial arts mocap clips"
+          git push origin HEAD:arena-combat-foundation
