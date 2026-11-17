@@ -107,8 +107,9 @@ function applyHit(att,def,type){
  def.hitFlash=result.result==='blocked'?.09:.18;def.stun=Math.max(def.stun||0,result.stun||0);
  if(result.result==='blocked')audio.block();else{audio.strike();audio.impact()}
  if(type==='takedown'&&result.result==='hit'){
-  const a=transitionGround('standing','clinch',{stamina:att.stamina}),d=transitionGround('standing','clinch',{stamina:def.stamina});
-  if(a.ok&&d.ok){att.groundState='top-control';def.groundState='bottom-guard';att.stamina=Math.max(0,att.stamina-14);def.knock=Math.max(def.knock,.72);def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*.18}
+  const a=transitionGround(att.groundState,'clinch',{stamina:att.stamina}),d=transitionGround(def.groundState,'clinch',{stamina:def.stamina});
+  const finish=a.ok&&d.ok?transitionGround('clinch','takedown',{stamina:att.stamina}):{ok:false};
+  if(finish.ok){att.groundState='top-control';def.groundState='bottom-guard';att.stamina=Math.max(0,att.stamina-finish.staminaCost);def.knock=Math.max(def.knock,.72);def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*.18}
  }
  else if(result.knockback)def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*result.knockback;
  return true;
