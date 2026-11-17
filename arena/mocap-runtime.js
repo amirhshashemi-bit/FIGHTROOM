@@ -82,7 +82,7 @@ export async function loadFighterBVH(THREE,file,fighter){
  if(!mapping.compatible)throw new Error('BVH skeleton mapping incomplete: '+mapping.mappedCount+' bones mapped');
  const sourceHip=sourceSkeleton.bones.find(b=>semanticBone(b.name)==='hips')?.name||sourceSkeleton.bones[0].name;
  const clip=SkeletonUtils.retargetClip(target,sourceSkeleton,parsed.clip,{names,hip:sourceHip,fps:30,useFirstFramePosition:false,preserveBoneMatrix:true,preserveBonePositions:true});
- clip.name=file.name.replace(/\\.bvh$/i,'').replace(/[^a-z0-9_-]/gi,'-').toLowerCase();
+ clip.name=file.name.replace(/\.bvh$/i,'').replace(/[^a-z0-9_-]/gi,'-').toLowerCase();
  if(!clip.tracks?.length)throw new Error('Retarget produced an empty animation clip');
  if(!fighter.mixer)fighter.mixer=new THREE.AnimationMixer(fighter.externalModel);
  fighter.clips=[...(fighter.clips||[]),clip];
