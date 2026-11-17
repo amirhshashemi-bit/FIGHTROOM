@@ -20,7 +20,8 @@ jobs:
           node --check arena/fight.js
           node --check arena/motion.js
           node --check arena/combat-rules.js
-      - name: Run deterministic combat tests
+          node --check arena/combat-ai.js
+      - name: Run deterministic combat and AI tests
         working-directory: arena
         run: npm run test:combat
       - name: Validate venue catalogue
