@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULT_CUSTOM_FIGHTER,MOVE_CATALOG,normalizeCustomFighter} from './character-creator.js';
+import {DEFAULT_CUSTOM_FIGHTER,MOVE_CATALOG,getBodyMetrics,normalizeCustomFighter} from './character-creator.js';
 
 test('custom fighter profile clamps body dimensions and combat attributes',()=>{
  const p=normalizeCustomFighter({name:'  Test Fighter  ',height:999,reach:1,power:200,body:{shoulders:9,chest:.1,arms:1.1,legs:.9}});
@@ -15,4 +15,14 @@ test('premium move catalogue has unique individually priced entries',()=>{
 test('default custom fighter is fictional and starts with a limited starter move set',()=>{
  const p=normalizeCustomFighter(DEFAULT_CUSTOM_FIGHTER);
  assert.equal(p.custom,true);assert.ok(p.ownedMoves.includes('signature-jab'));assert.ok(!p.ownedMoves.includes('flying-knee'));
+});
+
+test('body metrics reflect height, weight, reach and proportion sliders',()=>{
+ const base=getBodyMetrics(DEFAULT_CUSTOM_FIGHTER);
+ const larger=getBodyMetrics({...DEFAULT_CUSTOM_FIGHTER,height:200,weight:110,reach:210,body:{shoulders:1.2,chest:1.1,arms:1.15,legs:1.05}});
+ assert.ok(larger.height>base.height);assert.ok(larger.mass>base.mass);assert.ok(larger.reach>base.reach);assert.ok(larger.shoulders>base.shoulders);
+});
+test('equipped move slots can only contain owned moves',()=>{
+ const p=normalizeCustomFighter({ownedMoves:['signature-jab'],equippedMoves:['signature-jab','flying-knee']});
+ assert.deepEqual(p.equippedMoves,['signature-jab']);
 });
