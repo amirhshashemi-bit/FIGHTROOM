@@ -55,8 +55,10 @@ function pose(f,t,moveSpeed,dt){
   updateFighterMocap(THREE,f,dt,moveSpeed);
   const groundClipMissing=f.groundState==='submission'?!hasFighterClip(f,'submission'):(f.groundState!=='standing'&&!hasFighterClip(f,'ground-control'));
   const unsupported=(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||groundClipMissing;
-  if(!unsupported)return;
-  f.externalModel.visible=false;f.rig.visible=true;f.mixer.stopAllAction();f.mixer=null;f.currentAction=null;f.currentClip=null;
+  if(!unsupported){f.externalModel.visible=true;f.rig.visible=false;return;}
+  // Keep the imported mixer alive: procedural fallback is temporary and can
+  // hand control back to a later supported mocap clip without re-importing.
+  f.externalModel.visible=false;f.rig.visible=true;
  }
  animateFighter(f,t,moveSpeed,dt);
  }
