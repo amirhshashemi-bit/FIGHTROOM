@@ -22,5 +22,6 @@ test('profile proportions apply only to matching morph targets and clamp values'
  const mesh={morphTargetDictionary:{shoulder_width:0,chest_size:1,arm_size:2},morphTargetInfluences:[0,0,0]};
  const applied=applyCharacterMorphs(mockRoot([mesh]),{body:{shoulders:1.2,chest:.7,arms:1.8,legs:1.1}});
  assert.deepEqual(applied.sort(),['arms','chest','shoulders']);
- assert.deepEqual(mesh.morphTargetInfluences,[.2,-.3,.3]);
+ assert.ok(Math.abs(mesh.morphTargetInfluences[0]-.2)<1e-9);
+ assert.deepEqual(mesh.morphTargetInfluences.slice(1),[-.3,.3]);
 });
