@@ -18,6 +18,13 @@ function shape(type,p){
  if(type==='low'){m.kick=.9*h;m.lean=-.09*h;m.level=-.08*h;m.turn=-.12*h}
  if(type==='high'){m.kick=1.16*h;m.lean=-.2*h;m.level=-.04*h;m.turn=-.1*h}
  if(type==='takedown'){m.left=.58*h;m.right=.58*h;m.lean=.48*h;m.level=-.24*h}
+ if(type==='spinning-backfist'){m.right=.9*h;m.turn=.78*h;m.lean=.13*h}
+ if(type==='superman-punch'){m.right=1.18*h;m.left=.22*h;m.lean=.30*h;m.turn=.30*h;m.level=-.08*h}
+ if(type==='switch-kick'){m.kick=1.02*h;m.turn=.28*h;m.lean=-.12*h;m.level=-.04*h}
+ if(type==='question-mark-kick'){m.kick=1.22*h;m.turn=.42*h;m.lean=-.24*h;m.level=-.10*h}
+ if(type==='spinning-elbow'){m.left=.78*h;m.right=.35*h;m.turn=.72*h;m.lean=.08*h}
+ if(type==='flying-knee'){m.kick=.95*h;m.left=.55*h;m.right=.55*h;m.lean=.18*h;m.level=-.16*h}
+ if(type==='ground-pound'){m.left=.9*h;m.right=.9*h;m.lean=.24*h;m.level=-.10*h}
  return m;
 }
 function segment(mesh,a,b,dt){
