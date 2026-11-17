@@ -11,7 +11,7 @@ test('custom fighter profile clamps body dimensions and combat attributes',()=>{
 test('premium move catalogue has unique individually priced entries',()=>{
  assert.ok(MOVE_CATALOG.length>=8);
  assert.equal(new Set(MOVE_CATALOG.map(m=>m.id)).size,MOVE_CATALOG.length);
- for(const move of MOVE_CATALOG){assert.ok(move.name&&move.category&&move.price>0&&move.baseMove&&move.clip)}
+ for(const move of MOVE_CATALOG){assert.ok(move.name&&move.category&&move.price>0&&(move.baseMove||move.action)&&move.clip)}
 });
 test('default custom fighter is fictional and starts with a limited starter move set',()=>{
  const p=normalizeCustomFighter(DEFAULT_CUSTOM_FIGHTER);
