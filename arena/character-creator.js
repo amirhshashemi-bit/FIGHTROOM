@@ -15,7 +15,7 @@ export const MOVE_CATALOG = [
   {id:'armbar-transition',name:'Armbar Transition',category:'Ground',price:190,baseMove:'submission',clip:'armbar'}
 ];
 export const DEFAULT_CUSTOM_FIGHTER = {
-  id:'custom-player', name:'My Fighter', division:'Custom', weight:77, height:180, reach:184, country:'Iran', countryCode:'IR',
+  id:'custom-player', name:'My Fighter', gender:'male', division:'Custom', weight:77, height:180, reach:184, country:'Iran', countryCode:'IR',
   stance:'Orthodox', style:'All-rounder', country:'Custom', skin:0xb97855, hair:0x211914,
   shorts:0x26313c, gloves:0x9e2733, eye:0x3b2418,
   power:80,speed:80,wrestling:80,cardio:80,
@@ -28,6 +28,7 @@ export function normalizeCustomFighter(raw={}){
  return {
   ...d,...raw,id:'custom-player',custom:true,
   name:String(raw.name||d.name).trim().slice(0,24)||d.name,
+  gender:raw.gender==='female'?'female':'male',
   countryCode:resolveCountryCode(raw.countryCode||raw.country||d.countryCode),
   country:countryNameForCode(resolveCountryCode(raw.countryCode||raw.country||d.countryCode),'en'),
   height:clamp(raw.height??d.height,150,215),reach:clamp(raw.reach??d.reach,145,230),weight:clamp(raw.weight??d.weight,45,150),
@@ -54,6 +55,7 @@ export function saveCustomFighter(profile){
 export function getBodyMetrics(profile={}){
  const body=profile.body||{},height=Math.max(150,Math.min(215,Number(profile.height)||180)),weight=Math.max(45,Math.min(150,Number(profile.weight)||77));
  const bmi=weight/((height/100)**2),baseBmi=77/(1.8**2),mass=Math.max(.86,Math.min(1.18,Math.sqrt(bmi/baseBmi)));
+ const female=profile.gender==='female'||String(profile.division||'').startsWith('Women');
  const factor=(key)=>Math.max(.75,Math.min(1.3,Number(body[key])||1));
- return {mass,shoulders:factor('shoulders')*mass,chest:factor('chest')*mass,arms:factor('arms')*Math.sqrt(mass),legs:factor('legs')*Math.sqrt(mass),reach:Math.max(.82,Math.min(1.18,(Number(profile.reach)||180)/180)),height:height/180};
+ return {mass,shoulders:factor('shoulders')*mass*(female?.94:1),chest:factor('chest')*mass,arms:factor('arms')*Math.sqrt(mass)*(female?.96:1),legs:factor('legs')*Math.sqrt(mass)*(female?1.03:1),hips:factor('hips')*mass*(female?1.09:1),reach:Math.max(.82,Math.min(1.18,(Number(profile.reach)||180)/180)),height:height/180};
 }
