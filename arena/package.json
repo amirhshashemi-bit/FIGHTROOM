@@ -1,0 +1,8 @@
+{
+  "name": "fightroom-arena-combat",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:combat": "node --test combat-rules.test.js"
+  }
+}
