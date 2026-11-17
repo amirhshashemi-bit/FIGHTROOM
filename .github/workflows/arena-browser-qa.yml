@@ -1,6 +1,6 @@
 name: Arena browser visual QA
 concurrency:
-  group: arena-browser-qa-${{ github.head_ref || github.ref }}
+  group: arena-browser-qa-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 on:
   pull_request:
