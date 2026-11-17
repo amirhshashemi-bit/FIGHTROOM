@@ -41,7 +41,7 @@ Do not mark motion capture as installed until a real source file is checked into
 - Workflow: `.github/workflows/import-cc0-character.yml`
 - Target branch: `arena-combat-foundation` only; `main` is not modified.
 - The workflow downloads the exact pinned upstream GLB, validates the GLB v2 container, meshes, skin, and embedded clips, and generates a SHA-256 checksum plus this asset notice.
-- Repository status remains **pending workflow verification** until the binary, checksum, and notice are visible in the feature branch.
+- Repository status: **imported and verified in the feature branch**; the GLB path, matching upstream Git blob SHA, checksum file and licence notice are present.
 - Even after successful import, the asset remains a male anatomical base with locomotion clips; it is not a finished MMA fighter or a 24-character roster pack.
 
 
