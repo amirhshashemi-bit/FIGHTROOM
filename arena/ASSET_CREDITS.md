@@ -35,3 +35,11 @@ Do not mark motion capture as installed until a real source file is checked into
 - Direct download: https://raw.githubusercontent.com/kblood/CharacterCreator/852e48f316b90a0937234886630e4fb4cdfd1f78/output/base_body_anim.glb
 - Status: verified in upstream Git tree and linked from FIGHTROOM creator panel; not copied into FIGHTROOM repository because the GitHub content connector cannot retrieve binary blobs. This is a male anatomical base with general locomotion clips, not a complete dressed MMA fighter asset. Further clothing, female base, and MMA clip integration are required.
 - License notes: https://github.com/kblood/CharacterCreator/blob/852e48f316b90a0937234886630e4fb4cdfd1f78/LICENSE-NOTES.md
+
+
+## Automated pinned asset retrieval
+- Workflow: `.github/workflows/import-cc0-character.yml`
+- Target branch: `arena-combat-foundation` only; `main` is not modified.
+- The workflow downloads the exact pinned upstream GLB, validates the GLB v2 container, meshes, skin, and embedded clips, and generates a SHA-256 checksum plus this asset notice.
+- Repository status remains **pending workflow verification** until the binary, checksum, and notice are visible in the feature branch.
+- Even after successful import, the asset remains a male anatomical base with locomotion clips; it is not a finished MMA fighter or a 24-character roster pack.
