@@ -13,3 +13,4 @@ test('advanced strikes resolve through the same range and defense engine',()=>{a
 test('unknown move is rejected',()=>assert.equal(resolveStrike({move:'teleport',distance:1,inFront:true}).result,'invalid'));
 test('CPU policy is deterministic for identical state and seed',()=>{const s={distance:1.7,playerAttacking:true,playerGuarding:false,stamina:80,seed:17};assert.deepEqual(chooseCpuAction(s),chooseCpuAction(s))});
 test('CPU approaches, retreats from clinch distance and recovers at low stamina',()=>{assert.equal(chooseCpuAction({distance:3,seed:1}).action,'approach');assert.equal(chooseCpuAction({distance:.5,seed:1}).action,'retreat');assert.equal(chooseCpuAction({distance:1,stamina:5,seed:1}).action,'guard')});
+test('high-wrestling CPU can select a takedown entry at close range',()=>{assert.equal(chooseCpuAction({distance:1.2,wrestling:95,seed:1972}).action,'takedown');assert.notEqual(chooseCpuAction({distance:1.2,wrestling:70,seed:1972}).action,'takedown')});
