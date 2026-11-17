@@ -195,6 +195,26 @@ async function importMocap(input,which){
 }
 document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
 document.getElementById('e-mocap-file').addEventListener('change',e=>importMocap(e.target,'enemy'));
+const ACCAD_DEMO_CLIPS=['Male2_A1_Stand.bvh','Male2_E1_JabLeft.bvh','Male2_E3_CrossLeft.bvh','Male2_G8_RoundhouseLeft.bvh','Male2_E11_BlockLeftHigh.bvh','Male2_E19_DodgeLeft.bvh','Male2_A9_Lie.bvh','Male2_A10_LieToCrouch.bvh'];
+async function loadBundledAccadPack(which){
+ const f=which==='player'?player:enemy,status=byId('mocap-status');
+ try{
+  status.textContent='Loading licensed ACCAD test rig and real motion-capture clips…';
+  const modelResponse=await fetch(new URL('./assets/models/cc0-base-body-anim.glb',import.meta.url));
+  if(!modelResponse.ok)throw new Error('CC0 test rig download failed: '+modelResponse.status);
+  const modelFile=new File([await modelResponse.arrayBuffer()],'accad-test-rig.glb',{type:'model/gltf-binary'});
+  const modelInfo=await loadFighterGLB(THREE,GLTFLoader,modelFile,f);f.root.scale.y=1;
+  let loaded=0,lastInfo=null;
+  for(const name of ACCAD_DEMO_CLIPS){
+   const response=await fetch(new URL('./assets/mocap/accad/'+name,import.meta.url));
+   if(!response.ok)throw new Error('Missing ACCAD clip '+name+' ('+response.status+')');
+   const file=new File([await response.arrayBuffer()],name,{type:'application/octet-stream'});
+   lastInfo=await loadFighterBVH(THREE,file,f);loaded++;
+  }
+  status.textContent=which.toUpperCase()+' · ACCAD REAL MOCAP READY · '+loaded+' CLIPS · '+lastInfo.mappedBones+' BONES MAPPED · TEST RIG (MALE BASE)';
+ }catch(error){status.textContent='ACCAD PACK LOAD FAILED: '+error.message;console.error(error)}
+}
+document.querySelectorAll('[data-load-accad]').forEach(btn=>btn.addEventListener('click',()=>loadBundledAccadPack(btn.dataset.loadAccad)));
 updateUI();
 window.addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
