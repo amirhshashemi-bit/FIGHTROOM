@@ -3,7 +3,7 @@ import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/
 import { ROSTER, getFighter } from './roster.js';
 import { getCountryOptions, countryFlag, resolveCountryCode } from './countries.js';
 import { DEFAULT_CUSTOM_FIGHTER, MOVE_CATALOG, getBodyMetrics, loadCustomFighter, normalizeCustomFighter, saveCustomFighter } from './character-creator.js';
-import { loadFighterGLB, playFighterClip, updateFighterMocap, hasFighterClip } from './mocap-runtime.js';
+import { loadFighterGLB, loadFighterBVH, playFighterClip, updateFighterMocap, hasFighterClip } from './mocap-runtime.js';
 import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
 import { chooseCpuAction } from './combat-ai.js';
@@ -175,8 +175,15 @@ document.querySelectorAll('[data-custom-move]').forEach(btn=>btn.addEventListene
 async function importMocap(input,which){
  const file=input.files?.[0];if(!file)return;
  const f=which==='player'?player:enemy;
- try{const info=await loadFighterGLB(THREE,GLTFLoader,file,f);f.root.scale.y=1;document.getElementById('status').textContent=which.toUpperCase()+' MOCAP · '+info.clips.length+' CLIPS · RIG '+(info.rig.compatible?'COMPATIBLE':'PARTIAL')+' ('+info.rig.foundCore+'/7) · MORPHS '+info.appliedMorphs.length;}
- catch(error){document.getElementById('status').textContent='MOCAP IMPORT FAILED: '+error.message;console.error(error)}
+ try{
+  if(file.name.toLowerCase().endsWith('.bvh')){
+   const info=await loadFighterBVH(THREE,file,f);
+   document.getElementById('status').textContent=which.toUpperCase()+' BVH RETARGETED · '+info.mappedBones+' BONES · '+info.tracks+' TRACKS';
+  }else{
+   const info=await loadFighterGLB(THREE,GLTFLoader,file,f);f.root.scale.y=1;
+   document.getElementById('status').textContent=which.toUpperCase()+' MOCAP MODEL · '+info.clips.length+' CLIPS · RIG '+info.rig.foundCore+'/7 · MORPHS '+info.appliedMorphs.length;
+  }
+ }catch(error){document.getElementById('status').textContent='MOCAP IMPORT FAILED: '+error.message;console.error(error)}
 }
 document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
 document.getElementById('e-mocap-file').addEventListener('change',e=>importMocap(e.target,'enemy'));
