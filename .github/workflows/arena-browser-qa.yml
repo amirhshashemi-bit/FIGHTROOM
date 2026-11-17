@@ -22,8 +22,10 @@ jobs:
         with:
           node-version: 20
       - name: Install Playwright
+        working-directory: arena
         run: npm install --no-save @playwright/test
       - name: Install Chromium
+        working-directory: arena
         run: npx playwright install --with-deps chromium
       - name: Start local project server
         run: |
