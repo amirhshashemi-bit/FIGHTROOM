@@ -8,3 +8,10 @@
 .move-pad button.active{background:#28648b;border-color:#74c9ff}
 .pad button{min-height:42px;touch-action:none;user-select:none;-webkit-user-select:none}
 @media(max-width:760px){.mobile-controls{align-items:center;gap:8px}.move-pad{min-width:112px}.move-pad button{width:34px;height:38px}.pad{flex:1;grid-template-columns:repeat(2,minmax(68px,1fr));gap:5px}.pad button{padding:10px 5px;font-size:11px}.controls{padding:10px 0}.stage{touch-action:pan-y}.control-copy small{font-size:9px}}
+
+.arena-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;background:#101a27;border:1px solid #29384b;border-radius:4px;color:#9eb0c3;font:11px 'Barlow Condensed',sans-serif;letter-spacing:1px}
+.arena-toolbar select,.arena-toolbar button{background:#182638;color:#edf3f8;border:1px solid #40546d;border-radius:3px;padding:8px 12px;font:600 12px 'Barlow Condensed',sans-serif;letter-spacing:1px}
+.arena-toolbar button{cursor:pointer}
+.arena-toolbar span{margin-inline-start:auto}
+.pad button[data-action="ground-pound"],.pad button[data-action="submission"],.pad button[data-action="stand-up"]{background:#503d24;border-color:#8c7044}
+@media(max-width:700px){.arena-toolbar{gap:7px}.arena-toolbar span{width:100%;margin:0}.arena-toolbar select{flex:1;min-width:130px}.stage{min-height:340px;height:52vh}}
