@@ -37,6 +37,7 @@ function point(mesh,target,dt){mesh.position.lerp(target,1-Math.exp(-dt*23))}
 export function animateFighter(f,t,moveSpeed,dt){
  const p=f.action?clamp(f.actionTime/Math.max(.01,f.actionDuration),0,1):0;
  const m=f.action?shape(f.action,p):{left:0,right:0,kick:0,lean:0,turn:0,level:0};
+ if(f.groundState==='submission'){m.left=.48;m.right=.48;m.lean=.18;m.level=-.08;}
  if(f.profile?.stance==='Southpaw'){const lead=m.left;m.left=m.right;m.right=lead;}
  const locomotion=clamp(moveSpeed/2.2,0,1),cycle=t*8.6+f.side,stride=locomotion*Math.sin(cycle);
  const bob=Math.sin(t*2.7+f.side)*.012+Math.abs(Math.sin(cycle))*.018*locomotion;
