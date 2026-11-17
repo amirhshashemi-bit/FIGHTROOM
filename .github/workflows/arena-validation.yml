@@ -1,0 +1,21 @@
+name: Arena combat validation
+on:
+  pull_request:
+    paths:
+      - "arena/**"
+  push:
+    branches: [arena-combat-foundation]
+    paths:
+      - "arena/**"
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check combat JavaScript syntax
+        run: node --check arena/fight.js
+      - name: Validate venue catalogue
+        run: node -e "const v=require('./arena/data/venues.json'); if(v.venues.length!==10) process.exit(1); console.log('10 venue records validated')"
