@@ -243,7 +243,13 @@ function cpu(dt){
  if(ended||bout.phase!=='fight'||enemy.hp<=0)return;
  if(enemy.groundState!=='standing'||player.groundState!=='standing'){
   enemy.guard=false;enemy.move.set(0,0,0);enemy.aiThink-=dt;
-  if(enemy.aiThink<=0){enemy.aiThink=.8;if(enemy.groundState==='top-control')setAction(enemy,'ground-pound');else if(['mount','back-control'].includes(enemy.groundState))setAction(enemy,'submission');else if(enemy.groundState!=='standing')setAction(enemy,'stand-up')}
+  if(enemy.aiThink<=0){enemy.aiThink=.8;
+   if(enemy.groundState==='clinch')setAction(enemy,'takedown');
+   else if(enemy.groundState==='top-control'&&player.groundState==='bottom-guard')setAction(enemy,'ground-pound');
+   else if(['mount','back-control'].includes(enemy.groundState))setAction(enemy,'submission');
+   else if(enemy.groundState==='bottom-guard'&&player.groundState==='top-control'&&enemy.profile.wrestling>=player.profile.wrestling-10)setAction(enemy,'sweep');
+   else if(enemy.groundState!=='standing')setAction(enemy,'escape')
+  }
   return;
  }
  enemy.aiThink-=dt;
