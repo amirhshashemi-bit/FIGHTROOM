@@ -32,8 +32,84 @@ function fighter(name,side,skin,shorts,gloves,hair){const root=new THREE.Group()
 player=fighter('PLAYER',-1,skinA,shortA,gloveA,hairA);enemy=fighter('CPU',1,skinB,shortB,gloveB,hairB);
 function pose(f,t,moveSpeed,dt){animateFighter(f,t,moveSpeed,dt)}
 function resize(){const w=mount.clientWidth,h=mount.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(mount);resize();
-const keys=new Set(),touchMove=new Set();let moveVector=V();
+const keys=new Set(),touchMove=new Set();
 function currentMoveVector(){
+ const x=(keys.has('d')?1:0)-(keys.has('a')?1:0)+(touchMove.has('right')?1:0)-(touchMove.has('left')?1:0);
+ const z=(keys.has('s')?1:0)-(keys.has('w')?1:0)+(touchMove.has('down')?1:0)-(touchMove.has('up')?1:0);
+ const v=V(x,0,z);return v.lengthSq()>1?v.normalize():v;
+}
+function setAction(f,type){
+ if(ended||f.action||f.knock>0||f.stun>0)return;
+ if(type==='guard'){f.guard=true;return}
+ if(type==='dodge'){if(f.stamina>10){f.stamina-=10;f.dodge=.30;const v=currentMoveVector();f.evadeVector=v.lengthSq()>.01?v.clone():V(f===player?-1:1,0,0)}return}
+ const spec=MOVES[type];if(!spec||f.stamina<spec.cost)return;
+ f.stamina-=spec.cost;f.action=type;f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;
+}
+function releaseAction(f,type){if(type==='guard')f.guard=false}
+function bindAction(btn){
+ const a=btn.dataset.action;
+ const down=e=>{e.preventDefault();if(btn.setPointerCapture)btn.setPointerCapture(e.pointerId);setAction(player,a);btn.classList.add('active')};
+ const up=e=>{e.preventDefault();releaseAction(player,a);btn.classList.remove('active')};
+ btn.addEventListener('pointerdown',down);['pointerup','pointercancel','lostpointercapture'].forEach(n=>btn.addEventListener(n,up));
+}
+document.querySelectorAll('[data-action]').forEach(bindAction);
+function bindMove(btn){
+ const dir=btn.dataset.move;
+ const down=e=>{e.preventDefault();if(btn.setPointerCapture)btn.setPointerCapture(e.pointerId);touchMove.add(dir);btn.classList.add('active')};
+ const up=e=>{e.preventDefault();touchMove.delete(dir);btn.classList.remove('active')};
+ btn.addEventListener('pointerdown',down);['pointerup','pointercancel','lostpointercapture'].forEach(n=>btn.addEventListener(n,up));
+}
+document.querySelectorAll('[data-move]').forEach(bindMove);
+window.addEventListener('keydown',e=>{
+ const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
+ const alias={arrowup:'w',arrowdown:'s',arrowleft:'a',arrowright:'d'};keys.add(alias[k]||k);if(e.repeat)return;
+ const map={j:'jab',l:'cross',k:'hook',u:'low',i:'high',o:'takedown',' ':'guard',shift:'dodge'};if(map[k])setAction(player,map[k]);
+});
+window.addEventListener('keyup',e=>{
+ const k=e.key.toLowerCase(),alias={arrowup:'w',arrowdown:'s',arrowleft:'a',arrowright:'d'};
+ keys.delete(alias[k]||k);if(k===' ')releaseAction(player,'guard');
+});
+function distance(a,b){return a.root.position.distanceTo(b.root.position)}
+function face(a,b){const dx=b.root.position.x-a.root.position.x;a.root.rotation.y=Math.atan2(dx,Math.abs(b.root.position.z-a.root.position.z)+.001)*(a.side<0?1:-1);a.root.rotation.y=a.side<0?Math.PI/2:-Math.PI/2;}
+function inFront(att,def){
+ const dx=def.root.position.x-att.root.position.x,dz=def.root.position.z-att.root.position.z;
+ const forward=V(Math.sin(att.root.rotation.y),0,Math.cos(att.root.rotation.y));
+ return dx*forward.x+dz*forward.z>.35;
+}
+function applyHit(att,def,type){
+ const result=resolveStrike({move:type,distance:distance(att,def),inFront:inFront(att,def),guard:def.guard,evading:def.dodge>0,defenderStamina:def.stamina});
+ if(['invalid','miss','evaded'].includes(result.result))return false;
+ def.hp=Math.max(0,def.hp-result.damage);def.stamina=Math.max(0,def.stamina-result.staminaLoss);
+ def.hitFlash=result.result==='blocked'?.09:.18;def.stun=Math.max(def.stun||0,result.stun||0);
+ if(type==='takedown'&&result.result==='hit'){def.knock=Math.max(def.knock,.72);def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*.18}
+ else if(result.knockback)def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*result.knockback;
+ return true;
+}
+function tickFighter(f,dt){
+ f.stamina=clamp(f.stamina+dt*(f.guard?2.1:7.2),0,100);
+ f.hitFlash=Math.max(0,f.hitFlash-dt);f.knock=Math.max(0,f.knock-dt);f.dodge=Math.max(0,f.dodge-dt);f.stun=Math.max(0,(f.stun||0)-dt);
+ if(f.action){
+  f.actionTime+=dt;const p=f.actionTime/f.actionDuration,spec=MOVES[f.action];
+  if(p>=spec.active[0]&&p<=spec.active[1]&&!f.energy){applyHit(f,f===player?enemy:player,f.action);f.energy=1}
+  if(p>=1){f.action=null;f.actionTime=0;f.energy=0}
+ }
+}
+function cpu(dt){
+ if(ended||enemy.hp<=0)return;
+ enemy.aiThink-=dt;
+ if(enemy.aiThink<=0&&!enemy.action&&enemy.knock<=0&&enemy.stun<=0){
+  const d=distance(enemy,player);enemy.aiThink=.20+Math.random()*.22;
+  if(player.action&&d<2.1&&Math.random()<.48)enemy.guard=true;
+  else if(d>2.05){enemy.guard=false;enemy.move.set(-1,0,0)}
+  else{enemy.move.set(0,0,0);enemy.guard=false;const r=Math.random();
+   if(r<.22)setAction(enemy,'jab');else if(r<.42)setAction(enemy,'cross');else if(r<.60)setAction(enemy,'hook');
+   else if(r<.77)setAction(enemy,'low');else if(r<.91)setAction(enemy,'high');else setAction(enemy,'takedown')}
+ }
+ if(!player.action&&distance(enemy,player)>2.3)enemy.guard=false;
+}
+function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina)}}
+function endFight(text){ended=true;const r=document.getElementById('result');r.classList.remove('hidden');r.innerHTML=text+'<br><small>Refresh the page to start a new bout.</small>';document.getElementById('status').textContent='BOUT COMPLETE'}
+let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended){roundSeconds-=dt;if(roundSeconds<=0)endFight(player.hp>enemy.hp?'PLAYER WINS ON POINTS':'CPU WINS ON POINTS');if(player.hp<=0)endFight('CPU WINS — TKO');if(enemy.hp<=0)endFight('PLAYER WINS — TKO');
  const input=currentMoveVector(),moving=input.lengthSq()>.001;
  const speed=player.guard?1.05:player.stun>0?0:2.0;
  if(moving&&!player.action&&player.knock<=0&&player.stun<=0){
