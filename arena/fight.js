@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
+import { chooseCpuAction } from './combat-ai.js';
 
 const mount=document.getElementById('view');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090f18);scene.fog=new THREE.Fog(0x090f18,13,27);
@@ -77,7 +78,8 @@ function inFront(att,def){
  return dx*forward.x+dz*forward.z>.35;
 }
 function applyHit(att,def,type){
- const result=resolveStrike({move:type,distance:distance(att,def),inFront:inFront(att,def),guard:def.guard,evading:def.dodge>0,defenderStamina:def.stamina});
+ const defenderZone=def.stun>0?'exposed':def.guard?'braced':'neutral';
+ const result=resolveStrike({move:type,distance:distance(att,def),inFront:inFront(att,def),guard:def.guard,evading:def.dodge>0,defenderStamina:def.stamina,defenderZone});
  if(['invalid','miss','evaded'].includes(result.result))return false;
  def.hp=Math.max(0,def.hp-result.damage);def.stamina=Math.max(0,def.stamina-result.staminaLoss);
  def.hitFlash=result.result==='blocked'?.09:.18;def.stun=Math.max(def.stun||0,result.stun||0);
@@ -94,18 +96,25 @@ function tickFighter(f,dt){
   if(p>=1){f.action=null;f.actionTime=0;f.energy=0}
  }
 }
+let cpuDecisionSeed=1;
 function cpu(dt){
  if(ended||enemy.hp<=0)return;
  enemy.aiThink-=dt;
  if(enemy.aiThink<=0&&!enemy.action&&enemy.knock<=0&&enemy.stun<=0){
-  const d=distance(enemy,player);enemy.aiThink=.20+Math.random()*.22;
-  if(player.action&&d<2.1&&Math.random()<.48)enemy.guard=true;
-  else if(d>2.05){enemy.guard=false;enemy.move.set(-1,0,0)}
-  else{enemy.move.set(0,0,0);enemy.guard=false;const r=Math.random();
-   if(r<.22)setAction(enemy,'jab');else if(r<.42)setAction(enemy,'cross');else if(r<.60)setAction(enemy,'hook');
-   else if(r<.77)setAction(enemy,'low');else if(r<.91)setAction(enemy,'high');else setAction(enemy,'takedown')}
+  const d=distance(enemy,player);enemy.aiThink=.24;
+  const decision=chooseCpuAction({distance:d,playerAttacking:!!player.action,playerGuarding:player.guard,stamina:enemy.stamina,seed:cpuDecisionSeed++});
+  enemy.guard=decision.action==='guard';
+  if(decision.action==='approach')enemy.move.set(-1,0,0);
+  else if(decision.action==='retreat')enemy.move.set(1,0,0);
+  else{enemy.move.set(0,0,0);if(decision.action!=='guard')setAction(enemy,decision.action)}
  }
- if(!player.action&&distance(enemy,player)>2.3)enemy.guard=false;
+}
+function resolveFighterSpacing(){
+ const dx=enemy.root.position.x-player.root.position.x,dz=enemy.root.position.z-player.root.position.z;
+ const d=Math.hypot(dx,dz),minimum=.78;
+ if(d>0&&d<minimum){const push=(minimum-d)*.5,ux=dx/d,uz=dz/d;player.root.position.x-=ux*push;player.root.position.z-=uz*push;enemy.root.position.x+=ux*push;enemy.root.position.z+=uz*push}
+ player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);
+ enemy.root.position.x=clamp(enemy.root.position.x,-3.8,3.8);enemy.root.position.z=clamp(enemy.root.position.z,-3.4,3.4);
 }
 function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina)}}
 function endFight(text){ended=true;const r=document.getElementById('result');r.classList.remove('hidden');r.innerHTML=text+'<br><small>Refresh the page to start a new bout.</small>';document.getElementById('status').textContent='BOUT COMPLETE'}
@@ -118,7 +127,8 @@ let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock
   player.move.copy(input);
  }else player.move.set(0,0,0);
  if(player.dodge>0){player.root.position.x+=player.evadeVector.x*3.4*dt;player.root.position.z+=player.evadeVector.z*3.4*dt}
- cpu(dt);if(enemy.move.lengthSq()&&!enemy.action&&enemy.stun<=0){enemy.root.position.x-=1.15*dt;enemy.root.position.x=Math.max(.7,enemy.root.position.x);enemy.move.set(-1,0,0)}else enemy.move.set(0,0,0);
+ cpu(dt);if(enemy.move.lengthSq()&&!enemy.action&&enemy.stun<=0){enemy.root.position.x+=enemy.move.x*1.15*dt;enemy.root.position.x=clamp(enemy.root.position.x,.7,3.8);enemy.move.set(enemy.move.x,0,0)}else enemy.move.set(0,0,0);
+ resolveFighterSpacing();
  tickFighter(player,dt);tickFighter(enemy,dt);
  pose(player,elapsed,player.move.length(),dt);pose(enemy,elapsed,enemy.move.length(),dt);
  const d=distance(player,enemy);document.getElementById('status').textContent=player.stun>0?'PLAYER STAGGERED':enemy.stun>0?'CPU STAGGERED':player.action?'PLAYER ATTACK':enemy.action?'CPU ATTACK':d>2.3?'RANGE / FOOTWORK':'IN FIGHT';
