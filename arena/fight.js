@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 import { ROSTER, getFighter } from './roster.js';
-import { DEFAULT_CUSTOM_FIGHTER, MOVE_CATALOG, loadCustomFighter, normalizeCustomFighter, saveCustomFighter } from './character-creator.js';
+import { DEFAULT_CUSTOM_FIGHTER, MOVE_CATALOG, getBodyMetrics, loadCustomFighter, normalizeCustomFighter, saveCustomFighter } from './character-creator.js';
 import { loadFighterGLB, playFighterClip, updateFighterMocap } from './mocap-runtime.js';
 import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
@@ -35,14 +35,14 @@ const skinA=material(0xb97855),skinB=material(0x80533f),shortA=material(0x171f2a
 function sphere(parent,name,r,mat,pos){const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),mat);m.name=name;m.position.copy(pos);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function capsule(parent,name,r,len,mat){const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.01,len),4,8),mat);m.name=name;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function between(mesh,a,b){mesh.position.copy(a).add(b).multiplyScalar(.5);const d=new THREE.Vector3().subVectors(b,a);mesh.quaternion.setFromUnitVectors(V(0,1,0),d.clone().normalize());const gp=mesh.geometry.parameters||{};const base=(gp.length||.3)+2*(gp.radius||.07);mesh.scale.set(1,d.length()/Math.max(.01,base),1)}
-function fighter(profile,side){const name=profile.name,skin=material(profile.skin),shorts=material(profile.shorts),gloves=material(profile.gloves),hair=material(profile.hair);const root=new THREE.Group();scene.add(root);root.position.set(side*1.35,0,side*.08);root.rotation.y=side<0?Math.PI/2:-Math.PI/2;root.scale.y=profile.height/180;
+function fighter(profile,side){const name=profile.name,skin=material(profile.skin),shorts=material(profile.shorts),gloves=material(profile.gloves),hair=material(profile.hair),bodyMetrics=getBodyMetrics(profile);const root=new THREE.Group();scene.add(root);root.position.set(side*1.35,0,side*.08);root.rotation.y=side<0?Math.PI/2:-Math.PI/2;root.scale.y=bodyMetrics.height;
  const rig=new THREE.Group();root.add(rig);
  const body={torso:capsule(rig,'torso',.25,.48,skin),pelvis:capsule(rig,'pelvis',.24,.22,shorts),neck:capsule(rig,'neck',.09,.12,skin),head:sphere(rig,'head',.19,skin,V(0,1.65,0)),hair:sphere(rig,'hair',.195,hair,V(0,1.77,-.015)),shorts:capsule(rig,'shorts',.25,.18,shorts)};
- const proportions=profile.body||{shoulders:1,chest:1,arms:1,legs:1};body.torso.scale.set(proportions.shoulders||1,proportions.chest||1,proportions.chest||1);body.pelvis.scale.set(proportions.legs||1,1,proportions.legs||1);body.shorts.scale.set(proportions.legs||1,1,proportions.legs||1);
+ const proportions=bodyMetrics;body.torso.scale.set(proportions.shoulders,proportions.chest,proportions.chest);body.pelvis.scale.set(proportions.legs,1,proportions.legs);body.shorts.scale.set(proportions.legs,1,proportions.legs);
  const limbs={};for(const s of ['L','R']){limbs['upperArm'+s]=capsule(rig,'upperArm'+s,.075,.32,skin);limbs['foreArm'+s]=capsule(rig,'foreArm'+s,.064,.29,skin);limbs['glove'+s]=sphere(rig,'glove'+s,.105,gloves,V());limbs['thigh'+s]=capsule(rig,'thigh'+s,.105,.39,skin);limbs['shin'+s]=capsule(rig,'shin'+s,.075,.36,skin);limbs['foot'+s]=new THREE.Mesh(new THREE.BoxGeometry(.16,.09,.29),material(0x17191e));limbs['foot'+s].castShadow=true;rig.add(limbs['foot'+s]);}
  const belt=new THREE.Mesh(new THREE.BoxGeometry(.43,.055,.29),material(0xc2a56c,.5,.35));rig.add(belt);belt.position.y=1.02;
  const eyes=[];const eyeMat=material(profile.eye??0x151515,.35);for(const s of [-1,1]){const e=sphere(rig,'eye',.018,eyeMat,V(s*.07,1.68,.17));eyes.push(e)}
- for(const sideKey of ['L','R']){for(const part of ['upperArm','foreArm']){const m=limbs[part+sideKey];m.scale.x=proportions.arms||1;m.scale.z=proportions.arms||1}for(const part of ['thigh','shin']){const m=limbs[part+sideKey];m.scale.x=proportions.legs||1;m.scale.z=proportions.legs||1}}
+ for(const sideKey of ['L','R']){for(const part of ['upperArm','foreArm']){const m=limbs[part+sideKey];m.scale.x=proportions.arms;m.scale.z=proportions.arms}for(const part of ['thigh','shin']){const m=limbs[part+sideKey];m.scale.x=proportions.legs;m.scale.z=proportions.legs}}
  const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,skin};
  return state}
 player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('kwame-boateng'),1);
@@ -54,7 +54,7 @@ function currentMoveVector(){
  const z=(keys.has('s')?1:0)-(keys.has('w')?1:0)+(touchMove.has('down')?1:0)-(touchMove.has('up')?1:0);
  const v=V(x,0,z);return v.lengthSq()>1?v.normalize():v;
 }
-function setAction(f,type){
+function setAction(f,type,animationClip=null){
  if(ended||bout.phase!=='fight'||f.action||f.knock>0||f.stun>0)return;
  if(type==='submission'||type==='ground-pound'||type==='stand-up'){
   const def=f===player?enemy:player;
@@ -69,7 +69,7 @@ function setAction(f,type){
  if(type==='dodge'){if(f.stamina>10){f.stamina-=10;f.dodge=.30;playFighterClip(THREE,f,'dodge');const v=currentMoveVector();f.evadeVector=v.lengthSq()>.01?v.clone():V(f===player?-1:1,0,0)}return}
  if(f.groundState!=='standing')return;
  const spec=MOVES[type];if(!spec||f.stamina<spec.cost)return;
- f.stamina-=spec.cost;f.action=type;f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;playFighterClip(THREE,f,type);
+ f.stamina-=spec.cost;f.action=type;f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;playFighterClip(THREE,f,animationClip||type);
 }
 function releaseAction(f,type){
  if(type==='guard')f.guard=false;
@@ -103,11 +103,12 @@ const byId=id=>document.getElementById(id);
 const colorHex=n=>'#'+(Number(n)>>>0).toString(16).padStart(6,'0').slice(-6);
 const colorNum=s=>parseInt(String(s).replace('#',''),16);
 function renderMoveCatalog(profile){
+ for(let slot=0;slot<2;slot++){const select=byId('custom-move-slot-'+(slot+1));if(select){select.innerHTML='';for(const id of (profile?.ownedMoves||DEFAULT_CUSTOM_FIGHTER.ownedMoves)){const move=MOVE_CATALOG.find(m=>m.id===id);if(move){const option=document.createElement('option');option.value=id;option.textContent=move.name;select.appendChild(option)}}select.value=(profile?.equippedMoves||DEFAULT_CUSTOM_FIGHTER.equippedMoves)[slot]||''}}
  const host=byId('move-catalog');if(!host)return;host.innerHTML='';
  for(const move of MOVE_CATALOG){const card=document.createElement('article');card.className='move-card';
   const title=document.createElement('b');title.textContent=move.name;
   const category=document.createElement('small');category.textContent=move.category+' · '+move.price+' credits';
-  const state=document.createElement('small');state.textContent=profile?.ownedMoves?.includes(move.id)?'در حساب محلی ثبت شده':'قفل ویژه';
+  const state=document.createElement('small');state.textContent=profile?.ownedMoves?.includes(move.id)?(profile?.equippedMoves?.includes(move.id)?'مجهز شده':'قابل انتخاب · مالکیت پایه'):'قفل ویژه';
   const btn=document.createElement('button');btn.type='button';btn.disabled=true;btn.textContent='خرید پس از اتصال پرداخت';
   card.append(title,category,state,btn);host.appendChild(card)}
 }
@@ -129,6 +130,10 @@ byId('save-custom-fighter')?.addEventListener('click',()=>{
  catch(error){byId('creator-status').textContent='خطا در ذخیره: '+error.message}
 });
 fillCustomForm(savedCustom);renderMoveCatalog(savedCustom);
+function equipCustomMove(slot,id){const profile=loadCustomFighter()||DEFAULT_CUSTOM_FIGHTER;if(!profile.ownedMoves.includes(id))return;const equipped=[...(profile.equippedMoves||[])];equipped[slot]=id;const unique=equipped.filter(Boolean);if(new Set(unique).size!==unique.length){byId('creator-status').textContent='هر حرکت فقط در یک خانه قابل تجهیز است.';renderMoveCatalog(profile);return}const next=saveCustomFighter({...profile,equippedMoves:equipped});renderMoveCatalog(next);byId('creator-status').textContent='حرکت اختصاصی در جایگاه '+(slot+1)+' مجهز شد.'}
+for(let slot=0;slot<2;slot++)byId('custom-move-slot-'+(slot+1))?.addEventListener('change',e=>equipCustomMove(slot,e.target.value));
+function triggerEquippedMove(slot){const profile=player.profile;if(!profile.custom){document.getElementById('status').textContent='این حرکت‌ها مخصوص مبارز اختصاصی هستند';return}const id=profile.equippedMoves?.[slot],move=MOVE_CATALOG.find(m=>m.id===id);if(!move||!profile.ownedMoves.includes(id))return;setAction(player,move.baseMove,move.clip)}
+document.querySelectorAll('[data-custom-move]').forEach(btn=>btn.addEventListener('pointerdown',e=>{e.preventDefault();triggerEquippedMove(Number(btn.dataset.customMove)-1)}));
 async function importMocap(input,which){
  const file=input.files?.[0];if(!file)return;
  const f=which==='player'?player:enemy;
