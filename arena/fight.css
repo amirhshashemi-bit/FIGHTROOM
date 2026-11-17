@@ -15,3 +15,10 @@
 .arena-toolbar span{margin-inline-start:auto}
 .pad button[data-action="ground-pound"],.pad button[data-action="submission"],.pad button[data-action="stand-up"]{background:#503d24;border-color:#8c7044}
 @media(max-width:700px){.arena-toolbar{gap:7px}.arena-toolbar span{width:100%;margin:0}.arena-toolbar select{flex:1;min-width:130px}.stage{min-height:340px;height:52vh}}
+
+.roster-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 12px;padding:12px;background:#101a27;border:1px solid #29384b;border-radius:4px}
+.roster-toolbar>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.roster-toolbar label{font:600 10px 'Barlow Condensed',sans-serif;letter-spacing:1px;color:#9eb0c3}
+.roster-toolbar select,.roster-toolbar input{max-width:100%;min-width:0;background:#182638;color:#edf3f8;border:1px solid #40546d;border-radius:3px;padding:8px;font:12px 'Barlow Condensed',sans-serif}
+.roster-toolbar small{font-size:10px;color:#8fa2b7;line-height:1.35}
+@media(max-width:760px){.roster-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}.roster-toolbar input{font-size:10px;padding:6px}}
