@@ -147,7 +147,7 @@ async function refreshPremiumState(){const result=await resolvePremiumAccess();p
 refreshPremiumState();setInterval(refreshPremiumState,60000);
 function equipCustomMove(slot,id){const profile=loadCustomFighter()||DEFAULT_CUSTOM_FIGHTER;const move=MOVE_CATALOG.find(m=>m.id===id);if(!move||(move.premium&&!premiumAccess))return;const owned=[...(profile.ownedMoves||[])];if(move.premium&&!owned.includes(id))owned.push(id);if(!owned.includes(id))return;const equipped=[...(profile.equippedMoves||[])];equipped[slot]=id;const unique=equipped.filter(Boolean);if(new Set(unique).size!==unique.length){byId('creator-status').textContent='هر حرکت فقط در یک خانه قابل تجهیز است.';renderMoveCatalog(profile);return}const next=saveCustomFighter({...profile,ownedMoves:owned,equippedMoves:equipped});renderMoveCatalog(next);byId('creator-status').textContent='حرکت اختصاصی در جایگاه '+(slot+1)+' مجهز شد.'}
 for(let slot=0;slot<2;slot++)byId('custom-move-slot-'+(slot+1))?.addEventListener('change',e=>equipCustomMove(slot,e.target.value));
-function triggerEquippedMove(slot){const profile=player.profile;if(!profile.custom){document.getElementById('status').textContent='این حرکت‌ها مخصوص مبارز اختصاصی هستند';return}const id=profile.equippedMoves?.[slot],move=MOVE_CATALOG.find(m=>m.id===id);if(!move||!profile.ownedMoves.includes(id))return;if(move.premium&&!premiumAccess){document.getElementById('status').textContent='حرکات ویژه فقط با اشتراک تأییدشده فعال می‌شوند';return}setAction(player,move.action||move.baseMove,move.clip)}
+function triggerEquippedMove(slot){const loadout=loadCustomFighter()||DEFAULT_CUSTOM_FIGHTER;const id=loadout.equippedMoves?.[slot],move=MOVE_CATALOG.find(m=>m.id===id);if(!move||!loadout.ownedMoves.includes(id))return;if(move.premium&&!premiumAccess){document.getElementById('status').textContent='حرکات ویژه فقط با اشتراک تأییدشده فعال می‌شوند';return}setAction(player,move.action||move.baseMove,move.clip)}
 document.querySelectorAll('[data-custom-move]').forEach(btn=>btn.addEventListener('pointerdown',e=>{e.preventDefault();triggerEquippedMove(Number(btn.dataset.customMove)-1)}));
 async function importMocap(input,which){
  const file=input.files?.[0];if(!file)return;
@@ -176,8 +176,10 @@ function inFront(att,def){
 }
 function applyHit(att,def,type){
  if(type==='ground-pound'){
-  if(att.groundState!=='top-control'||!['bottom-guard','side-control','mount'].includes(def.groundState)||distance(att,def)>MOVES[type].reach)return false;
-  def.hp=Math.max(0,def.hp-MOVES[type].damage*(.8+att.profile.power/500));def.stun=Math.max(def.stun||0,MOVES[type].stun);def.hitFlash=.18;audio.strike();audio.impact();return true;
+  if(att.groundState!=='top-control'||!['bottom-guard','side-control','mount'].includes(def.groundState))return false;
+  const result=resolveStrike({move:type,distance:distance(att,def),inFront:true,guard:def.guard,evading:def.dodge>0,defenderStamina:def.stamina,defenderZone:def.stun>0?'exposed':def.guard?'braced':'neutral'});
+  if(['invalid','miss','evaded'].includes(result.result))return false;
+  def.hp=Math.max(0,def.hp-result.damage*(.8+att.profile.power/500));def.stamina=Math.max(0,def.stamina-result.staminaLoss);def.stun=Math.max(def.stun||0,result.stun||0);def.hitFlash=.18;if(result.result==='blocked')audio.block();else{audio.strike();audio.impact()}return true;
  }
  const zone=MOVES[type]?.zone||'head',direction=Math.sign(def.root.position.x-att.root.position.x)||1;
  const targetY=(zone==='head'?1.7:zone==='leg'?.35:1.2)*def.root.scale.y;
