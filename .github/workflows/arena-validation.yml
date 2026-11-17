@@ -21,8 +21,15 @@ jobs:
           node --check arena/motion.js
           node --check arena/combat-rules.js
           node --check arena/combat-ai.js
+          node --check arena/hitboxes.js
+          node --check arena/ground-combat.js
+          node --check arena/referee.js
+          node --check arena/venue-builder.js
+          node --check arena/mocap.js
+          node --check arena/audio.js
+          node --check arena/performance.js
       - name: Run deterministic combat and AI tests
         working-directory: arena
-        run: npm run test:combat
+        run: npm test
       - name: Validate venue catalogue
         run: node -e "const v=require('./arena/data/venues.json'); if(v.venues.length!==10) process.exit(1); console.log('10 venue records validated')"
