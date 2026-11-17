@@ -13,7 +13,7 @@ import { createBout, tickBout, nextRound, stoppage } from './referee.js';
 import { buildVenue } from './venue-builder.js';
 import { createFightAudio } from './audio.js';
 import { qualityProfile } from './performance.js';
-import { PREMIUM_COMBAT_ACTIONS, resolvePremiumAccess } from './premium-access.js';
+import { canUseCombatAction, resolvePremiumAccess } from './premium-access.js';
 
 const mount=document.getElementById('view');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090f18);scene.fog=new THREE.Fog(0x090f18,13,27);
@@ -68,7 +68,7 @@ function currentMoveVector(){
 }
 function setAction(f,type,animationClip=null){
  if(ended||bout.phase!=='fight'||f.action||f.knock>0||f.stun>0)return;
- if(f===player&&PREMIUM_COMBAT_ACTIONS.includes(type)&&!premiumAccess){document.getElementById('status').textContent='این فن فقط برای اعضای ویژه فعال است';return;}
+ if(f===player&&!canUseCombatAction(type,premiumAccess)){document.getElementById('status').textContent='این فن فقط برای اعضای ویژه فعال است';return;}
  if(type==='submission'||type==='ground-pound'||type==='stand-up'){
   const def=f===player?enemy:player;
   if(type==='submission'&&['top-control','mount','back-control'].includes(f.groundState)){
