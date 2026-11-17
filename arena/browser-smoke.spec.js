@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { test, expect } from '@playwright/test';
 
 test('desktop arena renders the WebGL stage, HUD and combat controls without runtime errors', async ({ page }) => {
@@ -29,5 +30,27 @@ test('Android-sized touch viewport renders and exposes grappling and defense con
     await expect(page.locator(`[data-action="${action}"]`)).toBeVisible();
   }
   await page.screenshot({ path: 'artifacts/arena-mobile-390x844.png', fullPage: true });
+  expect(pageErrors).toEqual([]);
+});
+
+test('real ACCAD BVH captures retarget onto the committed humanoid GLB', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('http://127.0.0.1:4173/arena/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#view canvas')).toBeVisible({ timeout: 30000 });
+  const files = [
+    path.resolve('assets/models/cc0-base-body-anim.glb'),
+    path.resolve('assets/mocap/accad/Male2_A1_Stand.bvh'),
+    path.resolve('assets/mocap/accad/Male2_E1_JabLeft.bvh'),
+    path.resolve('assets/mocap/accad/Male2_E3_CrossLeft.bvh'),
+    path.resolve('assets/mocap/accad/Male2_G8_RoundhouseLeft.bvh'),
+    path.resolve('assets/mocap/accad/Male2_E11_BlockLeftHigh.bvh'),
+    path.resolve('assets/mocap/accad/Male2_E19_DodgeLeft.bvh')
+  ];
+  await page.locator('#p-mocap-file').setInputFiles(files);
+  await expect(page.locator('#status')).toContainText('BVH RETARGETED', { timeout: 45000 });
+  await expect(page.locator('#status')).toContainText('7 FILE(S)');
+  await page.waitForTimeout(1800);
+  await page.screenshot({ path: 'artifacts/arena-accad-mocap-retarget.png', fullPage: true });
   expect(pageErrors).toEqual([]);
 });
