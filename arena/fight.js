@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { animateFighter } from './motion.js';
 
 const mount=document.getElementById('view');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090f18);scene.fog=new THREE.Fog(0x090f18,13,27);
@@ -28,17 +29,7 @@ function fighter(name,side,skin,shorts,gloves,hair){const root=new THREE.Group()
  const state={name,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,hitFlash:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,skin};
  return state}
 player=fighter('PLAYER',-1,skinA,shortA,gloveA,hairA);enemy=fighter('CPU',1,skinB,shortB,gloveB,hairB);
-function pose(f,t,moveSpeed){const active=f.action;let p=clamp(f.actionTime/Math.max(.01,f.actionDuration),0,1);const smooth=x=>x*x*(3-2*x);let phase=active?Math.sin(p*Math.PI):0;let bob=Math.sin(t*7+f.side)*.025+moveSpeed*.025;let lean=0,armL=0,armR=0,kickL=0,kickR=0,guard=f.guard?1:0;
- if(active){if(['jab','cross','hook'].includes(active)){const reach=phase*(p<.38?1:.72);if(active==='jab')armL=reach;if(active==='cross'){armR=reach;lean=.12*phase}if(active==='hook'){armL=.8*phase;armR=.4*phase;lean=.1*phase}}
- if(active==='low'){kickR=phase*.95;lean=-.08*phase}if(active==='high'){kickR=phase*1.2;lean=-.13*phase}if(active==='takedown'){lean=.48*phase;armL=armR=.65*phase}}
- if(f.dodge>0){lean+=Math.sin(f.dodge*10)*.28;armL-=.25;armR-=.25}
- if(f.knock>0)lean+=.4;
- f.rig.position.y=f.knock>0?-.3:0;f.rig.rotation.x=f.knock>0?-.3:0;const b=f.body,l=f.limbs; b.torso.position.set(0,1.25+bob,lean);b.torso.rotation.y=active==='hook'?Math.sin(p*Math.PI)*.28:active==='cross'?Math.sin(p*Math.PI)*.17:0;b.torso.rotation.z=lean*.22;b.pelvis.position.set(0,.91+bob,0);b.neck.position.set(0,1.52+bob,lean*.5);b.head.position.set(0,1.7+bob,lean*.5);b.hair.position.set(0,1.79+bob,lean*.5-.015);b.shorts.position.set(0,.94+bob,0);
- const arm=(side,extension)=>{const sign=side==='L'?-1:1;const shoulder=V(sign*.28,1.42+bob,0);const elbow=V(sign*(.38+extension*.12),1.31+bob, .18+extension*.37);const wrist=V(sign*(.34+extension*.18),1.34+bob+guard*.17,.38+extension*.55);between(l['upperArm'+side],shoulder,elbow);between(l['foreArm'+side],elbow,wrist);l['glove'+side].position.copy(wrist.clone().add(V(0,0,.06)));};
- arm('L',armL+guard*.45);arm('R',armR+guard*.45);
- const leg=(side,kick)=>{const sign=side==='L'?-1:1;const hip=V(sign*.14,.88+bob,0);const step=Math.sin(t*9+f.side+(side==='L'?0:Math.PI))*moveSpeed*.045;const knee=V(sign*(.17+kick*.14),.49+bob-kick*.1,.03+kick*.35+step);const ankle=V(sign*(.18+kick*.28),.11+bob+kick*.35,.12+kick*.85+step*1.8);between(l['thigh'+side],hip,knee);between(l['shin'+side],knee,ankle);l['foot'+side].position.copy(ankle.clone().add(V(0,-.025,.11)));l['foot'+side].rotation.x=-kick*.8;};
- leg('L',kickL);leg('R',kickR);
-}
+function pose(f,t,moveSpeed,dt){animateFighter(f,t,moveSpeed,dt)}
 function resize(){const w=mount.clientWidth,h=mount.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(mount);resize();
 const keys=new Set();let moveVector=V();function setAction(f,type){if(ended||f.action||f.knock>0)return;const costs={jab:7,cross:10,hook:12,low:13,high:17,takedown:20};if(type==='guard'){f.guard=true;return}if(type==='dodge'){if(f.stamina>10){f.stamina-=10;f.dodge=.28}return}const cost=costs[type]||0;if(f.stamina<cost)return;f.stamina-=cost;f.action=type;f.actionTime=0;f.actionDuration=({jab:.42,cross:.56,hook:.62,low:.72,high:.82,takedown:.9})[type]||.5;f.energy=0;}
 function releaseAction(f,type){if(type==='guard')f.guard=false}
@@ -57,7 +48,7 @@ let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock
  const x=(keys.has('d')?1:0)-(keys.has('a')?1:0),z=(keys.has('s')?1:0)-(keys.has('w')?1:0);const moving=Math.hypot(x,z)>0;const speed=player.guard?1.15:2.1;if(moving&&!player.action){player.root.position.x+=x*speed*dt;player.root.position.z+=z*speed*dt;player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);player.move.set(x,0,z)}else player.move.set(0,0,0);
  cpu(dt);if(enemy.move.lengthSq()&&!enemy.action){enemy.root.position.x-=1.35*dt;enemy.root.position.x=Math.max(.7,enemy.root.position.x);enemy.move.set(-1,0,0)}else enemy.move.set(0,0,0);
  tickFighter(player,dt);tickFighter(enemy,dt);
- pose(player,elapsed,player.move.length());pose(enemy,elapsed,enemy.move.length());
+ pose(player,elapsed,player.move.length(),dt);pose(enemy,elapsed,enemy.move.length(),dt);
  const d=distance(player,enemy);document.getElementById('status').textContent=d>2.3?'RANGE / FOOTWORK':player.action?'PLAYER ATTACK':enemy.action?'CPU ATTACK':'IN FIGHT';
  if(elapsed-lastUi>.1){updateUI();lastUi=elapsed}
  }
