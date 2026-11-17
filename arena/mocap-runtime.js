@@ -5,7 +5,7 @@ const aliases={
  advance:['advance','walk','forward','move'],
  retreat:['retreat','backward','back walk','walk_back'],
  jab:['jab'],cross:['cross'],hook:['hook','uppercut'],low:['low kick','low-kick'],high:['roundhouse','high kick','kick'],
- guard:['block','guard'],dodge:['dodge','slip','evade'],takedown:['takedown','double leg','sprawl'],
+ guard:['block','guard'],dodge:['dodge','slip','evade'],takedown:['takedown','double leg','double_leg','sprawl'],
  'ground-pound':['ground pound','ground-and-pound'], 'stand-up':['get up','stand up','get-up'],submission:['submission','ground control','armbar'],
  'spinning-backfist':['spinning backfist','spinning-backfist'], 'superman-punch':['superman punch','superman-punch'],
  'switch-kick':['switch kick','switch-kick'], 'question-mark-kick':['question mark kick','question-mark-kick'],
