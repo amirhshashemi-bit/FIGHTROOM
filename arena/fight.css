@@ -53,3 +53,5 @@
 .move-loadout label{display:grid;gap:5px;color:#b7c6d6;font-size:10px}
 .move-loadout select{background:#182638;color:#edf3f8;border:1px solid #40546d;border-radius:3px;padding:8px;font:12px Vazirmatn,Arial}
 .move-loadout small{grid-column:1/-1;color:#9aabc0;font-size:10px}
+
+.creator-grid select#custom-country{direction:rtl;min-height:36px}
