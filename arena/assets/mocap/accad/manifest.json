@@ -1,6 +1,6 @@
 {
   "asset_pack": "ACCAD Male 2 BVH selected martial arts clips",
-  "count": 22,
+  "count": 27,
   "clips": [
     {
       "file": "Male2_A10_LieToCrouch.bvh",
@@ -44,6 +44,24 @@
       "fps": 120.0,
       "bytes": 314427,
       "sha256": "6cf2fcba98c7dc5c827896edccc16a8a9444350a8833a24e8ac7f6267c81cab3",
+      "source": "Open Motion Project / ACCAD, The Ohio State University",
+      "license": "CC BY 3.0"
+    },
+    {
+      "file": "Male2_B5_WalkBackwards.bvh",
+      "frames": 190,
+      "fps": 30.0,
+      "bytes": 115197,
+      "sha256": "736e9c33d4928ef3ecb246c0f379375821c7cf2cf110e590131fcd8b7f8f1987",
+      "source": "Open Motion Project / ACCAD, The Ohio State University",
+      "license": "CC BY 3.0"
+    },
+    {
+      "file": "Male2_E10_SideStepRight.bvh",
+      "frames": 59,
+      "fps": 30.0,
+      "bytes": 38090,
+      "sha256": "3c3c48c4d1e46abc710e1def8b79de305679f5355624adfa37fb1aab8eea2560",
       "source": "Open Motion Project / ACCAD, The Ohio State University",
       "license": "CC BY 3.0"
     },
@@ -120,6 +138,15 @@
       "license": "CC BY 3.0"
     },
     {
+      "file": "Male2_E3_Advance.bvh",
+      "frames": 186,
+      "fps": 30.0,
+      "bytes": 112236,
+      "sha256": "a75c868714caf4dabe72004340e9b70c83f9d303a2eab15956b47a1493faaee5",
+      "source": "Open Motion Project / ACCAD, The Ohio State University",
+      "license": "CC BY 3.0"
+    },
+    {
       "file": "Male2_E3_CrossLeft.bvh",
       "frames": 99,
       "fps": 30.0,
@@ -147,11 +174,29 @@
       "license": "CC BY 3.0"
     },
     {
+      "file": "Male2_E5_Retreat.bvh",
+      "frames": 232,
+      "fps": 30.0,
+      "bytes": 139642,
+      "sha256": "2dcf9d589c547fd6f574c3c93340fab655a4608346e5b9034030cb3e21e9b04f",
+      "source": "Open Motion Project / ACCAD, The Ohio State University",
+      "license": "CC BY 3.0"
+    },
+    {
       "file": "Male2_E6_HookRight.bvh",
       "frames": 78,
       "fps": 30.0,
       "bytes": 49072,
       "sha256": "f76659d78ceca948ca294b3772f40bdbdbe35006cb81b64b44197177a5d38681",
+      "source": "Open Motion Project / ACCAD, The Ohio State University",
+      "license": "CC BY 3.0"
+    },
+    {
+      "file": "Male2_E9_SideStepLeft.bvh",
+      "frames": 69,
+      "fps": 30.0,
+      "bytes": 43880,
+      "sha256": "8af9c36343fdbe30aae7bf4de5052503009b8fc1f700fcbbf4124c12d525e3a4",
       "source": "Open Motion Project / ACCAD, The Ohio State University",
       "license": "CC BY 3.0"
     },
