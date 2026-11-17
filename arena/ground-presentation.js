@@ -6,7 +6,7 @@ export function resolveGroundPair(a,b){
  if(!a||!b)return null;
  const as=a.groundState||'standing',bs=b.groundState||'standing';
  if(as==='standing'&&bs==='standing')return null;
- const centerX=((a.x||0)+(b.x||0))*.5,centerZ=((a.z||0)+(b.z||0))*.5;
+ const ax=a.root?.position.x??a.x??0,bx=b.root?.position.x??b.x??0,az=a.root?.position.z??a.z??0,bz=b.root?.position.z??b.z??0;\n const centerX=(ax+bx)*.5,centerZ=(az+bz)*.5;
  if(as==='clinch'&&bs==='clinch')return {
   a:{x:centerX-.34,z:centerZ,yaw:a.side<0?Math.PI/2:-Math.PI/2},
   b:{x:centerX+.34,z:centerZ,yaw:b.side<0?Math.PI/2:-Math.PI/2},
