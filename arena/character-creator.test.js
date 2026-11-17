@@ -1,3 +1,4 @@
+import {resolveCountryCode,countryNameForCode,countryFlag,getCountryOptions} from './countries.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DEFAULT_CUSTOM_FIGHTER,MOVE_CATALOG,getBodyMetrics,normalizeCustomFighter} from './character-creator.js';
@@ -25,4 +26,17 @@ test('body metrics reflect height, weight, reach and proportion sliders',()=>{
 test('equipped move slots can only contain owned moves',()=>{
  const p=normalizeCustomFighter({ownedMoves:['signature-jab'],equippedMoves:['signature-jab','flying-knee']});
  assert.deepEqual(p.equippedMoves,['signature-jab']);
+});
+
+test('custom fighter country is normalized and preserved by ISO code',()=>{
+ const p=normalizeCustomFighter({countryCode:'AZ'});
+ assert.equal(p.countryCode,'AZ');
+ assert.equal(p.country,countryNameForCode('AZ','en'));
+ assert.equal(normalizeCustomFighter({country:'Iran'}).countryCode,'IR');
+});
+test('country selector provides a broad ISO country list and flag rendering',()=>{
+ const options=getCountryOptions('fa');
+ assert.ok(options.length>=240);
+ assert.ok(options.some(c=>c.code==='IR'));
+ assert.equal(countryFlag('IR'),'🇮🇷');
 });
