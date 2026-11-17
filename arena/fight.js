@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { ROSTER, getFighter } from './roster.js';
+import { loadFighterGLB, playFighterClip, updateFighterMocap } from './mocap-runtime.js';
 import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
 import { chooseCpuAction } from './combat-ai.js';
@@ -31,16 +34,16 @@ const skinA=material(0xb97855),skinB=material(0x80533f),shortA=material(0x171f2a
 function sphere(parent,name,r,mat,pos){const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),mat);m.name=name;m.position.copy(pos);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function capsule(parent,name,r,len,mat){const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.01,len),4,8),mat);m.name=name;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function between(mesh,a,b){mesh.position.copy(a).add(b).multiplyScalar(.5);const d=new THREE.Vector3().subVectors(b,a);mesh.quaternion.setFromUnitVectors(V(0,1,0),d.clone().normalize());const gp=mesh.geometry.parameters||{};const base=(gp.length||.3)+2*(gp.radius||.07);mesh.scale.set(1,d.length()/Math.max(.01,base),1)}
-function fighter(name,side,skin,shorts,gloves,hair){const root=new THREE.Group();scene.add(root);root.position.set(side*1.35,0,side*.08);root.rotation.y=side<0?Math.PI/2:-Math.PI/2;
+function fighter(profile,side){const name=profile.name,skin=material(profile.skin),shorts=material(profile.shorts),gloves=material(profile.gloves),hair=material(profile.hair);const root=new THREE.Group();scene.add(root);root.position.set(side*1.35,0,side*.08);root.rotation.y=side<0?Math.PI/2:-Math.PI/2;root.scale.y=profile.height/180;
  const rig=new THREE.Group();root.add(rig);
  const body={torso:capsule(rig,'torso',.25,.48,skin),pelvis:capsule(rig,'pelvis',.24,.22,shorts),neck:capsule(rig,'neck',.09,.12,skin),head:sphere(rig,'head',.19,skin,V(0,1.65,0)),hair:sphere(rig,'hair',.195,hair,V(0,1.77,-.015)),shorts:capsule(rig,'shorts',.25,.18,shorts)};
  const limbs={};for(const s of ['L','R']){limbs['upperArm'+s]=capsule(rig,'upperArm'+s,.075,.32,skin);limbs['foreArm'+s]=capsule(rig,'foreArm'+s,.064,.29,skin);limbs['glove'+s]=sphere(rig,'glove'+s,.105,gloves,V());limbs['thigh'+s]=capsule(rig,'thigh'+s,.105,.39,skin);limbs['shin'+s]=capsule(rig,'shin'+s,.075,.36,skin);limbs['foot'+s]=new THREE.Mesh(new THREE.BoxGeometry(.16,.09,.29),material(0x17191e));limbs['foot'+s].castShadow=true;rig.add(limbs['foot'+s]);}
  const belt=new THREE.Mesh(new THREE.BoxGeometry(.43,.055,.29),material(0xc2a56c,.5,.35));rig.add(belt);belt.position.y=1.02;
  const eyes=[];for(const s of [-1,1]){const e=sphere(rig,'eye',.018,material(0x151515),V(s*.07,1.68,.17));eyes.push(e)}
- const state={name,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,skin};
+ const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,skin};
  return state}
-player=fighter('PLAYER',-1,skinA,shortA,gloveA,hairA);enemy=fighter('CPU',1,skinB,shortB,gloveB,hairB);
-function pose(f,t,moveSpeed,dt){animateFighter(f,t,moveSpeed,dt)}
+player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('kwame-boateng'),1);
+function pose(f,t,moveSpeed,dt){if(f.mixer){updateFighterMocap(THREE,f,dt,moveSpeed);return}animateFighter(f,t,moveSpeed,dt)}
 function resize(){const w=mount.clientWidth,h=mount.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(mount);resize();
 const keys=new Set(),touchMove=new Set();
 function currentMoveVector(){
@@ -63,7 +66,7 @@ function setAction(f,type){
  if(type==='dodge'){if(f.stamina>10){f.stamina-=10;f.dodge=.30;const v=currentMoveVector();f.evadeVector=v.lengthSq()>.01?v.clone():V(f===player?-1:1,0,0)}return}
  if(f.groundState!=='standing')return;
  const spec=MOVES[type];if(!spec||f.stamina<spec.cost)return;
- f.stamina-=spec.cost;f.action=type;f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;
+ f.stamina-=spec.cost;f.action=type;f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;playFighterClip(THREE,f,type);
 }
 function releaseAction(f,type){
  if(type==='guard')f.guard=false;
@@ -101,13 +104,13 @@ function inFront(att,def){
 }
 function applyHit(att,def,type){
  const zone=MOVES[type]?.zone||'head',direction=Math.sign(def.root.position.x-att.root.position.x)||1;
- const targetY=zone==='head'?1.7:zone==='leg'?.35:1.2;
+ const targetY=(zone==='head'?1.7:zone==='leg'?.35:1.2)*def.root.scale.y;
  const contact=classifyContact({attacker:[att.root.position.x,1.2,att.root.position.z],defender:[def.root.position.x,0,def.root.position.z],attackPoint:[def.root.position.x-direction*.18,targetY,def.root.position.z],attackRadius:zone==='leg'?.20:.18,front:inFront(att,def),evading:def.dodge>0});
  if(!contact.hit||contact.zone!==zone)return false;
  const defenderZone=def.stun>0?'exposed':def.guard?'braced':'neutral';
- const result=resolveStrike({move:type,distance:distance(att,def),inFront:inFront(att,def),guard:def.guard,evading:def.dodge>0,defenderStamina:def.stamina,defenderZone});
+ const reachBonus=(att.profile.reach-180)/100;const result=resolveStrike({move:type,distance:Math.max(0,distance(att,def)-reachBonus),inFront:inFront(att,def),guard:def.guard,evading:def.dodge>0,defenderStamina:def.stamina,defenderZone});
  if(['invalid','miss','evaded'].includes(result.result))return false;
- def.hp=Math.max(0,def.hp-result.damage);def.stamina=Math.max(0,def.stamina-result.staminaLoss);
+ def.hp=Math.max(0,def.hp-result.damage*(.8+att.profile.power/500));def.stamina=Math.max(0,def.stamina-result.staminaLoss);
  def.hitFlash=result.result==='blocked'?.09:.18;def.stun=Math.max(def.stun||0,result.stun||0);
  if(result.result==='blocked')audio.block();else{audio.strike();audio.impact()}
  if(type==='takedown'&&result.result==='hit'){
@@ -126,7 +129,7 @@ function tickFighter(f,dt){
   if(f.submissionProgress>=100){endFight(f===player?'PLAYER WINS — SUBMISSION':'CPU WINS — SUBMISSION');return}
   if(f.stamina<=0)releaseAction(f,'submission');
  }
- f.stamina=clamp(f.stamina+dt*(f.submitting?0:f.guard?2.1:7.2),0,100);
+ f.stamina=clamp(f.stamina+dt*(f.submitting?0:f.guard?2.1:4+f.profile.cardio*.035),0,100);
  f.hitFlash=Math.max(0,f.hitFlash-dt);f.knock=Math.max(0,f.knock-dt);f.dodge=Math.max(0,f.dodge-dt);f.stun=Math.max(0,(f.stun||0)-dt);
  if(f.action){
   f.actionTime+=dt;const p=f.actionTime/f.actionDuration,spec=MOVES[f.action];
@@ -155,7 +158,7 @@ function resolveFighterSpacing(){
  player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);
  enemy.root.position.x=clamp(enemy.root.position.x,-3.8,3.8);enemy.root.position.z=clamp(enemy.root.position.z,-3.4,3.4);
 }
-function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina)}}
+function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina);document.getElementById(prefix+'-name').textContent=f.name;document.getElementById(prefix+'-profile').textContent=f.profile.division+' · '+f.profile.style+' · '+f.profile.height+'cm / '+f.profile.reach+'cm'}}
 function endFight(text){ended=true;audio.bell();const r=document.getElementById('result');r.classList.remove('hidden');r.innerHTML=text+'<br><small>Refresh the page to start a new bout.</small>';document.getElementById('status').textContent='BOUT COMPLETE'}
 let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended){
  if(bout.phase==='fight'){bout=tickBout(bout,dt);roundSeconds=bout.remaining;if(bout.phase==='between-rounds'){restCountdown=bout.restSeconds;document.getElementById('status').textContent='ROUND BREAK';audio.bell()}if(bout.phase==='decision')endFight(player.hp>enemy.hp?'PLAYER WINS ON POINTS':player.hp<enemy.hp?'CPU WINS ON POINTS':'DRAW')}
@@ -163,13 +166,13 @@ let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock
  if(stoppage({health:player.hp})==='ko-tko')endFight('CPU WINS — TKO');if(stoppage({health:enemy.hp})==='ko-tko')endFight('PLAYER WINS — TKO');
  if(bout.phase==='fight'){
   const input=currentMoveVector(),moving=input.lengthSq()>.001;
-  const speed=player.guard?1.05:player.stun>0?0:2.0;
+  const speed=player.guard?1.05:player.stun>0?0:1.45+player.profile.speed*.006;
   if(moving&&player.groundState==='standing'&&!player.action&&player.knock<=0&&player.stun<=0){
    player.root.position.x+=input.x*speed*dt;player.root.position.z+=input.z*speed*dt;
    player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);player.move.copy(input);
   }else player.move.set(0,0,0);
   if(player.dodge>0){player.root.position.x+=player.evadeVector.x*3.4*dt;player.root.position.z+=player.evadeVector.z*3.4*dt}
-  cpu(dt);if(enemy.move.lengthSq()&&!enemy.action&&enemy.stun<=0){enemy.root.position.x+=enemy.move.x*1.15*dt;enemy.root.position.x=clamp(enemy.root.position.x,.7,3.8);enemy.move.set(enemy.move.x,0,0)}else enemy.move.set(0,0,0);
+  cpu(dt);if(enemy.move.lengthSq()&&!enemy.action&&enemy.stun<=0){enemy.root.position.x+=enemy.move.x*(.8+enemy.profile.speed*.004)*dt;enemy.root.position.x=clamp(enemy.root.position.x,.7,3.8);enemy.move.set(enemy.move.x,0,0)}else enemy.move.set(0,0,0);
   resolveFighterSpacing();tickFighter(player,dt);tickFighter(enemy,dt);
  }else{
   player.move.set(0,0,0);enemy.move.set(0,0,0);player.guard=false;enemy.guard=false;
