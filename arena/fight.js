@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 import { ROSTER, getFighter } from './roster.js';
+import { DEFAULT_CUSTOM_FIGHTER, MOVE_CATALOG, loadCustomFighter, normalizeCustomFighter, saveCustomFighter } from './character-creator.js';
 import { loadFighterGLB, playFighterClip, updateFighterMocap } from './mocap-runtime.js';
 import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
@@ -37,9 +38,11 @@ function between(mesh,a,b){mesh.position.copy(a).add(b).multiplyScalar(.5);const
 function fighter(profile,side){const name=profile.name,skin=material(profile.skin),shorts=material(profile.shorts),gloves=material(profile.gloves),hair=material(profile.hair);const root=new THREE.Group();scene.add(root);root.position.set(side*1.35,0,side*.08);root.rotation.y=side<0?Math.PI/2:-Math.PI/2;root.scale.y=profile.height/180;
  const rig=new THREE.Group();root.add(rig);
  const body={torso:capsule(rig,'torso',.25,.48,skin),pelvis:capsule(rig,'pelvis',.24,.22,shorts),neck:capsule(rig,'neck',.09,.12,skin),head:sphere(rig,'head',.19,skin,V(0,1.65,0)),hair:sphere(rig,'hair',.195,hair,V(0,1.77,-.015)),shorts:capsule(rig,'shorts',.25,.18,shorts)};
+ const proportions=profile.body||{shoulders:1,chest:1,arms:1,legs:1};body.torso.scale.set(proportions.shoulders||1,proportions.chest||1,proportions.chest||1);body.pelvis.scale.set(proportions.legs||1,1,proportions.legs||1);body.shorts.scale.set(proportions.legs||1,1,proportions.legs||1);
  const limbs={};for(const s of ['L','R']){limbs['upperArm'+s]=capsule(rig,'upperArm'+s,.075,.32,skin);limbs['foreArm'+s]=capsule(rig,'foreArm'+s,.064,.29,skin);limbs['glove'+s]=sphere(rig,'glove'+s,.105,gloves,V());limbs['thigh'+s]=capsule(rig,'thigh'+s,.105,.39,skin);limbs['shin'+s]=capsule(rig,'shin'+s,.075,.36,skin);limbs['foot'+s]=new THREE.Mesh(new THREE.BoxGeometry(.16,.09,.29),material(0x17191e));limbs['foot'+s].castShadow=true;rig.add(limbs['foot'+s]);}
  const belt=new THREE.Mesh(new THREE.BoxGeometry(.43,.055,.29),material(0xc2a56c,.5,.35));rig.add(belt);belt.position.y=1.02;
- const eyes=[];for(const s of [-1,1]){const e=sphere(rig,'eye',.018,material(0x151515),V(s*.07,1.68,.17));eyes.push(e)}
+ const eyes=[];const eyeMat=material(profile.eye??0x151515,.35);for(const s of [-1,1]){const e=sphere(rig,'eye',.018,eyeMat,V(s*.07,1.68,.17));eyes.push(e)}
+ for(const sideKey of ['L','R']){for(const part of ['upperArm','foreArm']){const m=limbs[part+sideKey];m.scale.x=proportions.arms||1;m.scale.z=proportions.arms||1}for(const part of ['thigh','shin']){const m=limbs[part+sideKey];m.scale.x=proportions.legs||1;m.scale.z=proportions.legs||1}}
  const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,skin};
  return state}
 player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('kwame-boateng'),1);
@@ -91,9 +94,41 @@ function populateRoster(select){select.innerHTML='';for(const p of ROSTER){const
 const playerSelect=document.getElementById('player-roster'),enemySelect=document.getElementById('enemy-roster');
 populateRoster(playerSelect);populateRoster(enemySelect);playerSelect.value=player.profile.id;enemySelect.value=enemy.profile.id;
 function disposeFighter(f){scene.remove(f.root);f.root.traverse(o=>{o.geometry?.dispose?.();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose?.());else o.material?.dispose?.()})}
-function replaceFighter(which,id){const next=getFighter(id),old=which==='player'?player:enemy,side=which==='player'?-1:1;disposeFighter(old);const fresh=fighter(next,side);if(which==='player')player=fresh;else enemy=fresh;updateUI()}
+function replaceFighter(which,id,profileOverride=null){const next=id==='custom-player'?(profileOverride||loadCustomFighter()||DEFAULT_CUSTOM_FIGHTER):getFighter(id),old=which==='player'?player:enemy,side=which==='player'?-1:1;disposeFighter(old);const fresh=fighter(next,side);if(which==='player')player=fresh;else enemy=fresh;updateUI()}
+const customOption=document.createElement('option');customOption.value='custom-player';customOption.textContent='CUSTOM · My Fighter';playerSelect.appendChild(customOption);enemySelect.appendChild(customOption.cloneNode(true));
+const savedCustom=loadCustomFighter();if(savedCustom){playerSelect.value='custom-player';replaceFighter('player','custom-player',savedCustom)}
 playerSelect.addEventListener('change',e=>replaceFighter('player',e.target.value));
 enemySelect.addEventListener('change',e=>replaceFighter('enemy',e.target.value));
+const byId=id=>document.getElementById(id);
+const colorHex=n=>'#'+(Number(n)>>>0).toString(16).padStart(6,'0').slice(-6);
+const colorNum=s=>parseInt(String(s).replace('#',''),16);
+function renderMoveCatalog(profile){
+ const host=byId('move-catalog');if(!host)return;host.innerHTML='';
+ for(const move of MOVE_CATALOG){const card=document.createElement('article');card.className='move-card';
+  const title=document.createElement('b');title.textContent=move.name;
+  const category=document.createElement('small');category.textContent=move.category+' · '+move.price+' credits';
+  const state=document.createElement('small');state.textContent=profile?.ownedMoves?.includes(move.id)?'در حساب محلی ثبت شده':'قفل ویژه';
+  const btn=document.createElement('button');btn.type='button';btn.disabled=true;btn.textContent='خرید پس از اتصال پرداخت';
+  card.append(title,category,state,btn);host.appendChild(card)}
+}
+function readCustomForm(){
+ const saved=loadCustomFighter()||DEFAULT_CUSTOM_FIGHTER;
+ return normalizeCustomFighter({...saved,name:byId('custom-name').value,height:byId('custom-height').value,weight:byId('custom-weight').value,reach:byId('custom-reach').value,
+  skin:colorNum(byId('custom-skin').value),eye:colorNum(byId('custom-eye').value),hair:colorNum(byId('custom-hair').value),shorts:colorNum(byId('custom-shorts').value),gloves:colorNum(byId('custom-gloves').value),
+  stance:byId('custom-stance').value,style:byId('custom-style').value,power:byId('custom-power').value,speed:byId('custom-speed').value,wrestling:byId('custom-wrestling').value,cardio:byId('custom-cardio').value,
+  body:{shoulders:Number(byId('custom-shoulders').value)/100,chest:Number(byId('custom-chest').value)/100,arms:Number(byId('custom-arms').value)/100,legs:Number(byId('custom-legs').value)/100}});
+}
+function fillCustomForm(profile){
+ const p=profile||DEFAULT_CUSTOM_FIGHTER;
+ for(const [id,value] of Object.entries({'custom-name':p.name,'custom-height':p.height,'custom-weight':p.weight,'custom-reach':p.reach,'custom-skin':colorHex(p.skin),'custom-eye':colorHex(p.eye),'custom-hair':colorHex(p.hair),'custom-shorts':colorHex(p.shorts),'custom-gloves':colorHex(p.gloves),'custom-stance':p.stance,'custom-style':p.style,'custom-power':p.power,'custom-speed':p.speed,'custom-wrestling':p.wrestling,'custom-cardio':p.cardio,'custom-shoulders':Math.round((p.body?.shoulders||1)*100),'custom-chest':Math.round((p.body?.chest||1)*100),'custom-arms':Math.round((p.body?.arms||1)*100),'custom-legs':Math.round((p.body?.legs||1)*100)})){if(byId(id))byId(id).value=value}
+ for(const id of ['shoulders','chest','arms','legs']){const out=byId('custom-'+id+'-value');if(out)out.textContent=byId('custom-'+id).value+'%'}
+}
+for(const id of ['shoulders','chest','arms','legs'])byId('custom-'+id)?.addEventListener('input',e=>{byId('custom-'+id+'-value').textContent=e.target.value+'%'});
+byId('save-custom-fighter')?.addEventListener('click',()=>{
+ try{const profile=saveCustomFighter(readCustomForm());playerSelect.value='custom-player';replaceFighter('player','custom-player',profile);byId('creator-status').textContent='مبارز ذخیره شد و در گوشه قرمز انتخاب شد.';renderMoveCatalog(profile)}
+ catch(error){byId('creator-status').textContent='خطا در ذخیره: '+error.message}
+});
+fillCustomForm(savedCustom);renderMoveCatalog(savedCustom);
 async function importMocap(input,which){
  const file=input.files?.[0];if(!file)return;
  const f=which==='player'?player:enemy;
