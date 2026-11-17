@@ -6,6 +6,7 @@
     "test:combat": "node --test combat-rules.test.js",
     "test:advanced": "node --test advanced-systems.test.js",
     "test:roster": "node --test roster.test.js",
-    "test": "npm run test:combat && npm run test:advanced && npm run test:roster"
+    "test": "npm run test:combat && npm run test:advanced && npm run test:roster && npm run test:creator",
+    "test:creator": "node --test character-creator.test.js"
   }
 }
