@@ -5,6 +5,7 @@
   "scripts": {
     "test:combat": "node --test combat-rules.test.js",
     "test:advanced": "node --test advanced-systems.test.js",
-    "test": "npm run test:combat && npm run test:advanced"
+    "test:roster": "node --test roster.test.js",
+    "test": "npm run test:combat && npm run test:advanced && npm run test:roster"
   }
 }
