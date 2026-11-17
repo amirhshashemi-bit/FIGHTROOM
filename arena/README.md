@@ -53,3 +53,11 @@ See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requ
 
 - Verified animated CC0 base-body export (8.21 MB) from CharacterCreator is linked in the creator panel for download/import. Its upstream license notes mark generated `output/*.glb` assets CC0; the generator code has a separate GPL-3.0-or-later license. The linked base is an anatomical male base with basic procedural locomotion clips, not a dressed fight-ready roster pack. Source commit pinned: `852e48f316b90a0937234886630e4fb4cdfd1f78`.
 - For fully dressed, hair/customization exports, the creator panel links to Ara 3D Gen, a separate open-source pipeline based on CC0 MakeHuman assets. Verify each export and its source terms before shipping.
+
+
+## Automated CC0 base asset retrieval (pre-alpha 0.5 work)
+- A branch-scoped GitHub Actions workflow now fetches the exact pinned upstream GLB directly from its immutable source commit; this bypasses the binary-transfer limitation of the GitHub text-content connector.
+- Before committing, the workflow checks the GLB v2 container header, declared file length, mesh payload, skin/skeleton payload, embedded animation clips, and expected upstream byte size. It then records a SHA-256 checksum and the CC0 asset notice.
+- The workflow writes only to `arena/assets/models/` on `arena-combat-foundation`; it does not modify `main`.
+- This asset retrieval is not the same as completing the 24 fighters. The source is an anatomical male base with general locomotion clips. Do not enable it as the default visible fighter until clothing/coverage, rig compatibility, proportions, and Android performance are reviewed. It does not contain a verified MMA move set.
+- The workflow is triggered by its first feature-branch push and can also be run manually through GitHub Actions if the push trigger is not available.
