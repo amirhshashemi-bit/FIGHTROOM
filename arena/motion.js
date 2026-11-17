@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 // FIGHTROOM ARENA — phase-based procedural skeletal motion.
 // This is original procedural animation, not motion-capture data.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
