@@ -126,7 +126,7 @@ function tickFighter(f,dt){
   if(f.submissionProgress>=100){endFight(f===player?'PLAYER WINS — SUBMISSION':'CPU WINS — SUBMISSION');return}
   if(f.stamina<=0)releaseAction(f,'submission');
  }
- f.stamina=clamp(f.stamina+dt*(f.guard?2.1:7.2),0,100);
+ f.stamina=clamp(f.stamina+dt*(f.submitting?0:f.guard?2.1:7.2),0,100);
  f.hitFlash=Math.max(0,f.hitFlash-dt);f.knock=Math.max(0,f.knock-dt);f.dodge=Math.max(0,f.dodge-dt);f.stun=Math.max(0,(f.stun||0)-dt);
  if(f.action){
   f.actionTime+=dt;const p=f.actionTime/f.actionDuration,spec=MOVES[f.action];
