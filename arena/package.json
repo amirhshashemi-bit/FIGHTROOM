@@ -6,7 +6,8 @@
     "test:combat": "node --test combat-rules.test.js",
     "test:advanced": "node --test advanced-systems.test.js",
     "test:roster": "node --test roster.test.js",
-    "test": "npm run test:combat && npm run test:advanced && npm run test:roster && npm run test:creator && npm run test:rig && npm run test:premium",
+    "test:grappling": "node --test ground-combat.test.js",
+    "test": "npm run test:combat && npm run test:advanced && npm run test:roster && npm run test:creator && npm run test:rig && npm run test:premium && npm run test:grappling",
     "test:creator": "node --test character-creator.test.js",
     "test:rig": "node --test character-rig.test.js glb-rig-inspector.test.js mocap-runtime.test.js",
     "test:premium": "node --test premium-access.test.js"
