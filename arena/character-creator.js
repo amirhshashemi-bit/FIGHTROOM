@@ -27,14 +27,14 @@ export function normalizeCustomFighter(raw={}){
  return {
   ...d,...raw,id:'custom-player',custom:true,
   name:String(raw.name||d.name).trim().slice(0,24)||d.name,
-  height:clamp(raw.height,150,215),reach:clamp(raw.reach,145,230),weight:clamp(raw.weight,45,150),
-  power:clamp(raw.power,40,100),speed:clamp(raw.speed,40,100),wrestling:clamp(raw.wrestling,40,100),cardio:clamp(raw.cardio,40,100),
+  height:clamp(raw.height??d.height,150,215),reach:clamp(raw.reach??d.reach,145,230),weight:clamp(raw.weight??d.weight,45,150),
+  power:clamp(raw.power??d.power,40,100),speed:clamp(raw.speed??d.speed,40,100),wrestling:clamp(raw.wrestling??d.wrestling,40,100),cardio:clamp(raw.cardio??d.cardio,40,100),
   skin:Number.isFinite(Number(raw.skin))?Number(raw.skin):d.skin,
   hair:Number.isFinite(Number(raw.hair))?Number(raw.hair):d.hair,
   shorts:Number.isFinite(Number(raw.shorts))?Number(raw.shorts):d.shorts,
   gloves:Number.isFinite(Number(raw.gloves))?Number(raw.gloves):d.gloves,
   eye:Number.isFinite(Number(raw.eye))?Number(raw.eye):d.eye,
-  body:{shoulders:clamp(b.shoulders,0.75,1.3),chest:clamp(b.chest,0.75,1.3),arms:clamp(b.arms,0.75,1.3),legs:clamp(b.legs,0.75,1.3)},
+  body:{shoulders:clamp(b.shoulders??d.body.shoulders,0.75,1.3),chest:clamp(b.chest??d.body.chest,0.75,1.3),arms:clamp(b.arms??d.body.arms,0.75,1.3),legs:clamp(b.legs??d.body.legs,0.75,1.3)},
   ownedMoves:Array.isArray(raw.ownedMoves)?raw.ownedMoves.filter(id=>MOVE_CATALOG.some(m=>m.id===id)):d.ownedMoves.slice()
  };
 }
