@@ -10,7 +10,7 @@
 <body>
 <header class="top"><a href="../index.html">← FIGHTROOM</a><div><b>FIGHTROOM</b><span>ARENA / COMBAT LAB</span></div><span class="build">PRE-ALPHA 0.1</span></header>
 <main>
-<section class="hud"><div class="fighter"><label>RED CORNER <b id="p-name">PLAYER</b></label><div class="bar"><i id="p-health"></i></div><small>HP <span id="p-hp">100</span> · STAMINA <span id="p-st">100</span></small><div class="bar stamina"><i id="p-stamina"></i></div></div><div class="round"><b id="round">ROUND 1</b><strong id="clock">05:00</strong><small id="status">FIGHT READY</small></div><div class="fighter blue"><label>BLUE CORNER <b>CPU OPPONENT</b></label><div class="bar"><i id="e-health"></i></div><small>HP <span id="e-hp">100</span> · STAMINA <span id="e-st">100</span></small><div class="bar stamina"><i id="e-stamina"></i></div></div></section>
+<section class="hud"><div class="fighter"><label>RED CORNER <b id="p-name">PLAYER</b></label><div class="bar"><i id="p-health"></i></div><small>HP <span id="p-hp">100</span> · STAMINA <span id="p-st">100</span></small><div class="bar stamina"><i id="p-stamina"></i></div></div><div class="round"><b id="round">ROUND 1</b><strong id="clock">05:00</strong><small id="status">FIGHT READY</small></div><div class="fighter blue"><label>BLUE CORNER <b id="e-name">CPU OPPONENT</b></label><div class="bar"><i id="e-health"></i></div><small>HP <span id="e-hp">100</span> · STAMINA <span id="e-st">100</span></small><div class="bar stamina"><i id="e-stamina"></i></div></div></section>
 <section class="arena-toolbar" aria-label="Arena settings">
 <label for="venue-select">VENUE</label>
 <select id="venue-select">
@@ -19,9 +19,15 @@
 <button id="sound-toggle" type="button">SOUND OFF</button>
 <span>3 ROUNDS · 5 MINUTES · 60 SEC REST</span>
 </section>
-<section class="stage"><div id="view"></div><div class="stage-label"><span>NO LICENSED LIKENESSES · ORIGINAL FIGHTER MODELS</span><span>SIMULATION BUILD</span></div><div id="result" class="result hidden"></div></section>
+<section class="roster-toolbar" aria-label="Fighter selection">
+<div><label for="player-roster">RED CORNER FIGHTER</label><select id="player-roster"></select><small id="p-profile">Profile</small></div>
+<div><label for="enemy-roster">BLUE CORNER FIGHTER</label><select id="enemy-roster"></select><small id="e-profile">Profile</small></div>
+<div><label for="p-mocap-file">PLAYER MOTION CAPTURE GLB</label><input id="p-mocap-file" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json"></div>
+<div><label for="e-mocap-file">CPU MOTION CAPTURE GLB</label><input id="e-mocap-file" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json"></div>
+</section>
+<section class="stage"><div id="view"></div><div class="stage-label"><span>FICTIONAL FIGHTERS · MOCAP-READY RIG IMPORT</span><span>SIMULATION BUILD</span></div><div id="result" class="result hidden"></div></section>
 <section class="controls"><div class="control-copy"><b>PLAYER CONTROLS</b><span>WASD Move · J Jab · L Cross · K Hook · U Low Kick · I High Kick · SPACE Guard · SHIFT Evade · O Takedown · N Ground Pound · Hold M Submission · B Stand Up</span><small>On mobile: use the movement pad and action buttons together. Hold GUARD or SUBMISSION; tap EVADE to dodge. Ground actions require a successful takedown.</small></div><div class="mobile-controls"><div class="move-pad" aria-label="Movement controls"><button data-move="up" aria-label="Move forward">▲</button><div><button data-move="left" aria-label="Move left">◀</button><button data-move="down" aria-label="Move back">▼</button><button data-move="right" aria-label="Move right">▶</button></div></div><div class="pad"><button data-action="jab">JAB</button><button data-action="cross">CROSS</button><button data-action="hook">HOOK</button><button data-action="low">LOW KICK</button><button data-action="high">HIGH KICK</button><button data-action="guard">GUARD</button><button data-action="dodge">EVADE</button><button data-action="takedown">TAKEDOWN</button><button data-action="ground-pound">GROUND &amp; POUND</button><button data-action="submission">SUBMISSION</button><button data-action="stand-up">STAND UP</button></div></div></section>
-<section class="notes"><b>COMBAT LAB / CURRENT SYSTEMS</b><p>Procedural articulated fighters · stance and footwork · strike wind-up / active / recovery · range and guard checks · stamina costs · hit reactions · AI distance management · takedown attempt and sprawl response.</p><p class="warning">MMA combat prototype. Ground actions, venue dressing and procedural animation are in development; optical motion capture is not yet installed.</p></section>
+<section class="notes"><b>COMBAT LAB / CURRENT SYSTEMS</b><p>Procedural articulated fighters · stance and footwork · strike wind-up / active / recovery · range and guard checks · stamina costs · hit reactions · AI distance management · takedown attempt and sprawl response.</p><p class="warning">Fictional roster profiles with editable attributes. Import a properly licensed animated GLB to replace a fighter model and play its captured clips. The default procedural models remain available as fallback.</p></section>
 </main>
 <script type="module" src="fight.js"></script>
 </body></html>
