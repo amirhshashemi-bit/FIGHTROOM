@@ -75,6 +75,7 @@ function setAction(f,type,animationClip=null){
  if(GRAPPLE_ACTIONS[type]&&GRAPPLE_ACTIONS[type].premium&&f===player&&!premiumAccess){document.getElementById('status').textContent='این فن فقط برای اعضای ویژه فعال است';return;}
  if(['clinch','sprawl','frame','escape','sweep','pass','mount','back-take','defend-submission'].includes(type)){
   const def=f===player?enemy:player;
+  if(type==='clinch'&&distance(f,def)>1.6){document.getElementById('status').textContent='برای کلینچ باید نزدیک‌تر شوی';return;}
   const result=resolveGrappleAction({action:type,attackerState:f.groundState,defenderState:def.groundState,attackerStamina:f.stamina,defenderStamina:def.stamina,attackerSkill:f.profile.wrestling,defenderSkill:def.profile.wrestling,premium:f!==player||premiumAccess});
   if(!result.ok){document.getElementById('status').textContent=result.reason==='premium-required'?'این فن فقط برای اعضای ویژه فعال است':'حرکت در این موقعیت قابل اجرا نیست';return}
   f.groundState=result.attackerState;def.groundState=result.defenderState;
@@ -265,6 +266,7 @@ function cpu(dt){
  enemy.aiThink-=dt;
  if(enemy.aiThink<=0&&!enemy.action&&enemy.knock<=0&&enemy.stun<=0){
   const d=distance(enemy,player);enemy.aiThink=.24;
+  if(d<1.55&&enemy.profile.wrestling>=player.profile.wrestling-5&&enemy.stamina>32){setAction(enemy,'clinch');enemy.aiThink=.8;return;}
   const decision=chooseCpuAction({distance:d,playerAttacking:!!player.action,playerGuarding:player.guard,stamina:enemy.stamina,wrestling:enemy.profile.wrestling,seed:cpuDecisionSeed++});
   enemy.guard=decision.action==='guard';
   if(decision.action==='approach')enemy.move.set(-1,0,0);
