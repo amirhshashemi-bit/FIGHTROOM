@@ -97,7 +97,7 @@ function inFront(att,def){
 }
 function applyHit(att,def,type){
  const zone=MOVES[type]?.zone||'head',direction=Math.sign(def.root.position.x-att.root.position.x)||1;
- const targetY=zone==='head'?1.7:zone==='leg'?.47:1.2;
+ const targetY=zone==='head'?1.7:zone==='leg'?.35:1.2;
  const contact=classifyContact({attacker:[att.root.position.x,1.2,att.root.position.z],defender:[def.root.position.x,0,def.root.position.z],attackPoint:[def.root.position.x-direction*.18,targetY,def.root.position.z],attackRadius:zone==='leg'?.20:.18,front:inFront(att,def),evading:def.dodge>0});
  if(!contact.hit||contact.zone!==zone)return false;
  const defenderZone=def.stun>0?'exposed':def.guard?'braced':'neutral';
