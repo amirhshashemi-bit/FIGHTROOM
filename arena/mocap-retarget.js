@@ -4,12 +4,12 @@ const ALIASES={
  neck:['neck'],
  head:['head'],
  leftShoulder:['leftshoulder','shoulderl'],rightShoulder:['rightshoulder','shoulderr'],
- leftUpperArm:['leftarm','leftupperarm','upperarml'],rightUpperArm:['rightarm','rightupperarm','upperarmr'],
- leftForeArm:['leftforearm','leftlowerarm','forearml'],rightForeArm:['rightforearm','rightlowerarm','forearmr'],
- leftHand:['lefthand','handl'],rightHand:['righthand','handr'],
- leftUpLeg:['leftupleg','leftthigh','thighl'],rightUpLeg:['rightupleg','rightthigh','thighr'],
- leftLeg:['leftleg','leftcalf','lowerlegl'],rightLeg:['rightleg','rightcalf','lowerlegr'],
- leftFoot:['leftfoot','footl'],rightFoot:['rightfoot','footr']
+ leftUpperArm:['leftarm','leftupperarm','upperarml','leftshoulder'],rightUpperArm:['rightarm','rightupperarm','upperarmr','rightshoulder'],
+ leftForeArm:['leftforearm','leftlowerarm','forearml','leftelbow'],rightForeArm:['rightforearm','rightlowerarm','forearmr','rightelbow'],
+ leftHand:['lefthand','handl','leftwrist'],rightHand:['righthand','handr','rightwrist'],
+ leftUpLeg:['leftupleg','leftthigh','thighl','lefthip'],rightUpLeg:['rightupleg','rightthigh','thighr','righthip'],
+ leftLeg:['leftleg','leftcalf','lowerlegl','leftknee'],rightLeg:['rightleg','rightcalf','lowerlegr','rightknee'],
+ leftFoot:['leftfoot','footl','leftankle'],rightFoot:['rightfoot','footr','rightankle']
 };
 const clean=s=>String(s||'').toLowerCase().replace(/mixamorig[:_]?/g,'').replace(/[^a-z0-9]/g,'');
 export function semanticBone(name){
