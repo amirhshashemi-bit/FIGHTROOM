@@ -176,16 +176,21 @@ for(let slot=0;slot<2;slot++)byId('custom-move-slot-'+(slot+1))?.addEventListene
 function triggerEquippedMove(slot){const loadout=loadCustomFighter()||DEFAULT_CUSTOM_FIGHTER;const id=loadout.equippedMoves?.[slot],move=MOVE_CATALOG.find(m=>m.id===id);if(!move||!loadout.ownedMoves.includes(id))return;if(move.premium&&!premiumAccess){document.getElementById('status').textContent='حرکات ویژه فقط با اشتراک تأییدشده فعال می‌شوند';return}setAction(player,move.action||move.baseMove,move.clip)}
 document.querySelectorAll('[data-custom-move]').forEach(btn=>btn.addEventListener('pointerdown',e=>{e.preventDefault();triggerEquippedMove(Number(btn.dataset.customMove)-1)}));
 async function importMocap(input,which){
- const file=input.files?.[0];if(!file)return;
+ const files=Array.from(input.files||[]);if(!files.length)return;
  const f=which==='player'?player:enemy;
+ files.sort((a,b)=>Number(a.name.toLowerCase().endsWith('.bvh'))-Number(b.name.toLowerCase().endsWith('.bvh')));
  try{
-  if(file.name.toLowerCase().endsWith('.bvh')){
-   const info=await loadFighterBVH(THREE,file,f);
-   document.getElementById('status').textContent=which.toUpperCase()+' BVH RETARGETED · '+info.mappedBones+' BONES · '+info.tracks+' TRACKS';
-  }else{
-   const info=await loadFighterGLB(THREE,GLTFLoader,file,f);f.root.scale.y=1;
-   document.getElementById('status').textContent=which.toUpperCase()+' MOCAP MODEL · '+info.clips.length+' CLIPS · RIG '+info.rig.foundCore+'/7 · MORPHS '+info.appliedMorphs.length;
+  let summary='';
+  for(const file of files){
+   if(file.name.toLowerCase().endsWith('.bvh')){
+    const info=await loadFighterBVH(THREE,file,f);
+    summary=which.toUpperCase()+' BVH RETARGETED · '+info.mappedBones+' BONES · '+info.tracks+' TRACKS';
+   }else{
+    const info=await loadFighterGLB(THREE,GLTFLoader,file,f);f.root.scale.y=1;
+    summary=which.toUpperCase()+' MOCAP MODEL · '+info.clips.length+' CLIPS · RIG '+info.rig.foundCore+'/7 · MORPHS '+info.appliedMorphs.length;
+   }
   }
+  document.getElementById('status').textContent=summary+' · '+files.length+' FILE(S)';
  }catch(error){document.getElementById('status').textContent='MOCAP IMPORT FAILED: '+error.message;console.error(error)}
 }
 document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
