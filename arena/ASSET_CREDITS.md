@@ -51,3 +51,11 @@ Do not mark motion capture as installed until a real source file is checked into
 - SHA-256: `0eb271d4adea12b7f6bb1d4d8f7398db702f9449479be559ab9f019b5ab30b0f`
 - Checksum file: `arena/assets/models/cc0-base-body-anim.sha256`
 - This verifies file transfer into the feature branch. It does **not** establish that the model is a finished fighter or has been visually tested in-game.
+
+
+## BVH motion-capture import pipeline
+- Runtime support: `arena/mocap-runtime.js` accepts BVH motion files and retargets them onto a validated imported GLB humanoid skeleton using Three.js SkeletonUtils.
+- Bone mapping and compatibility checks: `arena/mocap-retarget.js`; incomplete rigs are rejected.
+- External source candidates: Open Motion Project / ACCAD, The Ohio State University (CC BY 3.0) and 100STYLE (CC BY 4.0), distributed in part through KinemIQ exports.
+- Attribution for ACCAD-derived clips: “Open Motion Project by ACCAD / The Ohio State University.”
+- Status: import/retarget code is integrated; **no real combat BVH clip is bundled or playback-verified in this branch yet**. Do not mark the real motion-capture content as shipped until source files, individual licence records, checksums and retarget playback QA are committed.
