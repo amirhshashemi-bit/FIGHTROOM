@@ -19,7 +19,7 @@ export const DEFAULT_CUSTOM_FIGHTER = {
   shorts:0x26313c, gloves:0x9e2733, eye:0x3b2418,
   power:80,speed:80,wrestling:80,cardio:80,
   body:{shoulders:1,chest:1,arms:1,legs:1},
-  custom:true,ownedMoves:['signature-jab','signature-cross']
+  custom:true,ownedMoves:['signature-jab','signature-cross'],equippedMoves:['signature-jab','signature-cross']
 };
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||min));
 export function normalizeCustomFighter(raw={}){
@@ -35,7 +35,8 @@ export function normalizeCustomFighter(raw={}){
   gloves:Number.isFinite(Number(raw.gloves))?Number(raw.gloves):d.gloves,
   eye:Number.isFinite(Number(raw.eye))?Number(raw.eye):d.eye,
   body:{shoulders:clamp(b.shoulders??d.body.shoulders,0.75,1.3),chest:clamp(b.chest??d.body.chest,0.75,1.3),arms:clamp(b.arms??d.body.arms,0.75,1.3),legs:clamp(b.legs??d.body.legs,0.75,1.3)},
-  ownedMoves:Array.isArray(raw.ownedMoves)?raw.ownedMoves.filter(id=>MOVE_CATALOG.some(m=>m.id===id)):d.ownedMoves.slice()
+  ownedMoves:Array.isArray(raw.ownedMoves)?[...new Set(raw.ownedMoves.filter(id=>MOVE_CATALOG.some(m=>m.id===id)))]:d.ownedMoves.slice(),
+  equippedMoves:Array.isArray(raw.equippedMoves)?raw.equippedMoves.filter(id=>(Array.isArray(raw.ownedMoves)?raw.ownedMoves:d.ownedMoves).includes(id)).slice(0,2):d.equippedMoves.slice()
  };
 }
 export function loadCustomFighter(){
@@ -45,4 +46,11 @@ export function saveCustomFighter(profile){
  const clean=normalizeCustomFighter(profile);
  localStorage.setItem(CREATOR_STORAGE_KEY,JSON.stringify(clean));
  return clean;
+}
+
+export function getBodyMetrics(profile={}){
+ const body=profile.body||{},height=Math.max(150,Math.min(215,Number(profile.height)||180)),weight=Math.max(45,Math.min(150,Number(profile.weight)||77));
+ const bmi=weight/((height/100)**2),baseBmi=77/(1.8**2),mass=Math.max(.86,Math.min(1.18,Math.sqrt(bmi/baseBmi)));
+ const factor=(key)=>Math.max(.75,Math.min(1.3,Number(body[key])||1));
+ return {mass,shoulders:factor('shoulders')*mass,chest:factor('chest')*mass,arms:factor('arms')*Math.sqrt(mass),legs:factor('legs')*Math.sqrt(mass),reach:Math.max(.82,Math.min(1.18,(Number(profile.reach)||180)/180)),height:height/180};
 }
