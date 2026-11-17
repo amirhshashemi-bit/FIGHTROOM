@@ -58,4 +58,4 @@ Do not mark motion capture as installed until a real source file is checked into
 - Bone mapping and compatibility checks: `arena/mocap-retarget.js`; incomplete rigs are rejected.
 - External source candidates: Open Motion Project / ACCAD, The Ohio State University (CC BY 3.0) and 100STYLE (CC BY 4.0), distributed in part through KinemIQ exports.
 - Attribution for ACCAD-derived clips: “Open Motion Project by ACCAD / The Ohio State University.”
-- Status: import/retarget code is integrated; **no real combat BVH clip is bundled or playback-verified in this branch yet**. Do not mark the real motion-capture content as shipped until source files, individual licence records, checksums and retarget playback QA are committed.
+- Status: **27 real ACCAD BVH clips are committed** under `arena/assets/mocap/accad/`, with individual SHA-256 values in `manifest.json` and `SHA256SUMS`, plus the CC BY 3.0 notice. Automated in-browser retarget/playback QA is the remaining validation gate.
