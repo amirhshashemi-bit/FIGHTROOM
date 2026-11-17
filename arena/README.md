@@ -1,6 +1,6 @@
 # FIGHTROOM ARENA — Combat Lab
 
-**Build:** 0.5.0-prealpha · **Status:** playable browser prototype, not release-ready
+**Build:** 0.6.0-prealpha · **Status:** playable browser prototype, not release-ready
 
 An isolated browser-based MMA combat prototype inside the FIGHTROOM repository. The existing content marketplace remains intact.
 
@@ -12,11 +12,11 @@ Visit `/arena/` on the deployed FIGHTROOM site. Three.js is loaded from jsDelivr
 - Distinct skin, hair, shorts and glove palettes; no real athlete names or identifiable likenesses
 - FIGHTER FORGE custom fighter editor: name, country (localized ISO country selector), gender selection (male/female), height, weight, reach, skin/eye/hair/shorts/glove colors, stance, fighting style, shoulder/chest/arm/leg proportions and combat attributes
 - Body metrics derive visual proportions from height, weight and body sliders; reach affects procedural arm extension as well as strike range
-- Two signature-move loadout slots for owned moves; starter jab/cross can be equipped and triggered with keyboard 1/2 or mobile buttons; locked premium entries remain unavailable
+- Two signature-move loadout slots; standard jab/cross are available to all users, while premium subscribers can equip advanced striking and grappling techniques with keyboard 1/2 or mobile buttons
 - Custom fighter profiles saved locally in the browser and selectable as a playable corner fighter
-- Premium MOVE STORE catalogue with separately listed signature/advanced motion entries and preview pricing; checkout is intentionally disabled until a secure payment and entitlement backend exists
+- Premium combat catalogue: takedown, ground-and-pound, submissions, spinning backfist, Superman punch, switch kick, question-mark kick, spinning elbow and flying knee are gated behind verified premium entitlement; no purchase/checkout is enabled
 - Optional GLB/glTF motion-capture character import with clip-name mapping onto idle, movement, strikes, blocks, dodges and ground actions
-- Stance, locomotion, jab, cross, hook, low/high kick, guard, evade and takedown attempt
+- Stance, locomotion, jab, cross, hook, low/high kick, guard and evade for all users; premium takedowns, ground control, ground-and-pound, submissions and advanced striking
 - Strike phases, stamina cost/regeneration, range checks, guard mitigation, hit reactions and basic CPU opponent
 - Keyboard and touch action buttons
 - 10 selectable procedural arena venue shells, with distinct palette and lighting presets (not bespoke photoreal venue art)
@@ -25,10 +25,10 @@ Visit `/arena/` on the deployed FIGHTROOM site. Three.js is loaded from jsDelivr
 - head/body/leg contact-volume checks and basic ground-state actions (early prototype)
 
 ## Controls
-WASD move; J jab; L cross; K hook; U low kick; I high kick; 1/2 equipped signature moves; Space guard; Shift evade; O takedown; N ground pound; hold M submission; B stand up. Select fighters in the roster bar. Upload an animated GLB for either corner to use captured animation clips.
+WASD move; J jab; L cross; K hook; U low kick; I high kick; 1/2 equipped signature moves; Space guard; Shift evade; O takedown (Premium); N ground pound (Premium); hold M submission (Premium); B stand up (free recovery). Select fighters in the roster bar. Upload an animated GLB for either corner to use captured animation clips.
 
 ## Honest limitations
-This is a first playable combat foundation, not a finished MMA game. The built-in fighters are still procedural fallback models. The pinned CC0 male base-body GLB is now committed under `assets/models/` with a recorded SHA-256 and licence notice. It is a base asset with general locomotion clips, not an MMA-ready fighter, and is not automatically applied as the default model. The optional GLB import pipeline still supports per-corner manual upload. The character creator currently uses the prototype's procedural model; body sliders adjust procedural primitive proportions and do not yet sculpt a production-grade anatomical mesh. Height/weight/reach are reflected in procedural dimensions and arm extension. Custom profiles are local to the browser and are not cloud-synced. Ground states and submissions are early gameplay scaffolding, not a complete grappling animation/physics system. Referee scoring is simplified; a checked-in and retarget-tested mocap pack, complete grappling physics, animation blending polish, crowd/audio assets, network play, and bespoke venue art remain future work. Premium purchases are not live: there is no payment provider, server-side receipt verification, account inventory, refund flow, or secure ownership delivery. The catalogue buttons remain disabled and no payment can be taken. Purchased motion clips will only be equipped after licensed animation assets are integrated and validated. Test on desktop and mobile browsers before release.
+This is a first playable combat foundation, not a finished MMA game. The built-in fighters are still procedural fallback models. The pinned CC0 male base-body GLB is now committed under `assets/models/` with a recorded SHA-256 and licence notice. It is a base asset with general locomotion clips, not an MMA-ready fighter, and is not automatically applied as the default model. The optional GLB import pipeline still supports per-corner manual upload. The character creator currently uses the prototype's procedural model; body sliders adjust procedural primitive proportions and do not yet sculpt a production-grade anatomical mesh. Height/weight/reach are reflected in procedural dimensions and arm extension. Custom profiles are local to the browser and are not cloud-synced. Ground states and submissions are early gameplay scaffolding, not a complete grappling animation/physics system. Referee scoring is simplified; a checked-in and retarget-tested mocap pack, complete grappling physics, animation blending polish, crowd/audio assets, network play, and bespoke venue art remain future work. Premium subscription/payment is not live: no account provider, server-side receipt verification, or purchase flow is connected. The entitlement adapter fails closed without a verified provider. The browser-side gate is not a security boundary; any online rewards, purchases or competitive actions must also be validated server-side. Premium special moves currently use original procedural animation, not motion capture. Test on desktop and mobile browsers before release.
 
 See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requirements.
 
@@ -75,3 +75,7 @@ See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requ
 - Repository blob SHA matches the pinned upstream Git blob; SHA-256 is recorded in `assets/models/cc0-base-body-anim.sha256`.
 - Licence notice: `assets/models/CC0-ASSET-NOTICE.md` (CC0-1.0 for generated GLB output).
 - This is an anatomical male base with general locomotion animations. It has not passed visual, clothing, fight-clip, retarget or Android performance QA; it is not yet the default model.
+
+
+## Premium combat implementation (pre-alpha 0.6)
+See [PREMIUM_COMBAT.md](./PREMIUM_COMBAT.md) for the standard/premium move split, entitlement contract and security limits. The premium move set has dedicated timing, stamina, range and damage values and shares the standard contact/guard/evasion resolver. The CPU can now attempt wrestling entries and react to ground-control states. Automated tests cover the new move specifications and fail-closed entitlement behavior.
