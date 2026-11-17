@@ -8,7 +8,7 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<header class="top"><a href="../index.html">← FIGHTROOM</a><div><b>FIGHTROOM</b><span>ARENA / COMBAT LAB</span></div><span class="build">PRE-ALPHA 0.4</span></header>
+<header class="top"><a href="../index.html">← FIGHTROOM</a><div><b>FIGHTROOM</b><span>ARENA / COMBAT LAB</span></div><span class="build">PRE-ALPHA 0.5</span></header>
 <main>
 <section class="hud"><div class="fighter"><label>RED CORNER <b id="p-name">PLAYER</b></label><div class="bar"><i id="p-health"></i></div><small>HP <span id="p-hp">100</span> · STAMINA <span id="p-st">100</span></small><div class="bar stamina"><i id="p-stamina"></i></div></div><div class="round"><b id="round">ROUND 1</b><strong id="clock">05:00</strong><small id="status">FIGHT READY</small></div><div class="fighter blue"><label>BLUE CORNER <b id="e-name">CPU OPPONENT</b></label><div class="bar"><i id="e-health"></i></div><small>HP <span id="e-hp">100</span> · STAMINA <span id="e-st">100</span></small><div class="bar stamina"><i id="e-stamina"></i></div></div></section>
 <section class="arena-toolbar" aria-label="Arena settings">
@@ -29,6 +29,7 @@
  <div class="creator-heading"><div><b id="creator-title">FIGHTER FORGE</b><small>ساخت مبارز اختصاصی · ذخیره روی همین دستگاه</small><small class="model-source-links">مدل حرفه‌ای: <a href="https://raw.githubusercontent.com/kblood/CharacterCreator/852e48f316b90a0937234886630e4fb4cdfd1f78/output/base_body_anim.glb" target="_blank" rel="noopener">دانلود مدل پایه CC0 با اسکلت و انیمیشن</a> · <a href="https://dionysus.dk/webxr/charactercreator/" target="_blank" rel="noopener">ساخت مدل کامل با لباس و مو</a></small></div><span class="premium-tag">SPECIAL / PREMIUM</span></div>
  <div class="creator-grid">
   <label>نام مبارز<input id="custom-name" maxlength="24" value="My Fighter"></label>
+  <label>جنسیت مبارز<select id="custom-gender"><option value="male">مرد</option><option value="female">زن</option></select></label>
   <label>کشور مبارز<select id="custom-country" required></select></label>
   <label>قد (cm)<input id="custom-height" type="number" min="150" max="215" value="180"></label>
   <label>وزن (kg)<input id="custom-weight" type="number" min="45" max="150" value="77"></label>
