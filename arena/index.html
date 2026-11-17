@@ -25,6 +25,36 @@
 <div><label for="p-mocap-file">PLAYER MOTION CAPTURE GLB</label><input id="p-mocap-file" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json"></div>
 <div><label for="e-mocap-file">CPU MOTION CAPTURE GLB</label><input id="e-mocap-file" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json"></div>
 </section>
+<section class="creator-panel" aria-labelledby="creator-title">
+ <div class="creator-heading"><div><b id="creator-title">FIGHTER FORGE</b><small>ساخت مبارز اختصاصی · ذخیره روی همین دستگاه</small></div><span class="premium-tag">SPECIAL / PREMIUM</span></div>
+ <div class="creator-grid">
+  <label>نام مبارز<input id="custom-name" maxlength="24" value="My Fighter"></label>
+  <label>قد (cm)<input id="custom-height" type="number" min="150" max="215" value="180"></label>
+  <label>وزن (kg)<input id="custom-weight" type="number" min="45" max="150" value="77"></label>
+  <label>طول دسترسی (cm)<input id="custom-reach" type="number" min="145" max="230" value="184"></label>
+  <label>رنگ پوست<input id="custom-skin" type="color" value="#b97855"></label>
+  <label>رنگ چشم<input id="custom-eye" type="color" value="#3b2418"></label>
+  <label>رنگ مو<input id="custom-hair" type="color" value="#211914"></label>
+  <label>رنگ شورت<input id="custom-shorts" type="color" value="#26313c"></label>
+  <label>رنگ دستکش<input id="custom-gloves" type="color" value="#9e2733"></label>
+  <label>گارد<select id="custom-stance"><option>Orthodox</option><option>Southpaw</option></select></label>
+  <label>سبک مبارزه<select id="custom-style"><option>All-rounder</option><option>Boxing</option><option>Kickboxing</option><option>Muay Thai</option><option>Wrestling</option><option>Brazilian Jiu-Jitsu</option><option>Karate</option><option>Sambo</option></select></label>
+ </div>
+ <div class="body-sliders">
+  <label>عرض شانه <input id="custom-shoulders" type="range" min="75" max="130" value="100"><output id="custom-shoulders-value">100%</output></label>
+  <label>حجم بالاتنه <input id="custom-chest" type="range" min="75" max="130" value="100"><output id="custom-chest-value">100%</output></label>
+  <label>حجم بازوها <input id="custom-arms" type="range" min="75" max="130" value="100"><output id="custom-arms-value">100%</output></label>
+  <label>حجم پاها <input id="custom-legs" type="range" min="75" max="130" value="100"><output id="custom-legs-value">100%</output></label>
+ </div>
+ <div class="creator-grid stats-grid">
+  <label>قدرت <input id="custom-power" type="range" min="40" max="100" value="80"></label>
+  <label>سرعت <input id="custom-speed" type="range" min="40" max="100" value="80"></label>
+  <label>کشتی <input id="custom-wrestling" type="range" min="40" max="100" value="80"></label>
+  <label>استقامت <input id="custom-cardio" type="range" min="40" max="100" value="80"></label>
+ </div>
+ <div class="creator-actions"><button id="save-custom-fighter" type="button">ذخیره و انتخاب مبارز</button><small id="creator-status">ویژگی‌های ظاهری و مشخصات مبارز را تنظیم کن.</small></div>
+ <div class="move-store"><div class="move-store-heading"><b>MOVE STORE · فروشگاه حرکات اختصاصی</b><small>هر حرکت جداگانه قیمت‌گذاری می‌شود؛ مالکیت باید سمت سرور تأیید شود.</small></div><div id="move-catalog" class="move-catalog"></div><p class="store-note">قیمت‌ها فعلاً اعتبار نمایشی داخل بازی هستند. درگاه پرداخت و تحویل امن هنوز متصل نشده؛ هیچ مبلغی دریافت نمی‌شود و دکمه‌های خرید تا اتصال پرداخت غیرفعال‌اند.</p></div>
+</section>
 <section class="stage"><div id="view"></div><div class="stage-label"><span>FICTIONAL FIGHTERS · MOCAP-READY RIG IMPORT</span><span>SIMULATION BUILD</span></div><div id="result" class="result hidden"></div></section>
 <section class="controls"><div class="control-copy"><b>PLAYER CONTROLS</b><span>WASD Move · J Jab · L Cross · K Hook · U Low Kick · I High Kick · SPACE Guard · SHIFT Evade · O Takedown · N Ground Pound · Hold M Submission · B Stand Up</span><small>On mobile: use the movement pad and action buttons together. Hold GUARD or SUBMISSION; tap EVADE to dodge. Ground actions require a successful takedown.</small></div><div class="mobile-controls"><div class="move-pad" aria-label="Movement controls"><button data-move="up" aria-label="Move forward">▲</button><div><button data-move="left" aria-label="Move left">◀</button><button data-move="down" aria-label="Move back">▼</button><button data-move="right" aria-label="Move right">▶</button></div></div><div class="pad"><button data-action="jab">JAB</button><button data-action="cross">CROSS</button><button data-action="hook">HOOK</button><button data-action="low">LOW KICK</button><button data-action="high">HIGH KICK</button><button data-action="guard">GUARD</button><button data-action="dodge">EVADE</button><button data-action="takedown">TAKEDOWN</button><button data-action="ground-pound">GROUND &amp; POUND</button><button data-action="submission">SUBMISSION</button><button data-action="stand-up">STAND UP</button></div></div></section>
 <section class="notes"><b>COMBAT LAB / CURRENT SYSTEMS</b><p>Procedural articulated fighters · stance and footwork · strike wind-up / active / recovery · range and guard checks · stamina costs · hit reactions · AI distance management · takedown attempt and sprawl response.</p><p class="warning">Fictional roster profiles with editable attributes. Import a properly licensed animated GLB to replace a fighter model and play its captured clips. The default procedural models remain available as fallback.</p></section>
