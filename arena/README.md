@@ -89,3 +89,13 @@ See [PREMIUM_COMBAT.md](./PREMIUM_COMBAT.md) for the standard/premium move split
 - Browser QA now has a Playwright workflow for desktop and a 390×844 Android-sized touch viewport, including screenshots uploaded as a GitHub Actions artifact.
 - This CI browser run is an emulated viewport, not a physical Android handset test. Real-device input latency, GPU performance, browser compatibility and visual motion review still require a physical device.
 - Grappling positions are gameplay state transitions with procedural fallback poses; they are not yet physically simulated wrestling or real motion-capture clips.
+
+
+## Grappling presentation, procedural ground poses and BVH retargeting (pre-alpha 0.8 work)
+- Added paired fighter staging for clinch and ground positions. The regular standing collision-spacing solver no longer pushes clinched/grounded fighters apart; pair positions ease smoothly rather than teleport.
+- Added separate articulated procedural poses for top-control and bottom-guard, with ground-level torso, head, arm and leg placement. These remain procedural fallback poses, not physical ragdoll simulation.
+- Added a BVH motion import path per corner. Import a validated animated GLB first, then BVH clips; the runtime maps common humanoid bone aliases and retargets clips to the imported skinned mesh using Three.js SkeletonUtils.
+- Incompatible GLB rigs and incomplete BVH bone maps are rejected. Missing clips temporarily use procedural motion without destroying the imported mixer, allowing later supported mocap clips to resume.
+- Added tests for paired ground staging and BVH bone mapping. See [MOCAP_PIPELINE.md](./MOCAP_PIPELINE.md) and [ASSET_CREDITS.md](./ASSET_CREDITS.md).
+- **Important:** the retargeting code is integrated, but no real combat BVH file has yet been downloaded, checked into this repository, or visually playback-verified. ACCAD-derived exports are CC BY 3.0 and require attribution; 100STYLE-derived exports are CC BY 4.0. A dedicated two-person wrestling/submission capture set is still required.
+- Browser/CI checks are used for this phase. Physical Android testing remains deliberately deferred until the motion, rig and visual QA gates are complete.
