@@ -1,3 +1,4 @@
+import { inspectHumanoidRig, applyCharacterMorphs } from './character-rig.js';
 // Load externally supplied, properly licensed humanoid GLB motion-capture packs.
 const aliases={
  idle:['idle','stance','fight idle','fighting stance'],
@@ -20,6 +21,10 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
  if(size.y>0){const scale=1.78/size.y;model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale)}
  fighter.externalModel=model;
+ const rigReport=inspectHumanoidRig(model);
+ const appliedMorphs=applyCharacterMorphs(model,fighter.profile);
+ fighter.rigReport=rigReport;
+ fighter.appliedMorphs=appliedMorphs;
  fighter.mixer=new THREE.AnimationMixer(model);
  fighter.clips=gltf.animations;
  fighter.clipActions=new Map();
@@ -27,7 +32,7 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  fighter.currentClip=null;
  fighter.mixer.addEventListener('finished',()=>{if(fighter.action===null)playFighterClip(THREE,fighter,'idle')});
  playFighterClip(THREE,fighter,'idle');
- return {clips:gltf.animations.map(c=>c.name),height:size.y};
+ return {clips:gltf.animations.map(c=>c.name),height:size.y,rig:rigReport,appliedMorphs};
 }
 export function playFighterClip(THREE,fighter,action){
  if(!fighter?.mixer||!fighter?.clips?.length)return false;
