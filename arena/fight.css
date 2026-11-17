@@ -57,3 +57,6 @@
 .creator-grid select#custom-country{direction:rtl;min-height:36px}
 
 .model-source-links{display:block;margin-top:5px;line-height:1.9;color:#9aabc0}.model-source-links a{color:#8bc9f1;text-decoration:underline;text-underline-offset:3px;margin-inline:4px}
+
+.roster-toolbar button[data-load-accad]{background:#283a50;color:#eaf4ff;border:1px solid #5a7898;border-radius:3px;padding:7px;font:700 10px 'Barlow Condensed';cursor:pointer}
+.roster-toolbar button[data-load-accad]:active{background:#315d7b}
