@@ -40,7 +40,7 @@ export function resolveGrappleAction({action,attackerState='standing',defenderSt
   if(!success)return {ok:false,reason:'takedown-defended',attackerState:a,defenderState:d,attackerStamina:clamp(attackerStamina-spec.cost*.45,0,100),defenderStamina:clamp(defenderStamina-5,0,100),staminaCost:spec.cost*.45,defenderCost:5};
   a='top-control';d='bottom-guard';defenderCost=8;
  } else if(action==='sprawl') {
-  if(a!=='standing'||d!=='clinch')return {ok:false,reason:'wrong-position'};
+  if(!['standing','clinch'].includes(a)||d!=='clinch')return {ok:false,reason:'wrong-position'};
   a=d='standing';defenderCost=4;
  } else if(action==='frame') {
   if(!['bottom-guard','side-control','mount','back-control','submission','ground-and-pound'].includes(a))return {ok:false,reason:'wrong-position'};
