@@ -61,6 +61,7 @@ function setAction(f,type){
  }
  if(type==='guard'){f.guard=true;return}
  if(type==='dodge'){if(f.stamina>10){f.stamina-=10;f.dodge=.30;const v=currentMoveVector();f.evadeVector=v.lengthSq()>.01?v.clone():V(f===player?-1:1,0,0)}return}
+ if(f.groundState!=='standing')return;
  const spec=MOVES[type];if(!spec||f.stamina<spec.cost)return;
  f.stamina-=spec.cost;f.action=type;f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;
 }
@@ -136,6 +137,7 @@ function tickFighter(f,dt){
 let cpuDecisionSeed=1;
 function cpu(dt){
  if(ended||bout.phase!=='fight'||enemy.hp<=0)return;
+ if(enemy.groundState!=='standing'||player.groundState!=='standing'){enemy.guard=false;enemy.move.set(0,0,0);return}
  enemy.aiThink-=dt;
  if(enemy.aiThink<=0&&!enemy.action&&enemy.knock<=0&&enemy.stun<=0){
   const d=distance(enemy,player);enemy.aiThink=.24;
@@ -162,7 +164,7 @@ let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock
  if(bout.phase==='fight'){
   const input=currentMoveVector(),moving=input.lengthSq()>.001;
   const speed=player.guard?1.05:player.stun>0?0:2.0;
-  if(moving&&!player.action&&player.knock<=0&&player.stun<=0){
+  if(moving&&player.groundState==='standing'&&!player.action&&player.knock<=0&&player.stun<=0){
    player.root.position.x+=input.x*speed*dt;player.root.position.z+=input.z*speed*dt;
    player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);player.move.copy(input);
   }else player.move.set(0,0,0);
