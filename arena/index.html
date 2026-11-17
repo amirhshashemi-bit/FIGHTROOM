@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FIGHTROOM ARENA — Combat Lab</title>
+<meta name="description" content="FIGHTROOM ARENA — an original browser-based MMA combat prototype.">
+<link rel="stylesheet" href="fight.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+</head>
+<body>
+<header class="top"><a href="../index.html">← FIGHTROOM</a><div><b>FIGHTROOM</b><span>ARENA / COMBAT LAB</span></div><span class="build">PRE-ALPHA 0.1</span></header>
+<main>
+<section class="hud"><div class="fighter"><label>RED CORNER <b id="p-name">PLAYER</b></label><div class="bar"><i id="p-health"></i></div><small>HP <span id="p-hp">100</span> · STAMINA <span id="p-st">100</span></small><div class="bar stamina"><i id="p-stamina"></i></div></div><div class="round"><b id="round">ROUND 1</b><strong id="clock">05:00</strong><small id="status">FIGHT READY</small></div><div class="fighter blue"><label>BLUE CORNER <b>CPU OPPONENT</b></label><div class="bar"><i id="e-health"></i></div><small>HP <span id="e-hp">100</span> · STAMINA <span id="e-st">100</span></small><div class="bar stamina"><i id="e-stamina"></i></div></div></section>
+<section class="stage"><div id="view"></div><div class="stage-label"><span>NO LICENSED LIKENESSES · ORIGINAL FIGHTER MODELS</span><span>SIMULATION BUILD</span></div><div id="result" class="result hidden"></div></section>
+<section class="controls"><div class="control-copy"><b>PLAYER CONTROLS</b><span>WASD Move · J Straight · K Hook · U Low Kick · I High Kick · SPACE Guard · SHIFT Evade · O Takedown</span><small>On mobile: use the action buttons. Tap the stage to focus.</small></div><div class="pad"><button data-action="jab">JAB</button><button data-action="cross">CROSS</button><button data-action="hook">HOOK</button><button data-action="low">LOW KICK</button><button data-action="high">HIGH KICK</button><button data-action="guard">GUARD</button><button data-action="dodge">EVADE</button><button data-action="takedown">TAKEDOWN</button></div></section>
+<section class="notes"><b>COMBAT LAB / CURRENT SYSTEMS</b><p>Procedural articulated fighters · stance and footwork · strike wind-up / active / recovery · range and guard checks · stamina costs · hit reactions · AI distance management · takedown attempt and sprawl response.</p><p class="warning">This is an early combat prototype, not yet a validated full MMA simulation or real motion-capture integration.</p></section>
+</main>
+<script type="module" src="fight.js"></script>
+</body></html>
