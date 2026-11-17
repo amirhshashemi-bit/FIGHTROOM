@@ -1,6 +1,6 @@
 # FIGHTROOM ARENA — Combat Lab
 
-**Build:** 0.4.0-prealpha · **Status:** playable browser prototype, not release-ready
+**Build:** 0.5.0-prealpha · **Status:** playable browser prototype, not release-ready
 
 An isolated browser-based MMA combat prototype inside the FIGHTROOM repository. The existing content marketplace remains intact.
 
@@ -28,7 +28,7 @@ Visit `/arena/` on the deployed FIGHTROOM site. Three.js is loaded from jsDelivr
 WASD move; J jab; L cross; K hook; U low kick; I high kick; 1/2 equipped signature moves; Space guard; Shift evade; O takedown; N ground pound; hold M submission; B stand up. Select fighters in the roster bar. Upload an animated GLB for either corner to use captured animation clips.
 
 ## Honest limitations
-This is a first playable combat foundation, not a finished MMA game. The built-in fighters are still procedural fallback models. A GLB import pipeline now accepts externally supplied animated humanoid models and uses their embedded clips, but no real mocap GLB has yet been committed or automatically applied by default. The character creator currently uses the prototype's procedural model; body sliders adjust procedural primitive proportions and do not yet sculpt a production-grade anatomical mesh. Height/weight/reach are reflected in procedural dimensions and arm extension. Custom profiles are local to the browser and are not cloud-synced. Ground states and submissions are early gameplay scaffolding, not a complete grappling animation/physics system. Referee scoring is simplified; a checked-in and retarget-tested mocap pack, complete grappling physics, animation blending polish, crowd/audio assets, network play, and bespoke venue art remain future work. Premium purchases are not live: there is no payment provider, server-side receipt verification, account inventory, refund flow, or secure ownership delivery. The catalogue buttons remain disabled and no payment can be taken. Purchased motion clips will only be equipped after licensed animation assets are integrated and validated. Test on desktop and mobile browsers before release.
+This is a first playable combat foundation, not a finished MMA game. The built-in fighters are still procedural fallback models. The pinned CC0 male base-body GLB is now committed under `assets/models/` with a recorded SHA-256 and licence notice. It is a base asset with general locomotion clips, not an MMA-ready fighter, and is not automatically applied as the default model. The optional GLB import pipeline still supports per-corner manual upload. The character creator currently uses the prototype's procedural model; body sliders adjust procedural primitive proportions and do not yet sculpt a production-grade anatomical mesh. Height/weight/reach are reflected in procedural dimensions and arm extension. Custom profiles are local to the browser and are not cloud-synced. Ground states and submissions are early gameplay scaffolding, not a complete grappling animation/physics system. Referee scoring is simplified; a checked-in and retarget-tested mocap pack, complete grappling physics, animation blending polish, crowd/audio assets, network play, and bespoke venue art remain future work. Premium purchases are not live: there is no payment provider, server-side receipt verification, account inventory, refund flow, or secure ownership delivery. The catalogue buttons remain disabled and no payment can be taken. Purchased motion clips will only be equipped after licensed animation assets are integrated and validated. Test on desktop and mobile browsers before release.
 
 See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requirements.
 
@@ -67,3 +67,11 @@ See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requ
 - Roster expanded from 24 to 30 original fictional fighters: three new men and three new women.
 - Each new fighter has a distinct country, division, stance, style, combat attributes, color palette and body-proportion profile.
 - The custom fighter creator now saves a male/female selection. The procedural model uses a subtle shoulder/arm/hip silhouette adjustment; it remains a low-detail placeholder, not a professional anatomical mesh.
+
+
+## Imported base model asset (verified in repository)
+- File: `assets/models/cc0-base-body-anim.glb` (upstream file size: 8,212,156 bytes).
+- Pinned upstream: CharacterCreator commit `852e48f316b90a0937234886630e4fb4cdfd1f78`; upstream Git blob `bdbdab04eb85903e46c56ff56c7a1ea0cbe9c78b`.
+- Repository blob SHA matches the pinned upstream Git blob; SHA-256 is recorded in `assets/models/cc0-base-body-anim.sha256`.
+- Licence notice: `assets/models/CC0-ASSET-NOTICE.md` (CC0-1.0 for generated GLB output).
+- This is an anatomical male base with general locomotion animations. It has not passed visual, clothing, fight-clip, retarget or Android performance QA; it is not yet the default model.
