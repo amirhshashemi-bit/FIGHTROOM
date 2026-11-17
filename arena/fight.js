@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 import { ROSTER, getFighter } from './roster.js';
+import { getCountryOptions, countryFlag } from './countries.js';
 import { DEFAULT_CUSTOM_FIGHTER, MOVE_CATALOG, getBodyMetrics, loadCustomFighter, normalizeCustomFighter, saveCustomFighter } from './character-creator.js';
 import { loadFighterGLB, playFighterClip, updateFighterMocap } from './mocap-runtime.js';
 import { animateFighter } from './motion.js';
@@ -90,7 +91,7 @@ function bindMove(btn){
 }
 
 document.querySelectorAll('[data-move]').forEach(bindMove);
-function populateRoster(select){select.innerHTML='';for(const p of ROSTER){const o=document.createElement('option');o.value=p.id;o.textContent=p.division+' — '+p.name;select.appendChild(o)}}
+function populateRoster(select){select.innerHTML='';for(const p of ROSTER){const o=document.createElement('option');o.value=p.id;o.textContent=p.division+' — '+p.name+' · '+(p.country||'');select.appendChild(o)}}
 const playerSelect=document.getElementById('player-roster'),enemySelect=document.getElementById('enemy-roster');
 populateRoster(playerSelect);populateRoster(enemySelect);playerSelect.value=player.profile.id;enemySelect.value=enemy.profile.id;
 function disposeFighter(f){scene.remove(f.root);f.root.traverse(o=>{o.geometry?.dispose?.();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose?.());else o.material?.dispose?.()})}
@@ -112,16 +113,18 @@ function renderMoveCatalog(profile){
   const btn=document.createElement('button');btn.type='button';btn.disabled=true;btn.textContent='خرید پس از اتصال پرداخت';
   card.append(title,category,state,btn);host.appendChild(card)}
 }
+function populateCountries(select,selected='IR'){select.innerHTML='';for(const country of getCountryOptions('fa')){const o=document.createElement('option');o.value=country.code;o.textContent=countryFlag(country.code)+' '+country.name;select.appendChild(o)}select.value=selected;}
+populateCountries(byId('custom-country'),(loadCustomFighter()||DEFAULT_CUSTOM_FIGHTER).countryCode||'IR');
 function readCustomForm(){
  const saved=loadCustomFighter()||DEFAULT_CUSTOM_FIGHTER;
  return normalizeCustomFighter({...saved,name:byId('custom-name').value,height:byId('custom-height').value,weight:byId('custom-weight').value,reach:byId('custom-reach').value,
   skin:colorNum(byId('custom-skin').value),eye:colorNum(byId('custom-eye').value),hair:colorNum(byId('custom-hair').value),shorts:colorNum(byId('custom-shorts').value),gloves:colorNum(byId('custom-gloves').value),
-  stance:byId('custom-stance').value,style:byId('custom-style').value,power:byId('custom-power').value,speed:byId('custom-speed').value,wrestling:byId('custom-wrestling').value,cardio:byId('custom-cardio').value,
+  countryCode:byId('custom-country').value,stance:byId('custom-stance').value,style:byId('custom-style').value,power:byId('custom-power').value,speed:byId('custom-speed').value,wrestling:byId('custom-wrestling').value,cardio:byId('custom-cardio').value,
   body:{shoulders:Number(byId('custom-shoulders').value)/100,chest:Number(byId('custom-chest').value)/100,arms:Number(byId('custom-arms').value)/100,legs:Number(byId('custom-legs').value)/100}});
 }
 function fillCustomForm(profile){
  const p=profile||DEFAULT_CUSTOM_FIGHTER;
- for(const [id,value] of Object.entries({'custom-name':p.name,'custom-height':p.height,'custom-weight':p.weight,'custom-reach':p.reach,'custom-skin':colorHex(p.skin),'custom-eye':colorHex(p.eye),'custom-hair':colorHex(p.hair),'custom-shorts':colorHex(p.shorts),'custom-gloves':colorHex(p.gloves),'custom-stance':p.stance,'custom-style':p.style,'custom-power':p.power,'custom-speed':p.speed,'custom-wrestling':p.wrestling,'custom-cardio':p.cardio,'custom-shoulders':Math.round((p.body?.shoulders||1)*100),'custom-chest':Math.round((p.body?.chest||1)*100),'custom-arms':Math.round((p.body?.arms||1)*100),'custom-legs':Math.round((p.body?.legs||1)*100)})){if(byId(id))byId(id).value=value}
+ for(const [id,value] of Object.entries({'custom-name':p.name,'custom-height':p.height,'custom-weight':p.weight,'custom-reach':p.reach,'custom-country':p.countryCode||'IR','custom-skin':colorHex(p.skin),'custom-eye':colorHex(p.eye),'custom-hair':colorHex(p.hair),'custom-shorts':colorHex(p.shorts),'custom-gloves':colorHex(p.gloves),'custom-stance':p.stance,'custom-style':p.style,'custom-power':p.power,'custom-speed':p.speed,'custom-wrestling':p.wrestling,'custom-cardio':p.cardio,'custom-shoulders':Math.round((p.body?.shoulders||1)*100),'custom-chest':Math.round((p.body?.chest||1)*100),'custom-arms':Math.round((p.body?.arms||1)*100),'custom-legs':Math.round((p.body?.legs||1)*100)})){if(byId(id))byId(id).value=value}
  for(const id of ['shoulders','chest','arms','legs']){const out=byId('custom-'+id+'-value');if(out)out.textContent=byId('custom-'+id).value+'%'}
 }
 for(const id of ['shoulders','chest','arms','legs'])byId('custom-'+id)?.addEventListener('input',e=>{byId('custom-'+id+'-value').textContent=e.target.value+'%'});
@@ -217,7 +220,7 @@ function resolveFighterSpacing(){
  player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);
  enemy.root.position.x=clamp(enemy.root.position.x,-3.8,3.8);enemy.root.position.z=clamp(enemy.root.position.z,-3.4,3.4);
 }
-function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina);document.getElementById(prefix+'-name').textContent=f.name;document.getElementById(prefix+'-profile').textContent=f.profile.division+' · '+f.profile.style+' · '+f.profile.height+'cm / '+f.profile.reach+'cm · PWR '+f.profile.power+' / SPD '+f.profile.speed+' / WRS '+f.profile.wrestling+' / CAR '+f.profile.cardio}}
+function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina);document.getElementById(prefix+'-name').textContent=f.name;document.getElementById(prefix+'-profile').textContent=f.profile.division+' · '+countryFlag(f.profile.countryCode)+' '+(f.profile.country||'')+' · '+f.profile.style+' · '+f.profile.height+'cm / '+f.profile.reach+'cm · PWR '+f.profile.power+' / SPD '+f.profile.speed+' / WRS '+f.profile.wrestling+' / CAR '+f.profile.cardio}}
 function endFight(text){ended=true;audio.bell();const r=document.getElementById('result');r.classList.remove('hidden');r.innerHTML=text+'<br><small>Refresh the page to start a new bout.</small>';document.getElementById('status').textContent='BOUT COMPLETE'}
 let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended){
  if(bout.phase==='fight'){bout=tickBout(bout,dt);roundSeconds=bout.remaining;if(bout.phase==='between-rounds'){restCountdown=bout.restSeconds;document.getElementById('status').textContent='ROUND BREAK';audio.bell()}if(bout.phase==='decision')endFight(player.hp>enemy.hp?'PLAYER WINS ON POINTS':player.hp<enemy.hp?'CPU WINS ON POINTS':'DRAW')}
