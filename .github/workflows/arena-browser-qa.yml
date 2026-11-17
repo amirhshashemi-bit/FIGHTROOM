@@ -1,4 +1,7 @@
 name: Arena browser visual QA
+concurrency:
+  group: arena-browser-qa-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 on:
   pull_request:
     paths:
