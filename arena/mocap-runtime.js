@@ -59,7 +59,10 @@ export function playFighterClip(THREE,fighter,action){
 }
 export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
  if(!fighter?.mixer)return;
- if(!fighter.action){\n  if(fighter.groundState&&fighter.groundState!=='standing'&&fighter.groundState!=='clinch')playFighterClip(THREE,fighter,'ground-control');\n  else playFighterClip(THREE,fighter,fighter.guard?'guard':fighter.dodge>0?'dodge':moveSpeed>.2?'advance':'idle');\n }
+ if(!fighter.action){
+  if(fighter.groundState&&fighter.groundState!=='standing'&&fighter.groundState!=='clinch')playFighterClip(THREE,fighter,'ground-control');
+  else playFighterClip(THREE,fighter,fighter.guard?'guard':fighter.dodge>0?'dodge':moveSpeed>.2?'advance':'idle');
+ }
  fighter.mixer.update(dt);
 }
 
