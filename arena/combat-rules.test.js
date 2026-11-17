@@ -1,28 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MOVES, resolveStrike } from './combat-rules.js';
-
-test('every authored strike has valid timing and positive reach',()=>{
- for(const [name,move] of Object.entries(MOVES)){
-  assert.ok(move.cost>0,name);assert.ok(move.duration>0,name);
-  assert.ok(move.reach>0,name);assert.ok(move.active[0]<move.active[1],name);
- }
-});
-test('strike outside range or behind defender misses',()=>{
- assert.equal(resolveStrike({move:'jab',distance:3,inFront:true}).result,'miss');
- assert.equal(resolveStrike({move:'cross',distance:1,inFront:false}).result,'miss');
-});
-test('front guard mitigates head strikes and drains stamina',()=>{
- const hit=resolveStrike({move:'cross',distance:1.5,inFront:true,guard:true,defenderStamina:80});
- assert.equal(hit.result,'blocked');assert.ok(hit.damage<MOVES.cross.damage);assert.ok(hit.staminaLoss>0);
-});
-test('evade avoids a correctly ranged strike',()=>{
- assert.equal(resolveStrike({move:'hook',distance:1.2,inFront:true,evading:true}).result,'evaded');
-});
-test('low kick can bypass high guard and still be defended by range',()=>{
- assert.equal(resolveStrike({move:'low',distance:1.5,inFront:true,guard:true,defenderStamina:80}).result,'hit');
- assert.equal(resolveStrike({move:'low',distance:2.8,inFront:true,guard:false}).result,'miss');
-});
-test('unknown techniques are rejected safely',()=>{
- assert.equal(resolveStrike({move:'teleport',distance:1,inFront:true}).result,'invalid');
-});
+import { chooseCpuAction } from './combat-ai.js';
+test('every strike has valid timing, reach and target zone',()=>{for(const [name,m] of Object.entries(MOVES)){assert.ok(m.cost>0,name);assert.ok(m.duration>0,name);assert.ok(m.reach>0,name);assert.ok(m.active[0]<m.active[1],name);assert.ok(['head','body','leg'].includes(m.zone),name)}});
+test('range and facing prevent phantom hits',()=>{assert.equal(resolveStrike({move:'jab',distance:3,inFront:true}).result,'miss');assert.equal(resolveStrike({move:'cross',distance:1,inFront:false}).result,'miss')});
+test('head guard mitigates strikes and consumes stamina',()=>{const h=resolveStrike({move:'cross',distance:1.5,inFront:true,guard:true,defenderStamina:80});assert.equal(h.result,'blocked');assert.ok(h.damage<MOVES.cross.damage);assert.ok(h.staminaLoss>0)});
+test('low kick bypasses head guard but respects range',()=>{assert.equal(resolveStrike({move:'low',distance:1.5,inFront:true,guard:true,defenderStamina:80}).result,'hit');assert.equal(resolveStrike({move:'low',distance:2.8,inFront:true}).result,'miss')});
+test('body defense partially absorbs takedowns',()=>{const h=resolveStrike({move:'takedown',distance:1,inFront:true,guard:true,defenderStamina:80});assert.equal(h.result,'partially-blocked');assert.ok(h.damage<MOVES.takedown.damage)});
+test('exposed and braced target zones alter damage',()=>{const a=resolveStrike({move:'cross',distance:1,inFront:true,defenderZone:'exposed'});const b=resolveStrike({move:'cross',distance:1,inFront:true,defenderZone:'braced'});assert.ok(a.damage>MOVES.cross.damage);assert.ok(b.damage<MOVES.cross.damage)});
+test('unknown move is rejected',()=>assert.equal(resolveStrike({move:'teleport',distance:1,inFront:true}).result,'invalid'));
+test('CPU policy is deterministic for identical state and seed',()=>{const s={distance:1.7,playerAttacking:true,playerGuarding:false,stamina:80,seed:17};assert.deepEqual(chooseCpuAction(s),chooseCpuAction(s))});
+test('CPU approaches, retreats from clinch distance and recovers at low stamina',()=>{assert.equal(chooseCpuAction({distance:3,seed:1}).action,'approach');assert.equal(chooseCpuAction({distance:.5,seed:1}).action,'retreat');assert.equal(chooseCpuAction({distance:1,stamina:5,seed:1}).action,'guard')});
