@@ -15,6 +15,12 @@ test('fictional roster has unique identities and complete physical attributes',(
   assert.ok(f.country&&f.division&&f.style&&['Orthodox','Southpaw'].includes(f.stance));
  }
  assert.ok(divisionList.length>=10);
+ assert.equal(ROSTER.length,30);
+ const added=ROSTER.filter(f=>['arman-daryan','thiago-nascimento','viktor-sokolov','leila-farhadi','sofia-alvarez','amina-diallo'].includes(f.id));
+ assert.equal(added.length,6);
+ assert.equal(added.filter(f=>f.gender==='male').length,3);
+ assert.equal(added.filter(f=>f.gender==='female').length,3);
+ for(const f of added)assert.ok(f.body?.hips>0.7&&f.body?.hips<1.3);
 });
 test('fighter lookup is stable and falls back to first fictional fighter',()=>{
  assert.equal(getFighter(ROSTER[0].id),ROSTER[0]);
