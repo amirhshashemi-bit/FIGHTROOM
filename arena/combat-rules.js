@@ -1,4 +1,4 @@
-// Deterministic MMA strike rules. Kept separate from rendering for testability.
+// Deterministic MMA strike rules with explicit target-zone and defense resolution.
 export const MOVES={
  jab:{cost:6,duration:.40,active:[.30,.52],reach:2.05,damage:4.8,stun:.10,knockback:.07,zone:'head'},
  cross:{cost:9,duration:.52,active:[.34,.57],reach:2.18,damage:7.6,stun:.16,knockback:.12,zone:'head'},
@@ -7,13 +7,16 @@ export const MOVES={
  high:{cost:16,duration:.78,active:[.42,.64],reach:2.20,damage:9.2,stun:.22,knockback:.13,zone:'head'},
  takedown:{cost:19,duration:.88,active:[.40,.70],reach:1.55,damage:2.2,stun:.35,knockback:.18,zone:'body'}
 };
-export function resolveStrike({move,distance,inFront,guard,evading,defenderStamina=100}){
- const spec=MOVES[move];if(!spec)return {result:'invalid',damage:0,staminaLoss:0};
- if(distance>spec.reach||distance<.48||!inFront)return {result:'miss',damage:0,staminaLoss:0};
- if(evading)return {result:'evaded',damage:0,staminaLoss:0};
- if(guard&&move!=='low'&&defenderStamina>2){
+export function resolveStrike({move,distance,inFront,guard=false,evading=false,defenderStamina=100,defenderZone='neutral'}){
+ const spec=MOVES[move];if(!spec)return {result:'invalid',damage:0,staminaLoss:0,zone:null};
+ if(distance>spec.reach||distance<.48||!inFront)return {result:'miss',damage:0,staminaLoss:0,zone:spec.zone};
+ if(evading)return {result:'evaded',damage:0,staminaLoss:0,zone:spec.zone};
+ const zoneMultiplier=defenderZone==='exposed'?1.18:defenderZone==='braced'?.78:1;
+ if(guard&&spec.zone==='head'&&defenderStamina>2){
   const exhausted=defenderStamina<18;
-  return {result:'blocked',damage:exhausted?spec.damage*.28:spec.damage*.10,staminaLoss:exhausted?13:9,stun:exhausted?spec.stun*.45:0,knockback:0};
+  return {result:'blocked',damage:spec.damage*(exhausted?.28:.10),staminaLoss:exhausted?13:9,stun:exhausted?spec.stun*.45:0,knockback:0,zone:spec.zone};
  }
- return {result:'hit',damage:spec.damage,staminaLoss:move==='low'?4:6,stun:spec.stun,knockback:spec.knockback};
+ if(guard&&spec.zone==='body'&&defenderStamina>8)
+  return {result:'partially-blocked',damage:spec.damage*.38,staminaLoss:11,stun:spec.stun*.45,knockback:spec.knockback*.25,zone:spec.zone};
+ return {result:'hit',damage:spec.damage*zoneMultiplier,staminaLoss:move==='low'?4:6,stun:spec.stun*(defenderZone==='exposed'?1.15:1),knockback:spec.knockback,zone:spec.zone};
 }
