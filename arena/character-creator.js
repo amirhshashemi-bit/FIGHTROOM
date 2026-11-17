@@ -3,16 +3,16 @@ import { resolveCountryCode, countryNameForCode } from './countries.js';
 // Local profile storage is a prototype only; purchase entitlements must be server-verified.
 export const CREATOR_STORAGE_KEY = 'fightroom.arena.custom-fighter.v1';
 export const MOVE_CATALOG = [
-  {id:'signature-jab',name:'Signature Jab',category:'Boxing',price:90,baseMove:'jab',clip:'jab'},
-  {id:'signature-cross',name:'Power Cross',category:'Boxing',price:110,baseMove:'cross',clip:'cross'},
-  {id:'spinning-backfist',name:'Spinning Backfist',category:'Advanced Striking',price:180,baseMove:'hook',clip:'spinning backfist'},
-  {id:'superman-punch',name:'Superman Punch',category:'Advanced Striking',price:180,baseMove:'cross',clip:'superman punch'},
-  {id:'switch-kick',name:'Switch Kick',category:'Kicks',price:160,baseMove:'high',clip:'switch kick'},
-  {id:'question-mark-kick',name:'Question Mark Kick',category:'Kicks',price:200,baseMove:'high',clip:'question mark kick'},
-  {id:'spinning-elbow',name:'Spinning Elbow',category:'Advanced Striking',price:190,baseMove:'hook',clip:'spinning elbow'},
-  {id:'flying-knee',name:'Flying Knee',category:'Knees',price:210,baseMove:'high',clip:'flying knee'},
-  {id:'double-leg-chain',name:'Chain Double Leg',category:'Wrestling',price:170,baseMove:'takedown',clip:'double leg'},
-  {id:'armbar-transition',name:'Armbar Transition',category:'Ground',price:190,baseMove:'submission',clip:'armbar'}
+  {id:'signature-jab',name:'Signature Jab',category:'Boxing',price:90,baseMove:'jab',clip:'jab',premium:false},
+  {id:'signature-cross',name:'Power Cross',category:'Boxing',price:110,baseMove:'cross',clip:'cross',premium:false},
+  {id:'spinning-backfist',name:'Spinning Backfist',category:'Advanced Striking',price:180,action:'spinning-backfist',clip:'spinning-backfist',premium:true},
+  {id:'superman-punch',name:'Superman Punch',category:'Advanced Striking',price:180,action:'superman-punch',clip:'superman-punch',premium:true},
+  {id:'switch-kick',name:'Switch Kick',category:'Kicks',price:160,action:'switch-kick',clip:'switch-kick',premium:true},
+  {id:'question-mark-kick',name:'Question Mark Kick',category:'Kicks',price:200,action:'question-mark-kick',clip:'question-mark-kick',premium:true},
+  {id:'spinning-elbow',name:'Spinning Elbow',category:'Advanced Striking',price:190,action:'spinning-elbow',clip:'spinning-elbow',premium:true},
+  {id:'flying-knee',name:'Flying Knee',category:'Knees',price:210,action:'flying-knee',clip:'flying-knee',premium:true},
+  {id:'double-leg-chain',name:'Chain Double Leg',category:'Wrestling',price:170,baseMove:'takedown',clip:'double-leg',premium:true},
+  {id:'armbar-transition',name:'Armbar Transition',category:'Ground',price:190,baseMove:'submission',clip:'armbar',premium:true}
 ];
 export const DEFAULT_CUSTOM_FIGHTER = {
   id:'custom-player', name:'My Fighter', gender:'male', division:'Custom', weight:77, height:180, reach:184, country:'Iran', countryCode:'IR',
