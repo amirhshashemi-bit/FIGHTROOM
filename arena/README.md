@@ -6,7 +6,9 @@ An isolated browser-based MMA combat prototype inside the FIGHTROOM repository. 
 Visit `/arena/` on the deployed FIGHTROOM site. Three.js is loaded from jsDelivr; an internet connection is required.
 
 ## Current scope
-- Procedural articulated original fighter models (no unlicensed real-fighter likenesses)
+- 24 original fictional fighters across 12 weight divisions, with height, reach, stance, style, power, speed, wrestling and cardio attributes
+- Distinct skin, hair, shorts and glove palettes; no real athlete names or identifiable likenesses
+- Optional GLB/glTF motion-capture character import with clip-name mapping onto idle, movement, strikes, blocks, dodges and ground actions
 - Stance, locomotion, jab, cross, hook, low/high kick, guard, evade and takedown attempt
 - Strike phases, stamina cost/regeneration, range checks, guard mitigation, hit reactions and basic CPU opponent
 - Keyboard and touch action buttons
@@ -16,7 +18,9 @@ Visit `/arena/` on the deployed FIGHTROOM site. Three.js is loaded from jsDelivr
 - head/body/leg contact-volume checks and basic ground-state actions (early prototype)
 
 ## Controls
-WASD move; J jab; L cross; K hook; U low kick; I high kick; Space guard; Shift evade; O takedown.
+WASD move; J jab; L cross; K hook; U low kick; I high kick; Space guard; Shift evade; O takedown; N ground pound; hold M submission; B stand up. Select fighters in the roster bar. Upload an animated GLB for either corner to use captured animation clips.
 
 ## Honest limitations
-This is a first playable combat foundation, not a finished MMA game. The fighters are procedural models with authored procedural motion, not optical motion-capture. Ground states and submissions are early gameplay scaffolding, not a complete grappling animation/physics system. Referee scoring is simplified; robust physics, optical motion capture, animation blending polish, crowd/audio assets, network play, and bespoke venue art remain future work. Test on desktop and mobile browsers before release.
+This is a first playable combat foundation, not a finished MMA game. The built-in fighters are still procedural fallback models. A GLB import pipeline now accepts externally supplied animated humanoid models and uses their embedded clips, but no real mocap GLB has yet been committed or automatically applied by default. Ground states and submissions are early gameplay scaffolding, not a complete grappling animation/physics system. Referee scoring is simplified; a checked-in and retarget-tested mocap pack, complete grappling physics, animation blending polish, crowd/audio assets, network play, and bespoke venue art remain future work. Test on desktop and mobile browsers before release.
+
+See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requirements.
