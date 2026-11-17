@@ -26,6 +26,8 @@ jobs:
           node --check arena/referee.js
           node --check arena/venue-builder.js
           node --check arena/mocap.js
+          node --check arena/mocap-runtime.js
+          node --check arena/roster.js
           node --check arena/audio.js
           node --check arena/performance.js
       - name: Run deterministic combat and AI tests
