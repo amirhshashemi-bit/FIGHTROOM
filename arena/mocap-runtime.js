@@ -86,7 +86,8 @@ export async function loadFighterBVH(THREE,file,fighter){
  fighter.clipActions=fighter.clipActions||new Map();
  fighter.clipActions.set(clip.name,fighter.mixer.clipAction(clip));
  fighter.currentClip=null;
- const action=Object.keys(aliases).find(key=>hasFighterClip(fighter,key));
+ const clipName=clip.name.toLowerCase();
+ const action=Object.keys(aliases).find(key=>(aliases[key]||[key]).some(alias=>clipName.includes(alias)));
  if(action)playFighterClip(THREE,fighter,action);
  return {clip:clip.name,tracks:clip.tracks.length,mappedBones:mapping.mappedCount,rig};
 }
