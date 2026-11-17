@@ -19,7 +19,7 @@ export function resolveGroundPair(a,b){
  const top=aIsTop?a:b,bottom=aIsTop?b:a;
  const left=top.side<0;
  const topX=clamp(centerX+(left?-.24:.24),-3.6,3.6);
- const bottomX=clamp(centerX+(left?.24:-.24),-3.6,3.6);
+ const bottomX=clamp(centerX+(left ? .24 : -.24),-3.6,3.6);
  return {
   a:aIsTop?{x:topX,z:centerZ-.18,yaw:top.side<0?Math.PI/2:-Math.PI/2}:{x:bottomX,z:centerZ+.18,yaw:bottom.side<0?Math.PI/2:-Math.PI/2},
   b:aIsTop?{x:bottomX,z:centerZ+.18,yaw:bottom.side<0?Math.PI/2:-Math.PI/2}:{x:topX,z:centerZ-.18,yaw:top.side<0?Math.PI/2:-Math.PI/2},
