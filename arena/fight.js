@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 import { ROSTER, getFighter } from './roster.js';
-import { getCountryOptions, countryFlag } from './countries.js';
+import { getCountryOptions, countryFlag, resolveCountryCode } from './countries.js';
 import { DEFAULT_CUSTOM_FIGHTER, MOVE_CATALOG, getBodyMetrics, loadCustomFighter, normalizeCustomFighter, saveCustomFighter } from './character-creator.js';
 import { loadFighterGLB, playFighterClip, updateFighterMocap } from './mocap-runtime.js';
 import { animateFighter } from './motion.js';
@@ -91,7 +91,7 @@ function bindMove(btn){
 }
 
 document.querySelectorAll('[data-move]').forEach(bindMove);
-function populateRoster(select){select.innerHTML='';for(const p of ROSTER){const o=document.createElement('option');o.value=p.id;o.textContent=p.division+' — '+p.name+' · '+(p.country||'');select.appendChild(o)}}
+function populateRoster(select){select.innerHTML='';for(const p of ROSTER){const o=document.createElement('option');o.value=p.id;o.textContent=p.division+' — '+p.name+' · '+countryFlag(resolveCountryCode(p.country))+' '+(p.country||'');select.appendChild(o)}}
 const playerSelect=document.getElementById('player-roster'),enemySelect=document.getElementById('enemy-roster');
 populateRoster(playerSelect);populateRoster(enemySelect);playerSelect.value=player.profile.id;enemySelect.value=enemy.profile.id;
 function disposeFighter(f){scene.remove(f.root);f.root.traverse(o=>{o.geometry?.dispose?.();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose?.());else o.material?.dispose?.()})}
@@ -220,7 +220,7 @@ function resolveFighterSpacing(){
  player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);
  enemy.root.position.x=clamp(enemy.root.position.x,-3.8,3.8);enemy.root.position.z=clamp(enemy.root.position.z,-3.4,3.4);
 }
-function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina);document.getElementById(prefix+'-name').textContent=f.name;document.getElementById(prefix+'-profile').textContent=f.profile.division+' · '+countryFlag(f.profile.countryCode)+' '+(f.profile.country||'')+' · '+f.profile.style+' · '+f.profile.height+'cm / '+f.profile.reach+'cm · PWR '+f.profile.power+' / SPD '+f.profile.speed+' / WRS '+f.profile.wrestling+' / CAR '+f.profile.cardio}}
+function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina);document.getElementById(prefix+'-name').textContent=f.name;document.getElementById(prefix+'-profile').textContent=f.profile.division+' · '+countryFlag(f.profile.countryCode||resolveCountryCode(f.profile.country))+' '+(f.profile.country||'')+' · '+f.profile.style+' · '+f.profile.height+'cm / '+f.profile.reach+'cm · PWR '+f.profile.power+' / SPD '+f.profile.speed+' / WRS '+f.profile.wrestling+' / CAR '+f.profile.cardio}}
 function endFight(text){ended=true;audio.bell();const r=document.getElementById('result');r.classList.remove('hidden');r.innerHTML=text+'<br><small>Refresh the page to start a new bout.</small>';document.getElementById('status').textContent='BOUT COMPLETE'}
 let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended){
  if(bout.phase==='fight'){bout=tickBout(bout,dt);roundSeconds=bout.remaining;if(bout.phase==='between-rounds'){restCountdown=bout.restSeconds;document.getElementById('status').textContent='ROUND BREAK';audio.bell()}if(bout.phase==='decision')endFight(player.hp>enemy.hp?'PLAYER WINS ON POINTS':player.hp<enemy.hp?'CPU WINS ON POINTS':'DRAW')}
