@@ -1,7 +1,7 @@
 import { inspectHumanoidRig, applyCharacterMorphs } from './character-rig.js';
 import { BVHLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/BVHLoader.js';
 import * as SkeletonUtils from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
-import { buildRetargetNameMap, validateRetargetMap } from './mocap-retarget.js';
+import { buildRetargetNameMap, validateRetargetMap, semanticBone } from './mocap-retarget.js';
 // Load externally supplied, properly licensed humanoid GLB motion-capture packs.
 const aliases={
  idle:['idle','stance','fight idle','fighting stance'],
@@ -78,7 +78,8 @@ export async function loadFighterBVH(THREE,file,fighter){
  const names=buildRetargetNameMap(target.skeleton.bones.map(b=>b.name),sourceSkeleton.bones.map(b=>b.name));
  const mapping=validateRetargetMap(names);
  if(!mapping.compatible)throw new Error('BVH skeleton mapping incomplete: '+mapping.mappedCount+' bones mapped');
- const clip=SkeletonUtils.retargetClip(target,sourceSkeleton,parsed.clip,{names,fps:30,useFirstFramePosition:false,preserveBoneMatrix:true,preserveBonePositions:true});
+ const sourceHip=sourceSkeleton.bones.find(b=>semanticBone(b.name)==='hips')?.name||sourceSkeleton.bones[0].name;
+ const clip=SkeletonUtils.retargetClip(target,sourceSkeleton,parsed.clip,{names,hip:sourceHip,fps:30,useFirstFramePosition:false,preserveBoneMatrix:true,preserveBonePositions:true});
  clip.name=file.name.replace(/\\.bvh$/i,'').replace(/[^a-z0-9_-]/gi,'-').toLowerCase();
  if(!clip.tracks?.length)throw new Error('Retarget produced an empty animation clip');
  if(!fighter.mixer)fighter.mixer=new THREE.AnimationMixer(fighter.externalModel);
