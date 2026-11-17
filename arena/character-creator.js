@@ -1,3 +1,4 @@
+import { resolveCountryCode, countryNameForCode } from './countries.js';
 // FIGHTROOM custom fighter profiles and premium movement catalogue.
 // Local profile storage is a prototype only; purchase entitlements must be server-verified.
 export const CREATOR_STORAGE_KEY = 'fightroom.arena.custom-fighter.v1';
@@ -14,7 +15,7 @@ export const MOVE_CATALOG = [
   {id:'armbar-transition',name:'Armbar Transition',category:'Ground',price:190,baseMove:'submission',clip:'armbar'}
 ];
 export const DEFAULT_CUSTOM_FIGHTER = {
-  id:'custom-player', name:'My Fighter', division:'Custom', weight:77, height:180, reach:184,
+  id:'custom-player', name:'My Fighter', division:'Custom', weight:77, height:180, reach:184, country:'Iran', countryCode:'IR',
   stance:'Orthodox', style:'All-rounder', country:'Custom', skin:0xb97855, hair:0x211914,
   shorts:0x26313c, gloves:0x9e2733, eye:0x3b2418,
   power:80,speed:80,wrestling:80,cardio:80,
@@ -27,6 +28,8 @@ export function normalizeCustomFighter(raw={}){
  return {
   ...d,...raw,id:'custom-player',custom:true,
   name:String(raw.name||d.name).trim().slice(0,24)||d.name,
+  countryCode:resolveCountryCode(raw.countryCode||raw.country||d.countryCode),
+  country:countryNameForCode(resolveCountryCode(raw.countryCode||raw.country||d.countryCode),'en'),
   height:clamp(raw.height??d.height,150,215),reach:clamp(raw.reach??d.reach,145,230),weight:clamp(raw.weight??d.weight,45,150),
   power:clamp(raw.power??d.power,40,100),speed:clamp(raw.speed??d.speed,40,100),wrestling:clamp(raw.wrestling??d.wrestling,40,100),cardio:clamp(raw.cardio??d.cardio,40,100),
   skin:Number.isFinite(Number(raw.skin))?Number(raw.skin):d.skin,
