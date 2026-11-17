@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "venues": [
+    {
+      "id": "las-vegas",
+      "name": "Las Vegas — Grand Arena",
+      "country": "USA",
+      "city": "Las Vegas",
+      "architecture": "modern-resort",
+      "lighting": "warm-white",
+      "crowd": "capacity-20k",
+      "canvas": "charcoal"
+    },
+    {
+      "id": "abu-dhabi",
+      "name": "Abu Dhabi — Etihad Hall",
+      "country": "UAE",
+      "city": "Abu Dhabi",
+      "architecture": "desert-modern",
+      "lighting": "gold-amber",
+      "crowd": "capacity-18k",
+      "canvas": "sandstone"
+    },
+    {
+      "id": "london",
+      "name": "London — O2 Arena",
+      "country": "UK",
+      "city": "London",
+      "architecture": "industrial-dome",
+      "lighting": "cool-white",
+      "crowd": "capacity-17k",
+      "canvas": "slate"
+    },
+    {
+      "id": "tokyo",
+      "name": "Tokyo — Metropolitan Dome",
+      "country": "Japan",
+      "city": "Tokyo",
+      "architecture": "minimal-tech",
+      "lighting": "ice-blue",
+      "crowd": "capacity-15k",
+      "canvas": "graphite"
+    },
+    {
+      "id": "rio",
+      "name": "Rio de Janeiro — Maracanãzinho",
+      "country": "Brazil",
+      "city": "Rio de Janeiro",
+      "architecture": "concrete-bowl",
+      "lighting": "tropical-green",
+      "crowd": "capacity-11k",
+      "canvas": "deep-green"
+    },
+    {
+      "id": "paris",
+      "name": "Paris — Accor Arena",
+      "country": "France",
+      "city": "Paris",
+      "architecture": "urban-premium",
+      "lighting": "tricolor-white",
+      "crowd": "capacity-16k",
+      "canvas": "navy"
+    },
+    {
+      "id": "bangkok",
+      "name": "Bangkok — Lumpinee Stadium",
+      "country": "Thailand",
+      "city": "Bangkok",
+      "architecture": "traditional-fight-hall",
+      "lighting": "hot-amber",
+      "crowd": "capacity-5k",
+      "canvas": "crimson"
+    },
+    {
+      "id": "new-york",
+      "name": "New York — Madison Square Garden",
+      "country": "USA",
+      "city": "New York",
+      "architecture": "historic-indoor",
+      "lighting": "theatre-spot",
+      "crowd": "capacity-20k",
+      "canvas": "midnight"
+    },
+    {
+      "id": "toronto",
+      "name": "Toronto — Scotiabank Arena",
+      "country": "Canada",
+      "city": "Toronto",
+      "architecture": "glass-steel",
+      "lighting": "cold-white",
+      "crowd": "capacity-19k",
+      "canvas": "ice"
+    },
+    {
+      "id": "sydney",
+      "name": "Sydney — Qudos Bank Arena",
+      "country": "Australia",
+      "city": "Sydney",
+      "architecture": "harbour-modern",
+      "lighting": "ocean-blue",
+      "crowd": "capacity-18k",
+      "canvas": "ocean"
+    }
+  ],
+  "note": "Venue identity data only. Distinct 3D environments, signage and lighting are scheduled after fighter/combat quality."
+}
