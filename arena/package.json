@@ -8,6 +8,6 @@
     "test:roster": "node --test roster.test.js",
     "test": "npm run test:combat && npm run test:advanced && npm run test:roster && npm run test:creator && npm run test:rig",
     "test:creator": "node --test character-creator.test.js",
-    "test:rig": "node --test character-rig.test.js"
+    "test:rig": "node --test character-rig.test.js glb-rig-inspector.test.js"
   }
 }
