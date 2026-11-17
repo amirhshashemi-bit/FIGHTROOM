@@ -8,7 +8,7 @@ test('desktop arena renders WebGL and responds to keyboard strike and movement',
   await expect(canvas).toBeVisible({ timeout: 30000 });
   await expect(page.locator('#p-health')).toBeAttached();
   await expect(page.locator('[data-action="takedown"]')).toBeVisible();
-  await expect(page.locator('#p-mocap-file')).toHaveAttribute('accept', expect.stringContaining('.bvh'));
+  expect(await page.locator('#p-mocap-file').getAttribute('accept')).toContain('.bvh');
   await page.keyboard.down('j');
   await page.waitForTimeout(420);
   await page.keyboard.up('j');
