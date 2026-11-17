@@ -3,7 +3,7 @@ import { inspectHumanoidRig, applyCharacterMorphs } from './character-rig.js';
 const aliases={
  idle:['idle','stance','fight idle','fighting stance'],
  advance:['advance','walk','forward','move'],
- retreat:['retreat','backward','back walk'],
+ retreat:['retreat','backward','back walk','walk_back'],
  jab:['jab'],cross:['cross'],hook:['hook','uppercut'],low:['low kick','low-kick'],high:['roundhouse','high kick','kick'],
  guard:['block','guard'],dodge:['dodge','slip','evade'],takedown:['takedown','double leg','sprawl'],
  'ground-pound':['ground pound','ground-and-pound'], 'stand-up':['get up','stand up','get-up'],submission:['submission','ground control']
