@@ -3,7 +3,7 @@ import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/
 import { ROSTER, getFighter } from './roster.js';
 import { getCountryOptions, countryFlag, resolveCountryCode } from './countries.js';
 import { DEFAULT_CUSTOM_FIGHTER, MOVE_CATALOG, getBodyMetrics, loadCustomFighter, normalizeCustomFighter, saveCustomFighter } from './character-creator.js';
-import { loadFighterGLB, playFighterClip, updateFighterMocap } from './mocap-runtime.js';
+import { loadFighterGLB, playFighterClip, updateFighterMocap, hasFighterClip } from './mocap-runtime.js';
 import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
 import { chooseCpuAction } from './combat-ai.js';
@@ -49,7 +49,15 @@ function fighter(profile,side){const name=profile.name,skin=material(profile.ski
  const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,skin};
  return state}
 player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('kwame-boateng'),1);
-function pose(f,t,moveSpeed,dt){if(f.mixer){updateFighterMocap(THREE,f,dt,moveSpeed);return}animateFighter(f,t,moveSpeed,dt)}
+function pose(f,t,moveSpeed,dt){
+ if(f.mixer){
+  updateFighterMocap(THREE,f,dt,moveSpeed);
+  const unsupported=(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||(f.groundState!=='standing'&&!hasFighterClip(f,'ground-control'));
+  if(!unsupported)return;
+  f.externalModel.visible=false;f.rig.visible=true;f.mixer.stopAllAction();f.mixer=null;f.currentAction=null;f.currentClip=null;
+ }
+ animateFighter(f,t,moveSpeed,dt);
+ }
 function resize(){const w=mount.clientWidth,h=mount.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(mount);resize();
 const keys=new Set(),touchMove=new Set();
 function currentMoveVector(){
