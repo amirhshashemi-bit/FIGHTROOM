@@ -8,7 +8,7 @@ import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
 import { chooseCpuAction } from './combat-ai.js';
 import { classifyContact } from './hitboxes.js';
-import { transitionGround, submissionProgress } from './ground-combat.js';
+import { transitionGround, submissionProgress, resolveGrappleAction, GRAPPLE_ACTIONS } from './ground-combat.js';
 import { createBout, tickBout, nextRound, stoppage } from './referee.js';
 import { buildVenue } from './venue-builder.js';
 import { createFightAudio } from './audio.js';
@@ -69,6 +69,19 @@ function currentMoveVector(){
 function setAction(f,type,animationClip=null){
  if(ended||bout.phase!=='fight'||f.action||f.knock>0||f.stun>0)return;
  if(f===player&&!canUseCombatAction(type,premiumAccess)){document.getElementById('status').textContent='این فن فقط برای اعضای ویژه فعال است';return;}
+ if(GRAPPLE_ACTIONS[type]&&GRAPPLE_ACTIONS[type].premium&&f===player&&!premiumAccess){document.getElementById('status').textContent='این فن فقط برای اعضای ویژه فعال است';return;}
+ if(['clinch','sprawl','frame','escape','sweep','pass','mount','back-take','defend-submission'].includes(type)){
+  const def=f===player?enemy:player;
+  const result=resolveGrappleAction({action:type,attackerState:f.groundState,defenderState:def.groundState,attackerStamina:f.stamina,defenderStamina:def.stamina,attackerSkill:f.profile.wrestling,defenderSkill:def.profile.wrestling,premium:f!==player||premiumAccess});
+  if(!result.ok){document.getElementById('status').textContent=result.reason==='premium-required'?'این فن فقط برای اعضای ویژه فعال است':'حرکت در این موقعیت قابل اجرا نیست';return}
+  f.groundState=result.attackerState;def.groundState=result.defenderState;
+  f.stamina=result.attackerStamina;def.stamina=result.defenderStamina;
+  if(type==='clinch'){const mid=(f.root.position.x+def.root.position.x)/2;f.root.position.x=mid-(f.side<0?.38:-.38);def.root.position.x=mid+(f.side<0?.38:-.38)}
+  if(type==='frame')f.guard=true;
+  playFighterClip(THREE,f,type==='defend-submission'?'submission':type);
+  document.getElementById('status').textContent=type.toUpperCase().replaceAll('-',' ')+' · GRAPPLING';
+  updateUI();return;
+ }
  if(type==='submission'||type==='ground-pound'||type==='stand-up'){
   const def=f===player?enemy:player;
   if(type==='submission'&&['top-control','mount','back-control'].includes(f.groundState)){
@@ -201,10 +214,8 @@ function applyHit(att,def,type){
  def.hitFlash=result.result==='blocked'?.09:.18;def.stun=Math.max(def.stun||0,result.stun||0);
  if(result.result==='blocked')audio.block();else{audio.strike();audio.impact()}
  if(type==='takedown'&&result.result==='hit'){
-  const a=transitionGround(att.groundState,'clinch',{stamina:att.stamina}),d=transitionGround(def.groundState,'clinch',{stamina:def.stamina});
-  const finish=a.ok&&d.ok?transitionGround('clinch','takedown',{stamina:att.stamina}):{ok:false};
-  const wrestlingEdge=att.profile.wrestling-def.profile.wrestling;
-  if(finish.ok&&wrestlingEdge>=-12){att.groundState='top-control';def.groundState='bottom-guard';att.stamina=Math.max(0,att.stamina-finish.staminaCost);def.knock=Math.max(def.knock,.72);def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*.18}
+  const grappling=resolveGrappleAction({action:'takedown',attackerState:att.groundState,defenderState:def.groundState,attackerStamina:att.stamina,defenderStamina:def.stamina,attackerSkill:att.profile.wrestling,defenderSkill:def.profile.wrestling,premium:att!==player||premiumAccess});
+  if(grappling.ok){att.groundState=grappling.attackerState;def.groundState=grappling.defenderState;att.stamina=grappling.attackerStamina;def.stamina=grappling.defenderStamina;def.knock=Math.max(def.knock,.42)}
   else{def.stun=Math.max(def.stun,.18);document.getElementById('status').textContent='TAKEDOWN DEFENDED'}
  }
  else if(result.knockback)def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*result.knockback;
