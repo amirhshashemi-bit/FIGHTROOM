@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:combat": "node --test combat-rules.test.js"
+    "test:combat": "node --test combat-rules.test.js",
+    "test:advanced": "node --test advanced-systems.test.js",
+    "test": "npm run test:combat && npm run test:advanced"
   }
 }
