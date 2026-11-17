@@ -127,7 +127,7 @@ function renderMoveCatalog(profile){
  const host=byId('move-catalog');if(!host)return;host.innerHTML='';
  for(const move of MOVE_CATALOG){const card=document.createElement('article');card.className='move-card';
   const title=document.createElement('b');title.textContent=move.name;
-  const category=document.createElement('small');category.textContent=move.category+' · '+move.price+' credits';
+  const category=document.createElement('small');category.textContent=move.category+' · '+(move.premium?'PREMIUM ACCESS':'STANDARD');
   const state=document.createElement('small');state.textContent=move.premium&&!premiumAccess?'قفل اشتراک ویژه':(profile?.equippedMoves?.includes(move.id)?'مجهز شده':move.premium?'فعال با اشتراک ویژه':'قابل انتخاب · پایه');
   const btn=document.createElement('button');btn.type='button';btn.disabled=true;btn.textContent=move.premium?(premiumAccess?'ویژه فعال':'قفل ویژه'):'پیش‌فرض';
   card.append(title,category,state,btn);host.appendChild(card)}
