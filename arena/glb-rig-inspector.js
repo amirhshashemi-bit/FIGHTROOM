@@ -15,7 +15,7 @@ export function parseGlbJson(input) {
 const clean = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const aliases = {
   hips: ['hips','pelvis','root','mixamorighips'],
-  spine: ['spine','spine1','spine01','mixamorიგspine','mixamorიგspine1'],
+  spine: ['spine','spine1','spine01','mixamorigspine','mixamorigspine1'],
   head: ['head','mixamorighead'],
   leftUpperArm: ['leftarm','upperarml','upperarml','mixamorigleftarm'],
   rightUpperArm: ['rightarm','upperarmr','mixamorigrightarm'],
@@ -40,7 +40,6 @@ export function inspectGlbDocument(doc) {
   const animations = Array.isArray(doc.animations) ? doc.animations : [];
   const nodeNames = nodes.map((n,i) => n.name || `node_${i}`);
   const joints = [...new Set(skins.flatMap(s => (s.joints || []).map(i => nodeNames[i] || `node_${i}`)))];
-  const normalizedJoints = new Set(joints.map(clean));
   const boneMatches = {};
   for (const [key, names] of Object.entries(aliases)) {
     const match = joints.find(name => names.map(clean).includes(clean(name)));
