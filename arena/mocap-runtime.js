@@ -6,7 +6,10 @@ const aliases={
  retreat:['retreat','backward','back walk','walk_back'],
  jab:['jab'],cross:['cross'],hook:['hook','uppercut'],low:['low kick','low-kick'],high:['roundhouse','high kick','kick'],
  guard:['block','guard'],dodge:['dodge','slip','evade'],takedown:['takedown','double leg','sprawl'],
- 'ground-pound':['ground pound','ground-and-pound'], 'stand-up':['get up','stand up','get-up'],submission:['submission','ground control']
+ 'ground-pound':['ground pound','ground-and-pound'], 'stand-up':['get up','stand up','get-up'],submission:['submission','ground control','armbar'],
+ 'spinning-backfist':['spinning backfist','spinning-backfist'], 'superman-punch':['superman punch','superman-punch'],
+ 'switch-kick':['switch kick','switch-kick'], 'question-mark-kick':['question mark kick','question-mark-kick'],
+ 'spinning-elbow':['spinning elbow','spinning-elbow'], 'flying-knee':['flying knee','flying-knee'], 'ground-control':['ground control','top control','bottom guard'],
 };
 export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  const loader=new GLTFLoader(),buffer=await file.arrayBuffer();
@@ -34,10 +37,16 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  playFighterClip(THREE,fighter,'idle');
  return {clips:gltf.animations.map(c=>c.name),height:size.y,rig:rigReport,appliedMorphs};
 }
+export function hasFighterClip(fighter,action){
+ if(!fighter?.clips?.length)return false;
+ const keys=aliases[action]||[action];
+ return Boolean(fighter.clips.find(c=>keys.some(k=>c.name.toLowerCase().includes(k))));
+}
 export function playFighterClip(THREE,fighter,action){
  if(!fighter?.mixer||!fighter?.clips?.length)return false;
  const keys=aliases[action]||[action],clip=fighter.clips.find(c=>keys.some(k=>c.name.toLowerCase().includes(k)));
- if(!clip)return false;
+ if(!clip){fighter.missingClipAction=action;return false;}
+ fighter.missingClipAction=null;
  if(fighter.currentClip===clip.name)return true;
  const next=fighter.clipActions.get(clip.name);if(!next)return false;
  const previous=fighter.currentAction;
