@@ -85,11 +85,11 @@ document.querySelectorAll('[data-move]').forEach(bindMove);
 window.addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
  const alias={arrowup:'w',arrowdown:'s',arrowleft:'a',arrowright:'d'};keys.add(alias[k]||k);if(e.repeat)return;
- const map={j:'jab',l:'cross',k:'hook',u:'low',i:'high',o:'takedown',' ':'guard',shift:'dodge'};if(map[k])setAction(player,map[k]);
+ const map={j:'jab',l:'cross',k:'hook',u:'low',i:'high',o:'takedown',n:'ground-pound',m:'submission',b:'stand-up',' ':'guard',shift:'dodge'};if(map[k])setAction(player,map[k]);
 });
 window.addEventListener('keyup',e=>{
  const k=e.key.toLowerCase(),alias={arrowup:'w',arrowdown:'s',arrowleft:'a',arrowright:'d'};
- keys.delete(alias[k]||k);if(k===' ')releaseAction(player,'guard');
+ keys.delete(alias[k]||k);if(k===' ')releaseAction(player,'guard');if(k==='m')releaseAction(player,'submission');
 });
 function distance(a,b){return a.root.position.distanceTo(b.root.position)}
 function face(a,b){const dx=b.root.position.x-a.root.position.x;a.root.rotation.y=Math.atan2(dx,Math.abs(b.root.position.z-a.root.position.z)+.001)*(a.side<0?1:-1);a.root.rotation.y=a.side<0?Math.PI/2:-Math.PI/2;}
