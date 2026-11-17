@@ -94,7 +94,7 @@ function setAction(f,type,animationClip=null){
   }else if(type==='ground-pound'&&f.groundState==='top-control'){
    const spec=MOVES['ground-pound'];if(f.stamina>=spec.cost){f.stamina-=spec.cost;f.action='ground-pound';f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;playFighterClip(THREE,f,animationClip||'ground-pound')}
   }
-  else if(type==='stand-up'&&f.groundState!=='standing'){f.groundState='standing';def.groundState='standing';f.submitting=false;def.submitting=false;f.stamina=Math.max(0,f.stamina-10)}
+  else if(type==='stand-up'&&f.groundState!=='standing'){f.groundState='standing';def.groundState='standing';f.submitting=false;def.submitting=false;f.stamina=Math.max(0,f.stamina-10);playFighterClip(THREE,f,'stand-up');playFighterClip(THREE,def,'stand-up')}
   updateUI();return;
  }
  if(type==='guard'){f.guard=true;playFighterClip(THREE,f,'guard');return}
