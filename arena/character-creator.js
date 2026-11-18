@@ -17,7 +17,7 @@ export const MOVE_CATALOG = [
 ];
 export const DEFAULT_CUSTOM_FIGHTER = {
   id:'custom-player', name:'My Fighter', gender:'male', division:'Custom', weight:77, height:180, reach:184, country:'Iran', countryCode:'IR',
-  stance:'Orthodox', style:'All-rounder', country:'Custom', skin:0xb97855, hair:0x211914,
+  stance:'Orthodox', style:'All-rounder', skin:0xb97855, hair:0x211914,
   shorts:0x26313c, gloves:0x9e2733, eye:0x3b2418,
   power:80,speed:80,wrestling:80,cardio:80,
   body:{shoulders:1,chest:1,arms:1,legs:1},
@@ -48,8 +48,10 @@ export function loadCustomFighter(){
  try{
   const raw=JSON.parse(localStorage.getItem(CREATOR_STORAGE_KEY)||'null');
   if(!raw||typeof raw!=='object'||Array.isArray(raw))return null;
+  const storedVersion=Number(raw.schemaVersion)||1;
+  if(storedVersion>CREATOR_SCHEMA_VERSION)return null;
   const clean=normalizeCustomFighter(raw);
-  if(raw.schemaVersion!==CREATOR_SCHEMA_VERSION)localStorage.setItem(CREATOR_STORAGE_KEY,JSON.stringify(clean));
+  if(storedVersion<CREATOR_SCHEMA_VERSION)localStorage.setItem(CREATOR_STORAGE_KEY,JSON.stringify(clean));
   return clean;
  }catch{return null}
 }
