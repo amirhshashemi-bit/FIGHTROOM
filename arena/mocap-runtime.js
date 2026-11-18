@@ -180,7 +180,9 @@ export function playFighterClip(THREE,fighter,action){
  }
  fighter.missingClipAction=null;
  if(fighter.currentClip===clip.name)return true;
- const next=fighter.clipActions.get(clip.name);if(!next)return false;
+ fighter.clipActions=fighter.clipActions||new Map();
+ const next=fighter.clipActions.get(clip.name)||fighter.mixer.clipAction(clip);
+ if(!fighter.clipActions.has(clip.name))fighter.clipActions.set(clip.name,next);
  const previous=fighter.currentAction;
  next.reset();next.enabled=true;next.setEffectiveWeight(1);next.timeScale=1;
  if(action==='advance'||action==='retreat'||action==='guard')next.setLoop(THREE.LoopRepeat,Infinity);

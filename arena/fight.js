@@ -272,6 +272,7 @@ async function loadBundledAccadPack(which){
   f.clips=[...accadClips,...nativeOnly];
   playFighterClip(THREE,f,'idle');
   f.root.visible=true;
+  if(!fighterAssetsReady(f))f.proceduralFallbackReady=true;
   const report=which.toUpperCase()+' · UAL1 '+nativeOnly.length+' NATIVE CLIPS + '+loaded+' REAL ACCAD MOCAP CLIPS · '+lastInfo.mappedBones+' BONES MAPPED · '+gender.toUpperCase()+' RIG'+(f.outfitReport?' · FIGHTWEAR READY':'');
   status.textContent=report;byId('stage-mocap-status').textContent=report;
   updateFighterReadiness(which.toUpperCase()+' READY · WAITING FOR THE OTHER FIGHTER');
