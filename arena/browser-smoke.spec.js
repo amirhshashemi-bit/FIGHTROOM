@@ -49,6 +49,6 @@ test('bundled real ACCAD mocap pack loads and plays through the arena runtime', 
   await expect(page.locator('#mocap-status')).toContainText('8 CLIPS');
   await page.keyboard.press('j');
   await page.waitForTimeout(550);
-  await page.screenshot({ path: 'artifacts/arena-accad-mocap-retarget.png', fullPage: true });
+  await page.locator('#view canvas').screenshot({ path: 'artifacts/arena-accad-mocap-retarget.png' });
   expect(pageErrors).toEqual([]);
 });
