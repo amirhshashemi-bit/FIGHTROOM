@@ -54,7 +54,7 @@ test('Android-sized viewport renders grappling and defensive touch controls', as
 test('both gendered fighter rigs load native and ACCAD motion, then play synchronized CMU pairs', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
-  await page.goto('http://127.0.0.1:4173/arena/', { waitUntil: 'domcontentloaded' });
+  await page.goto('http://127.0.0.1:4173/arena/?showcase=1', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#view canvas')).toBeVisible({ timeout: 30000 });
   await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 5 REAL ACCAD CLIPS EACH · READY', { timeout: 60000 });
   const initial = await page.evaluate(() => window.__fightroomDebug());
@@ -71,6 +71,20 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   const male = rosterOptions.find(option => !option.label.includes('Women'));
   expect(female).toBeTruthy();
   expect(male).toBeTruthy();
+  const assertMotion = async (action, clipName) => {
+    await page.locator(`[data-action="${action}"]`).click();
+    await page.waitForFunction(expected => window.__fightroomDebug().player.currentClip?.toLowerCase().includes(expected), clipName, { timeout: 5000 });
+    await page.waitForFunction(() => window.__fightroomDebug().player.currentClip === 'rest', null, { timeout: 7000 });
+  };
+  const assertGuardMotion = async () => {
+    const button = page.locator('[data-action="guard"]');
+    const bounds = await button.boundingBox();
+    await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    await page.mouse.down();
+    await page.waitForFunction(() => window.__fightroomDebug().player.currentClip?.toLowerCase().includes('blocklefthigh'), null, { timeout: 5000 });
+    await page.mouse.up();
+    await page.waitForFunction(() => window.__fightroomDebug().player.currentClip === 'rest', null, { timeout: 5000 });
+  };
   await page.locator('#player-roster').selectOption(female.value);
   await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 5 REAL ACCAD MOCAP CLIPS', { timeout: 60000 });
   await expect(page.locator('#mocap-status')).toContainText('FEMALE RIG');
@@ -80,12 +94,22 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   expect(femaleDebug.currentClip).toBe('rest');
   expect(femaleDebug.modelBounds.size[1]).toBeGreaterThan(1.5);
   expect(femaleDebug.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(5);
+  await assertMotion('jab', 'jableft');
+  await assertMotion('cross', 'crossleft');
+  await assertMotion('high', 'roundhouseleft');
+  await assertGuardMotion();
+  await assertMotion('dodge', 'dodgeleft');
   await page.locator('#player-roster').selectOption(male.value);
   await expect(page.locator('#mocap-status')).toContainText('MALE RIG', { timeout: 60000 });
   const maleDebug = await page.evaluate(() => window.__fightroomDebug().player);
   expect(maleDebug.rig.compatible).toBe(true);
   expect(maleDebug.currentClip).toBe('rest');
   expect(maleDebug.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(5);
+  await assertMotion('jab', 'jableft');
+  await assertMotion('cross', 'crossleft');
+  await assertMotion('high', 'roundhouseleft');
+  await assertGuardMotion();
+  await assertMotion('dodge', 'dodgeleft');
   await page.locator('#player-roster').selectOption(female.value);
   await page.locator('#enemy-roster').selectOption(male.value);
   await page.waitForFunction(() => {
