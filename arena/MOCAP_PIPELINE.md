@@ -38,7 +38,7 @@ The ACCAD martial-arts source is principally single-performer striking and footw
 6. Before shipping, record each file's source, licence, attribution, SHA-256, frame rate, skeleton notes and a successful playback/retarget test in the asset manifest.
 
 ## Current release blockers
-- The 27 committed ACCAD BVH clips still require successful in-browser retarget and playback QA against the bundled GLB before the pack can be considered validated.
+- Browser CI successfully loads and retargets eight committed ACCAD clips onto the bundled male GLB test rig, reporting 13 mapped bones and no runtime errors. The full 27-clip pack still needs clip-by-clip visual review and biomechanics QA.
 - No dedicated two-person wrestling/submission mocap is integrated.
 - Retarget mapping is a conservative humanoid name-map, not a universal retargeter. Unusual skeletons are rejected rather than silently accepted.
 - Root-motion extraction, foot locking, contact-aware blending and per-move retarget calibration remain future polish.
