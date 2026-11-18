@@ -8,6 +8,7 @@ import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
 import { chooseCpuAction } from './combat-ai.js';
 import { classifyContact } from './hitboxes.js';
+import { resolveBodyContact, resolveImpactImpulse } from './contact-physics.js';
 import { transitionGround, submissionProgress, resolveGrappleAction, GRAPPLE_ACTIONS } from './ground-combat.js';
 import { stepGroundPair } from './ground-presentation.js';
 import { createBout, tickBout, nextRound, stoppage } from './referee.js';
@@ -47,7 +48,7 @@ function fighter(profile,side){const name=profile.name,skin=material(profile.ski
  const belt=new THREE.Mesh(new THREE.BoxGeometry(.43,.055,.29),material(0xc2a56c,.5,.35));rig.add(belt);belt.position.y=1.02;
  const eyes=[];const eyeMat=material(profile.eye??0x151515,.35);for(const s of [-1,1]){const e=sphere(rig,'eye',.018,eyeMat,V(s*.07,1.68,.17));eyes.push(e)}
  for(const sideKey of ['L','R']){for(const part of ['upperArm','foreArm']){const m=limbs[part+sideKey];m.scale.x=proportions.arms;m.scale.z=proportions.arms}for(const part of ['thigh','shin']){const m=limbs[part+sideKey];m.scale.x=proportions.legs;m.scale.z=proportions.legs}}
- const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,frameTimer:0,motionOverride:null,motionOverrideTime:0,skin};
+ const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,knockVector:V(),move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,frameTimer:0,motionOverride:null,motionOverrideTime:0,skin};
  return state}
 player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('kwame-boateng'),1);
 function pose(f,t,moveSpeed,dt){
@@ -266,7 +267,12 @@ function applyHit(att,def,type){
   if(grappling.ok){att.groundState=grappling.attackerState;def.groundState=grappling.defenderState;att.stamina=grappling.attackerStamina;def.stamina=grappling.defenderStamina;def.knock=Math.max(def.knock,.42)}
   else{def.stun=Math.max(def.stun,.18);document.getElementById('status').textContent='TAKEDOWN DEFENDED'}
  }
- else if(result.knockback)def.root.position.x+=Math.sign(def.root.position.x-att.root.position.x)*result.knockback;
+ 
+else {
+  const impact=resolveImpactImpulse({attacker:{x:att.root.position.x,z:att.root.position.z},defender:{x:def.root.position.x,z:def.root.position.z},damage:result.damage*(.8+att.profile.power/500),defenderMassKg:def.profile.weight||75,guarded:result.result==='blocked'||result.result==='partially-blocked'});
+  def.knockVector.set(impact.x,0,impact.z);
+  if(impact.speed>.04)def.knock=Math.max(def.knock,.12+impact.speed*.2);
+ }
  return true;
 }
 function tickFighter(f,dt){
@@ -278,7 +284,9 @@ function tickFighter(f,dt){
   if(f.stamina<=0)releaseAction(f,'submission');
  }
  f.stamina=clamp(f.stamina+dt*(f.submitting?0:f.guard?2.1:4+f.profile.cardio*.035),0,100);
- f.hitFlash=Math.max(0,f.hitFlash-dt);f.knock=Math.max(0,f.knock-dt);f.dodge=Math.max(0,f.dodge-dt);f.stun=Math.max(0,(f.stun||0)-dt);
+ f.hitFlash=Math.max(0,f.hitFlash-dt);f.knock=Math.max(0,f.knock-dt);
+ if(f.knockVector?.lengthSq()>.0001){f.root.position.addScaledVector(f.knockVector,dt);f.knockVector.multiplyScalar(Math.exp(-dt*8));}
+ f.dodge=Math.max(0,f.dodge-dt);f.stun=Math.max(0,(f.stun||0)-dt);
  if(f.frameTimer>0){f.frameTimer=Math.max(0,f.frameTimer-dt);if(f.frameTimer===0)f.guard=false;}
  if(f.action){
   f.actionTime+=dt;const p=f.actionTime/f.actionDuration,spec=MOVES[f.action];
@@ -313,8 +321,8 @@ function cpu(dt){
 }
 function resolveFighterSpacing(){
  const dx=enemy.root.position.x-player.root.position.x,dz=enemy.root.position.z-player.root.position.z;
- const d=Math.hypot(dx,dz),minimum=.78;
- if(d>0&&d<minimum){const push=(minimum-d)*.5,ux=dx/d,uz=dz/d;player.root.position.x-=ux*push;player.root.position.z-=uz*push;enemy.root.position.x+=ux*push;enemy.root.position.z+=uz*push}
+ const contact=resolveBodyContact({a:{x:player.root.position.x,z:player.root.position.z},b:{x:enemy.root.position.x,z:enemy.root.position.z},radiusA:.39,radiusB:.39,massA:player.profile.weight||75,massB:enemy.profile.weight||75});
+ if(contact.hit){player.root.position.x=contact.a.x;player.root.position.z=contact.a.z;enemy.root.position.x=contact.b.x;enemy.root.position.z=contact.b.z}
  player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);
  enemy.root.position.x=clamp(enemy.root.position.x,-3.8,3.8);enemy.root.position.z=clamp(enemy.root.position.z,-3.4,3.4);
 }
