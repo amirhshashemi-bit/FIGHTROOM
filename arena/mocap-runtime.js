@@ -33,11 +33,11 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  fighter.mixer=new THREE.AnimationMixer(model);
  fighter.clips=gltf.animations||[];
  fighter.clipActions=new Map();
- for(const clip of gltf.animations)fighter.clipActions.set(clip.name,fighter.mixer.clipAction(clip));
+ for(const clip of (gltf.animations||[]))fighter.clipActions.set(clip.name,fighter.mixer.clipAction(clip));
  fighter.currentClip=null;
  fighter.mixer.addEventListener('finished',()=>{if(fighter.action===null)playFighterClip(THREE,fighter,'idle')});
  playFighterClip(THREE,fighter,'idle');
- return {clips:gltf.animations.map(c=>c.name),height:size.y,rig:rigReport,appliedMorphs};
+ return {clips:(gltf.animations||[]).map(c=>c.name),height:size.y,rig:rigReport,appliedMorphs};
 }
 export function hasFighterClip(fighter,action){
  if(!fighter?.clips?.length)return false;
