@@ -6,10 +6,6 @@ on:
   pull_request:
     paths:
       - "arena/**"
-  push:
-    branches: [arena-combat-foundation]
-    paths:
-      - "arena/**"
 jobs:
   validate:
     runs-on: ubuntu-latest
