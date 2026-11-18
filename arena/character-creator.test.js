@@ -71,3 +71,20 @@ test('legacy custom fighter profiles migrate forward without losing player choic
   else delete globalThis.localStorage;
  }
 });
+
+test('newer unknown save schemas are preserved instead of downgraded',()=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+ const future=JSON.stringify({schemaVersion:CREATOR_SCHEMA_VERSION+1,name:'Future Fighter',custom:true});
+ const values=new Map([[CREATOR_STORAGE_KEY,future]]);
+ Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{
+  getItem:key=>values.has(key)?values.get(key):null,
+  setItem:(key,value)=>values.set(key,String(value))
+ }});
+ try{
+  assert.equal(loadCustomFighter(),null);
+  assert.equal(values.get(CREATOR_STORAGE_KEY),future);
+ }finally{
+  if(previous)Object.defineProperty(globalThis,'localStorage',previous);
+  else delete globalThis.localStorage;
+ }
+});
