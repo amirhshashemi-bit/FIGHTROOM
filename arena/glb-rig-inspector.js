@@ -14,13 +14,13 @@ export function parseGlbJson(input) {
 
 const clean = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const aliases = {
-  hips: ['hips','pelvis','mixamorighips'],
+  hips: ['hips','pelvis','mixamorighips','root'],
   spine: ['spine','spine1','spine01','mixamorigspine','mixamorigspine1'],
   head: ['head','mixamorighead'],
-  leftUpperArm: ['leftarm','upperarml','upperarml','mixamorigleftarm'],
-  rightUpperArm: ['rightarm','upperarmr','mixamorigrightarm'],
-  leftUpperLeg: ['leftupleg','thighl','leftupperleg','mixamorigleftupleg'],
-  rightUpperLeg: ['rightupleg','thighr','rightupperleg','mixamorigrightupleg']
+  leftUpperArm: ['leftarm','upperarml','mixamorigleftarm','upperarm01l','upperarm02l'],
+  rightUpperArm: ['rightarm','upperarmr','mixamorigrightarm','upperarm01r','upperarm02r'],
+  leftUpperLeg: ['leftupleg','thighl','leftupperleg','mixamorigleftupleg','upperleg01l','upperleg02l'],
+  rightUpperLeg: ['rightupleg','thighr','rightupperleg','mixamorigrightupleg','upperleg01r','upperleg02r']
 };
 const actionAliases = {
   idle: ['idle','stance','fight idle','fighting stance'],
