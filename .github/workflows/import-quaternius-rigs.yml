@@ -43,7 +43,7 @@ jobs:
             const doc=await io.read(src);
             const root=doc.getRoot();
             for (const animation of root.listAnimations()) animation.dispose();
-            await doc.transform(dedup(),quantize(),prune(),textureCompress({encoder:sharp,targetFormat:'webp',resize:[512,512],quality:0.65,slots:/^(?!normalTexture).*$/}),draco({method:'edgebreaker'}));
+            await doc.transform(dedup(),quantize(),prune(),textureCompress({encoder:sharp,targetFormat:'webp',resize:[512,512],quality:65,slots:/^(?!normalTexture).*$/}),draco({method:'edgebreaker'}));
             const skins=root.listSkins(),meshes=root.listMeshes();
             if(!skins.length||!meshes.length)throw new Error('Optimized model lost its skin or mesh: '+dst);
             const bytes=await io.writeBinary(doc);
