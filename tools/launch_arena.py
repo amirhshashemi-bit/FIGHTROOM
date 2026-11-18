@@ -5,6 +5,7 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -13,7 +14,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PORT = 4173
 URL = f"http://127.0.0.1:{PORT}/arena/"
-LOCK_PATH = Path(__file__).with_name("arena-launch.lock")
+PROFILE_DIR = PROJECT_ROOT.parent / "_WORK" / "fightroom-edge-profile"
+LOCK_PATH = Path(tempfile.gettempdir()) / "fightroom-arena-launch.lock"
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
@@ -78,10 +80,11 @@ def start_local_server() -> None:
 
 
 def arena_app_already_open() -> bool:
+    needle = f"--user-data-dir={PROFILE_DIR}"
     query = (
+        f"$needle='{needle}'; "
         "$p=Get-CimInstance Win32_Process -Filter \"Name='msedge.exe'\" "
-        "| Where-Object { $_.CommandLine -and "
-        "$_.CommandLine.Contains('--app=http://127.0.0.1:4173/arena/') }; "
+        "| Where-Object { $_.CommandLine -and $_.CommandLine.Contains($needle) }; "
         "if($p){'FIGHTROOM_APP_RUNNING'}"
     )
     try:
@@ -135,8 +138,9 @@ def main() -> int:
             print("Microsoft Edge was not found.")
             return 1
 
+        PROFILE_DIR.mkdir(parents=True, exist_ok=True)
         subprocess.Popen(
-            [str(edge), f"--app={URL}", "--no-first-run"],
+            [str(edge), f"--user-data-dir={PROFILE_DIR}", f"--app={URL}", "--no-first-run", "--disable-background-mode"],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
