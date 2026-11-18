@@ -183,6 +183,7 @@ function applyFighterGuardPose(THREE,fighter,guarding=false){
 
 export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
  if(!fighter?.mixer||fighter.pairedMotion)return;
+ fighter.guardPoseApplied=false;
  if(!fighter.action){
   if(fighter.submitting)playFighterClip(THREE,fighter,'submission');
   else if(fighter.motionOverrideTime>0){fighter.motionOverrideTime=Math.max(0,fighter.motionOverrideTime-dt);playFighterClip(THREE,fighter,fighter.motionOverride||'stand-up');if(fighter.motionOverrideTime===0)fighter.motionOverride=null;}
@@ -190,7 +191,7 @@ export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
   else if(fighter.guard)playFighterClip(THREE,fighter,'guard');
   else if(fighter.dodge>0)playFighterClip(THREE,fighter,'dodge');
   else if(moveSpeed>.2)playFighterClip(THREE,fighter,'advance');
-  else{playFighterClip(THREE,fighter,'idle');applyFighterGuardPose(THREE,fighter,false)}
+  else{playFighterClip(THREE,fighter,'idle');fighter.guardPoseApplied=applyFighterGuardPose(THREE,fighter,false)}
  }
  fighter.mixer.update(dt);
 }
