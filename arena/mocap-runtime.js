@@ -203,7 +203,7 @@ function aimBoneSegment(THREE,bone,child,targetDirection){
 export function getFighterGuardProfile(profile={},mode='high'){
  const style=String(profile.style||'').toLowerCase();
  const stance=String(profile.stance||'orthodox').toLowerCase();
- const kind=style.includes('muay')||style.includes('thai')?'muay-thai':style.includes('karate')||style.includes('distance')?'long-range':style.includes('kickbox')?'kickboxing':style.includes('wrest')||style.includes('sambo')||style.includes('grappl')||style.includes('judo')?'wrestling':'boxing';
+ const grapplingStyle=style.includes('wrest')||style.includes('sambo')||style.includes('grappl')||style.includes('judo')||style.includes('jiu')||/\\bbjj\\b/.test(style);\n const kind=style.includes('muay')||style.includes('thai')?'muay-thai':style.includes('karate')||style.includes('distance')?'long-range':style.includes('kickbox')?'kickboxing':grapplingStyle?'wrestling':'boxing';
  return {kind,lead:stance.includes('southpaw')?'right':'left',mode:['high','body','long'].includes(mode)?mode:'high'};
 }
 function applyFighterGuardPose(THREE,fighter,guarding=false){
