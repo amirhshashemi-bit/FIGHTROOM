@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPairClock,advancePairClock,validatePairedFbxScenes } from './paired-fbx-runtime.js';
+import { createPairClock,advancePairClock,validatePairedFbxScenes,updatePairedFbxMotion } from './paired-fbx-runtime.js';
 
 function scene(duration=6.9,rootKeys=205){
  const bones=['hip','abdomen','chest','neck','head','lShldr','rShldr','lForeArm','rForeArm','lHand','rHand','lThigh','rThigh','lShin','rShin','lFoot','rFoot'];
@@ -23,4 +23,18 @@ test('advances both actors on one shared clock and clamps at the common end',()=
  assert.deepEqual(advancePairClock(clock,.25),{time:.25,done:false});
  assert.deepEqual(advancePairClock(clock,9),{time:6.9,done:true});
  assert.deepEqual(advancePairClock(clock,.1),{time:6.9,done:true});
+});
+
+test('updates both real actor mixers at exactly the same time and stops them together',()=>{
+ const timesA=[],timesB=[],stops=[];
+ const fighterA={pairedMotion:null},fighterB={pairedMotion:null};
+ const pair={active:true,clock:createPairClock(.5),actors:[
+  {fighter:fighterA,mixer:{setTime:t=>timesA.push(t),stopAllAction:()=>stops.push('A')}},
+  {fighter:fighterB,mixer:{setTime:t=>timesB.push(t),stopAllAction:()=>stops.push('B')}}
+ ]};
+ fighterA.pairedMotion=pair;fighterB.pairedMotion=pair;
+ assert.deepEqual(updatePairedFbxMotion(pair,.25),{time:.25,done:false});
+ assert.deepEqual(timesA,[.25]);assert.deepEqual(timesB,[.25]);
+ assert.deepEqual(updatePairedFbxMotion(pair,.25),{time:.5,done:true});
+ assert.deepEqual(stops,['A','B']);assert.equal(fighterA.pairedMotion,null);assert.equal(fighterB.pairedMotion,null);
 });
