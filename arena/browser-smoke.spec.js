@@ -66,6 +66,8 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
     expect(actor.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(5);
     expect(actor.clips).toHaveLength(48);
     expect(actor.outfit).toBeTruthy();
+    expect(actor.arms.left).toBeTruthy();
+    expect(actor.arms.right).toBeTruthy();
     expect(actor.currentClip).toBe('rest');
   }
   const rosterOptions = await page.locator('#player-roster option').evaluateAll(options => options.map(option => ({ value: option.value, label: option.textContent })));

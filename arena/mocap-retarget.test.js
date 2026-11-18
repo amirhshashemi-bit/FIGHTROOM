@@ -6,6 +6,15 @@ test('normalizes common Mixamo and BVH bone naming conventions',()=>{
  assert.equal(semanticBone('LeftUpLeg'),'leftUpLeg');
  assert.equal(semanticBone('mixamorig:RightForeArm'),'rightForeArm');
 });
+test('maps Quaternius runtime shoulder, arm, forearm, hand and calf names',()=>{
+ assert.equal(semanticBone('clavicle_l'),'leftShoulder');
+ assert.equal(semanticBone('upperarm_l'),'leftUpperArm');
+ assert.equal(semanticBone('lowerarm_l'),'leftForeArm');
+ assert.equal(semanticBone('hand_l'),'leftHand');
+ assert.equal(semanticBone('calf_l'),'leftLeg');
+ assert.equal(semanticBone('lowerarm_r'),'rightForeArm');
+ assert.equal(semanticBone('calf_r'),'rightLeg');
+});
 test('builds target-to-source map for compatible humanoid skeletons',()=>{
  const target=['mixamorig:Hips','mixamorig:Spine','mixamorig:Head','mixamorig:LeftArm','mixamorig:RightArm','mixamorig:LeftUpLeg','mixamorig:RightUpLeg'];
  const source=['Hips','Spine','Head','LeftArm','RightArm','LeftUpLeg','RightUpLeg'];
