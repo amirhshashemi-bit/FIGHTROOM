@@ -48,6 +48,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: arena-browser-visual-qa
-          path: arena/artifacts/
+          path: |
+            arena/artifacts/
+            arena/test-results/
           if-no-files-found: ignore
           retention-days: 14

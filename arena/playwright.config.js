@@ -8,6 +8,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4173',
     headless: true,
+    video: 'on',
     launchOptions: { args: ['--use-gl=angle', '--use-angle=swiftshader'] }
   }
 });
