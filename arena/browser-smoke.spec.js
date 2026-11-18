@@ -51,27 +51,44 @@ test('Android-sized viewport renders grappling and defensive touch controls', as
   expect(pageErrors).toEqual([]);
 });
 
-test('bundled real ACCAD mocap pack loads and plays through the arena runtime', async ({ page }) => {
+test('both gendered fighter rigs load native and ACCAD motion, then play synchronized CMU pairs', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto('http://127.0.0.1:4173/arena/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#view canvas')).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 5 REAL ACCAD CLIPS EACH · READY', { timeout: 60000 });
+  const initial = await page.evaluate(() => window.__fightroomDebug());
+  for (const actor of Object.values(initial)) {
+    expect(actor.rig.compatible).toBe(true);
+    expect(actor.modelBounds.size[1]).toBeGreaterThan(1.5);
+    expect(actor.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(5);
+    expect(actor.clips).toHaveLength(48);
+    expect(actor.outfit).toBeTruthy();
+  }
   const rosterOptions = await page.locator('#player-roster option').evaluateAll(options => options.map(option => ({ value: option.value, label: option.textContent })));
   const female = rosterOptions.find(option => option.label.includes('Women'));
   const male = rosterOptions.find(option => !option.label.includes('Women'));
   expect(female).toBeTruthy();
   expect(male).toBeTruthy();
   await page.locator('#player-roster').selectOption(female.value);
-  await page.locator('[data-load-accad="player"]').click();
-  await expect(page.locator('#mocap-status')).toContainText('ACCAD REAL MOCAP READY', { timeout: 60000 });
+  await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 5 REAL ACCAD MOCAP CLIPS', { timeout: 60000 });
   await expect(page.locator('#mocap-status')).toContainText('FEMALE RIG');
   await expect(page.locator('#mocap-status')).toContainText('FIGHTWEAR READY');
+  const femaleDebug = await page.evaluate(() => window.__fightroomDebug().player);
+  expect(femaleDebug.rig.compatible).toBe(true);
+  expect(femaleDebug.modelBounds.size[1]).toBeGreaterThan(1.5);
+  expect(femaleDebug.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(5);
   await page.locator('#player-roster').selectOption(male.value);
-  await page.locator('[data-load-accad="player"]').click();
-  await expect(page.locator('#mocap-status')).toContainText('ACCAD REAL MOCAP READY', { timeout: 60000 });
-  await expect(page.locator('#mocap-status')).toContainText('8 CLIPS');
+  await expect(page.locator('#mocap-status')).toContainText('MALE RIG', { timeout: 60000 });
+  const maleDebug = await page.evaluate(() => window.__fightroomDebug().player);
+  expect(maleDebug.rig.compatible).toBe(true);
+  expect(maleDebug.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(5);
   await page.locator('#player-roster').selectOption(female.value);
   await page.locator('#enemy-roster').selectOption(male.value);
+  await page.waitForFunction(() => {
+    const debug = window.__fightroomDebug();
+    return ['player', 'enemy'].every(key => debug[key].rig?.compatible && debug[key].modelBounds?.size?.[1] > 1.5 && debug[key].clips?.length === 48);
+  }, { timeout: 60000 });
   await page.locator('#preview-paired-mocap').click();
   await expect(page.locator('#mocap-status')).toContainText('REAL PAIRED MOCAP PLAYING', { timeout: 60000 });
   await page.waitForTimeout(8000);

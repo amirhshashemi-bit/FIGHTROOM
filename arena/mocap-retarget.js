@@ -20,7 +20,7 @@ const clean=s=>String(s||'').toLowerCase().replace(/mixamorig[:_]?/g,'').replace
 export function semanticBone(name){
  const n=clean(name);
  if(['hips','hip','root','pelvis'].includes(n))return 'hips';
- if(['abdomen','chest','spine','spine1','spine01','spine02','spine03','spine04','spine05'].includes(n))return 'spine';
+ if(['abdomen','chest','spine','spine1','spine2','spine3','spine4','spine5','spine01','spine02','spine03','spine04','spine05'].includes(n))return 'spine';
  for(const [semantic,names] of Object.entries(ALIASES))if(names.some(alias=>clean(alias)===n))return semantic;
  if(/^l(coll(ar|arbone)|clavicle)$/.test(n))return 'leftShoulder';
  if(/^r(coll(ar|arbone)|clavicle)$/.test(n))return 'rightShoulder';
@@ -49,7 +49,7 @@ export function semanticBone(name){
 function preferredSource(targetName,semantic,sourceBySemantic){
  const n=clean(targetName);
  if(semantic==='spine'){
-  if(/spine0?[45]|spine2/.test(n))return sourceBySemantic.get('spine:upper')||sourceBySemantic.get('spine');
+  if(/spine0?[2-5]/.test(n))return sourceBySemantic.get('spine:upper')||sourceBySemantic.get('spine');
   return sourceBySemantic.get('spine:lower')||sourceBySemantic.get('spine');
  }
  if(semantic==='leftShoulder')return sourceBySemantic.get('leftShoulder')||sourceBySemantic.get('leftUpperArm');
@@ -58,6 +58,7 @@ function preferredSource(targetName,semantic,sourceBySemantic){
 }
 export function buildRetargetNameMap(targetNames,sourceNames){
  const sourceBySemantic=new Map();
+ const hasDedicatedPelvis=(targetNames||[]).some(name=>clean(name)==='pelvis');
  for(const name of sourceNames){
   const semantic=semanticBone(name);
   if(!semantic)continue;
@@ -70,6 +71,7 @@ export function buildRetargetNameMap(targetNames,sourceNames){
  }
  const names={};
  for(const targetName of targetNames){
+  if(hasDedicatedPelvis&&clean(targetName)==='root')continue;
   const semantic=semanticBone(targetName),sourceName=semantic&&preferredSource(targetName,semantic,sourceBySemantic);
   if(sourceName)names[targetName]=sourceName;
  }

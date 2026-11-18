@@ -25,3 +25,12 @@ test('profile proportions apply only to matching morph targets and clamp values'
  assert.ok(Math.abs(mesh.morphTargetInfluences[0]-.2)<1e-9);
  assert.deepEqual(mesh.morphTargetInfluences.slice(1),[-.3,.3]);
 });
+
+test('gender profile selects the matching real base-mesh gender morph',()=>{
+ const make=()=>({morphTargetDictionary:{gender_female:0,gender_male:1},morphTargetInfluences:[1,1]});
+ const female=make(),male=make();
+ applyCharacterMorphs(mockRoot([female]),{gender:'female'});
+ applyCharacterMorphs(mockRoot([male]),{gender:'male'});
+ assert.deepEqual(female.morphTargetInfluences,[1,0]);
+ assert.deepEqual(male.morphTargetInfluences,[0,1]);
+});

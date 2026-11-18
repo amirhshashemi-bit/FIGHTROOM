@@ -21,7 +21,7 @@ import { createGrapplePair, updateGrapplePair } from './grappling-choreography.j
 
 const mount=document.getElementById('view');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090f18);scene.fog=new THREE.Fog(0x090f18,13,27);
-const camera=new THREE.PerspectiveCamera(38,1,.1,80);camera.position.set(0,5.6,11.7);camera.lookAt(0,1.1,0);
+const camera=new THREE.PerspectiveCamera(40,1,.1,80);camera.position.set(0,3.55,3.95);camera.lookAt(0,1.02,0);
 const quality=qualityProfile({width:innerWidth,height:innerHeight,deviceMemory:navigator.deviceMemory||4,hardwareConcurrency:navigator.hardwareConcurrency||4,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});
 const renderer=new THREE.WebGLRenderer({antialias:quality.antialias,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,quality.pixelRatio));renderer.shadowMap.enabled=quality.shadows;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;mount.appendChild(renderer.domElement);
 const audio=createFightAudio();let audioEnabled=false;
@@ -52,7 +52,7 @@ function fighter(profile,side){const name=profile.name,skin=material(profile.ski
  for(const sideKey of ['L','R']){for(const part of ['upperArm','foreArm']){const m=limbs[part+sideKey];m.scale.x=proportions.arms;m.scale.z=proportions.arms}for(const part of ['thigh','shin']){const m=limbs[part+sideKey];m.scale.x=proportions.legs;m.scale.z=proportions.legs}}
  const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,knockVector:V(),move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,frameTimer:0,motionOverride:null,motionOverrideTime:0,skin};
  return state}
-player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('kwame-boateng'),1);
+player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('leila-farhadi'),1);
 function pose(f,t,moveSpeed,dt){
  if(f.mixer){
   updateFighterMocap(THREE,f,dt,moveSpeed);
@@ -131,12 +131,17 @@ document.querySelectorAll('[data-move]').forEach(bindMove);
 function populateRoster(select){select.innerHTML='';for(const p of ROSTER){const o=document.createElement('option');o.value=p.id;o.textContent=p.division+' — '+p.name+' · '+countryFlag(resolveCountryCode(p.country))+' '+(p.country||'');select.appendChild(o)}}
 const playerSelect=document.getElementById('player-roster'),enemySelect=document.getElementById('enemy-roster');
 populateRoster(playerSelect);populateRoster(enemySelect);playerSelect.value=player.profile.id;enemySelect.value=enemy.profile.id;
-function disposeFighter(f){scene.remove(f.root);f.root.traverse(o=>{o.geometry?.dispose?.();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose?.());else o.material?.dispose?.()})}
+function disposeFighter(f){
+ f.mixer?.stopAllAction?.();if(f.externalModel)f.mixer?.uncacheRoot?.(f.externalModel);f.pairedMotion=null;
+ const geometries=new Set(),materials=new Set(),textures=new Set();
+ f.root.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const material of (Array.isArray(o.material)?o.material:[o.material]))if(material){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value)}});
+ geometries.forEach(item=>item.dispose?.());materials.forEach(item=>item.dispose?.());textures.forEach(item=>item.dispose?.());scene.remove(f.root);
+}
 function replaceFighter(which,id,profileOverride=null){const next=id==='custom-player'?(profileOverride||loadCustomFighter()||DEFAULT_CUSTOM_FIGHTER):getFighter(id),old=which==='player'?player:enemy,side=which==='player'?-1:1;disposeFighter(old);const fresh=fighter(next,side);if(which==='player')player=fresh;else enemy=fresh;updateUI()}
 const customOption=document.createElement('option');customOption.value='custom-player';customOption.textContent='CUSTOM · My Fighter';playerSelect.appendChild(customOption);enemySelect.appendChild(customOption.cloneNode(true));
 const savedCustom=loadCustomFighter();if(savedCustom){playerSelect.value='custom-player';replaceFighter('player','custom-player',savedCustom)}
-playerSelect.addEventListener('change',e=>replaceFighter('player',e.target.value));
-enemySelect.addEventListener('change',e=>replaceFighter('enemy',e.target.value));
+playerSelect.addEventListener('change',e=>{replaceFighter('player',e.target.value);loadBundledAccadPack('player')});
+enemySelect.addEventListener('change',e=>{replaceFighter('enemy',e.target.value);loadBundledAccadPack('enemy')});
 const byId=id=>document.getElementById(id);
 const colorHex=n=>'#'+(Number(n)>>>0).toString(16).padStart(6,'0').slice(-6);
 const colorNum=s=>parseInt(String(s).replace('#',''),16);
@@ -201,14 +206,29 @@ async function importMocap(input,which){
 }
 document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
 document.getElementById('e-mocap-file').addEventListener('change',e=>importMocap(e.target,'enemy'));
-const ACCAD_DEMO_CLIPS=['Male2_A1_Stand.bvh','Male2_E1_JabLeft.bvh','Male2_E3_CrossLeft.bvh','Male2_G8_RoundhouseLeft.bvh','Male2_E11_BlockLeftHigh.bvh','Male2_E19_DodgeLeft.bvh','Male2_A9_Lie.bvh','Male2_A10_LieToCrouch.bvh'];
+const ACCAD_DEMO_CLIPS=['Male2_E1_JabLeft.bvh','Male2_E3_CrossLeft.bvh','Male2_G8_RoundhouseLeft.bvh','Male2_E11_BlockLeftHigh.bvh','Male2_E19_DodgeLeft.bvh'];
+let quaterniusNativeClipsPromise=null;
+async function loadQuaterniusNativeClips(){
+ if(!quaterniusNativeClipsPromise)quaterniusNativeClipsPromise=(async()=>{
+  const response=await fetch(new URL('./assets/mocap/quaternius/UAL1_Standard.glb',import.meta.url));
+  if(!response.ok)throw new Error('Quaternius UAL1 animation library missing ('+response.status+')');
+  const loader=new GLTFLoader(),gltf=await loader.parseAsync(await response.arrayBuffer(),'');
+  const clips=gltf.animations||[];
+  if(!clips.some(clip=>clip.name==='Idle_Loop')||!clips.some(clip=>clip.name==='Walk_Loop'))throw new Error('Quaternius UAL1 is missing idle/walk clips');
+  const textures=new Set(),materials=new Set();
+  gltf.scene?.traverse(object=>{object.geometry?.dispose?.();for(const material of (Array.isArray(object.material)?object.material:[object.material]))if(material&&!materials.has(material)){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value);material.dispose?.()}});
+  textures.forEach(texture=>texture.dispose?.());
+  return clips;
+ })();
+ return quaterniusNativeClipsPromise;
+}
 async function ensureFighterMocapModel(f){
  if(f.externalModel)return;
  const gender=f.profile?.gender||(String(f.profile?.division||'').startsWith('Women')?'female':'male');
- const path=gender==='female'?'./assets/models/source/female-base-mesh-base_female.glb':'./assets/models/cc0-base-body-anim.glb';
+ const path=gender==='female'?'./assets/models/quaternius/human_female.glb':'./assets/models/quaternius/human_male.glb';
  const response=await fetch(new URL(path,import.meta.url));
  if(!response.ok)throw new Error('Licensed '+gender+' base model unavailable: '+response.status);
- const file=new File([await response.arrayBuffer()],gender==='female'?'female-cc0-fightwear-base.glb':'cc0-male-test-rig.glb',{type:'model/gltf-binary'});
+ const file=new File([await response.arrayBuffer()],gender==='female'?'quaternius-female-fighter.glb':'quaternius-male-fighter.glb',{type:'model/gltf-binary'});
  const info=await loadFighterGLB(THREE,GLTFLoader,file,f);
  f.root.scale.y=1;
  if(gender==='female'&&!info.outfit)throw new Error('Female fightwear setup did not complete');
@@ -220,6 +240,10 @@ async function loadBundledAccadPack(which){
   status.textContent='Loading licensed fighter base and real ACCAD motion-capture clips…';
   const gender=f.profile?.gender||(String(f.profile?.division||'').startsWith('Women')?'female':'male');
   await ensureFighterMocapModel(f);
+  const nativeClips=await loadQuaterniusNativeClips();
+  f.clips=[...nativeClips];
+  f.clipActions=new Map(nativeClips.map(clip=>[clip.name,f.mixer.clipAction(clip)]));
+  f.currentClip=null;
   let loaded=0,lastInfo=null;
   for(const name of ACCAD_DEMO_CLIPS){
    const response=await fetch(new URL('./assets/mocap/accad/'+name,import.meta.url));
@@ -227,8 +251,13 @@ async function loadBundledAccadPack(which){
    const file=new File([await response.arrayBuffer()],name,{type:'application/octet-stream'});
    lastInfo=await loadFighterBVH(THREE,file,f);loaded++;
   }
-  status.textContent=which.toUpperCase()+' · ACCAD REAL MOCAP READY · '+loaded+' CLIPS · '+lastInfo.mappedBones+' BONES MAPPED · '+gender.toUpperCase()+' RIG'+(f.outfitReport?' · FIGHTWEAR READY':'');
- }catch(error){status.textContent='ACCAD PACK LOAD FAILED: '+error.message;console.error(error)}
+  const accadClips=f.clips.filter(clip=>clip.name.toLowerCase().startsWith('male2_'));
+  const nativeOnly=f.clips.filter(clip=>!clip.name.toLowerCase().startsWith('male2_'));
+  f.clips=[...accadClips,...nativeOnly];
+  playFighterClip(THREE,f,'idle');
+  const report=which.toUpperCase()+' · UAL1 '+nativeOnly.length+' NATIVE CLIPS + '+loaded+' REAL ACCAD MOCAP CLIPS · '+lastInfo.mappedBones+' BONES MAPPED · '+gender.toUpperCase()+' RIG'+(f.outfitReport?' · FIGHTWEAR READY':'');
+  status.textContent=report;byId('stage-mocap-status').textContent=report;
+ }catch(error){const report='ACCAD PACK LOAD FAILED: '+error.message;status.textContent=report;byId('stage-mocap-status').textContent=report;console.error(error)}
 }
 document.querySelectorAll('[data-load-accad]').forEach(btn=>btn.addEventListener('click',()=>loadBundledAccadPack(btn.dataset.loadAccad)));
 async function ensureFighterIdleMotion(f){
@@ -386,7 +415,8 @@ function restorePairedDemoPositions(){
  restore(player,pairedDemoRestore.player);restore(enemy,pairedDemoRestore.enemy);
  pairedDemoRestore=null;
 }
-let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended||pairedDemoLoading||pairedDemoActive){
+const showcaseMode=new URLSearchParams(location.search).get('showcase')==='1';
+let lastUi=0,fightersReady=false;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);if(!fightersReady){renderer.render(scene,camera);return;}if(showcaseMode){for(const f of [player,enemy]){f.action=null;f.actionTime=0;f.actionDuration=0;f.guard=false;f.dodge=0;f.stun=0;f.knock=0;f.groundState='standing';f.submitting=false;f.motionOverride=null;f.motionOverrideTime=0;f.grapplePose=null;f.grapplePair=null;f.pairedMotion=false;f.move.set(0,0,0);pose(f,elapsed,0,dt)}renderer.render(scene,camera);return;}elapsed+=dt;if(!ended||pairedDemoLoading||pairedDemoActive){
  if(pairedDemoLoading){player.move.set(0,0,0);enemy.move.set(0,0,0)}
  else if(pairedDemoActive){
   player.move.set(0,0,0);enemy.move.set(0,0,0);
@@ -429,4 +459,13 @@ let activeVenue=null;
 function selectVenue(id){if(activeVenue){scene.remove(activeVenue);activeVenue.traverse(o=>{o.geometry?.dispose?.();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose?.());else o.material?.dispose?.()})}const cfg=venueConfigs[id]||venueConfigs['las-vegas'];activeVenue=buildVenue(THREE,scene,{id,canvas:cfg[0],lighting:cfg[1]})}
 selectVenue('las-vegas');document.getElementById('venue-select')?.addEventListener('change',e=>selectVenue(e.target.value));
 document.getElementById('sound-toggle')?.addEventListener('click',()=>{audioEnabled=!audioEnabled;audio.setEnabled(audioEnabled);document.getElementById('sound-toggle').textContent=audioEnabled?'SOUND ON':'SOUND OFF'});
+window.__fightroomDebug=()=>Object.fromEntries([['player',player],['enemy',enemy]].map(([key,f])=>{const box=f.externalModel?new THREE.Box3().setFromObject(f.externalModel):null;return [key,{name:f.name,profile:f.profile?.id,rootScale:f.root.scale.toArray(),rootPosition:f.root.position.toArray(),modelScale:f.externalModel?.scale.toArray(),modelPosition:f.externalModel?.position.toArray(),modelVisible:f.externalModel?.visible,rigVisible:f.rig.visible,modelBounds:box?{min:box.min.toArray(),max:box.max.toArray(),size:box.getSize(new THREE.Vector3()).toArray()}:null,clips:f.clips?.map(c=>c.name),currentClip:f.currentClip,outfit:f.outfitReport,rig:f.rigReport}]}));
 loop();updateUI();
+(async()=>{
+ byId('stage-mocap-status').textContent='LOADING MALE/FEMALE RIGS + NATIVE ANIMATION + REAL ACCAD…';
+ await loadBundledAccadPack('player');
+ await loadBundledAccadPack('enemy');
+ const ready=[player,enemy].every(f=>f.externalModel&&f.rigReport?.compatible&&f.outfitReport&&f.clips?.length===48&&f.clips.filter(c=>c.name.toLowerCase().startsWith('male2_')).length===5&&f.clips.some(c=>c.name==='Idle_Loop'));
+ const report=ready?'AUTO FIGHTERS CONNECTED · 43 NATIVE CLIPS + 5 REAL ACCAD CLIPS EACH · READY':'MODEL OR MOTION LOAD INCOMPLETE · CHECK REQUIRED';
+ byId('mocap-status').textContent=report;byId('stage-mocap-status').textContent=report;enemy.aiThink=showcaseMode?9999:15;fightersReady=true;
+})().catch(error=>{const message='AUTO FIGHTER LOAD FAILED: '+error.message;byId('mocap-status').textContent=message;byId('stage-mocap-status').textContent=message;fightersReady=true;console.error(error)});

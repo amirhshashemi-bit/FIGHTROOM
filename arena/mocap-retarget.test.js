@@ -39,3 +39,14 @@ test('maps the real CMU FBX skeleton onto female rig segments',()=>{
  assert.equal(map['lowerarm01.R'],'rForeArm');
  assert.equal(map['foot.R'],'rFoot');
 });
+
+test('maps Quaternius shared-root rigs to the dedicated pelvis instead of duplicating hip motion',()=>{
+ const target=['root','pelvis','spine_01','spine_02','spine_03','Head','upperarm_l','upperarm_r','thigh_l','thigh_r','hand_l','hand_r','foot_l','foot_r'];
+ const source=['Hips','Spine','Spine1','Spine2','Head','LeftArm','RightArm','LeftUpLeg','RightUpLeg','LeftHand','RightHand','LeftFoot','RightFoot'];
+ const map=buildRetargetNameMap(target,source),valid=validateRetargetMap(map);
+ assert.equal(valid.compatible,true);
+ assert.equal(map.root,undefined);
+ assert.equal(map.pelvis,'Hips');
+ assert.equal(map.spine_01,'Spine');
+ assert.equal(map.spine_02,'Spine2');
+});

@@ -1,85 +1,63 @@
-# FIGHTROOM Arena — motion-capture integration pipeline
+# FIGHTROOM Arena — motion and character pipeline
 
-## Runtime status
+## Runtime status (2026-11-18)
 
-The runtime accepts:
-1. A validated animated humanoid GLB as the fighter model and base clip library.
-2. Additional BVH files per fighter, retargeted onto the GLB skeleton through Three.js SkeletonUtils.
-3. Synchronized two-actor FBX motion pairs, retargeted independently to each fighter but driven by one shared elapsed-time clock.
-4. Temporary procedural fallback for moves absent from the imported capture set; imported mixers remain available so supported captured clips can resume.
+- **Male/female fighters:** separate Quaternius Universal Base Characters (Standard) GLBs, CC0 1.0. Both use matching 65-joint humanoid skeletons and approximately 13k triangles. The runtime normalizes each model to 1.78 m before attaching it to the fighter root.
+- **FIGHTROOM art overlays:** compression tops, shorts, gloves, shoes, short male hair and a female ponytail are procedural meshes attached to the rig; these are original project assets, not part of the Quaternius pack.
+- **Native animation:** Quaternius Universal Animation Library 1 (Standard), 43 clips, CC0 1.0. The clip tracks use the same 65 bone names as the fighter models and play directly on both rigs without retargeting. The runtime loads this library once, then disposes its temporary preview geometry/materials/textures. Idle uses a captured, validated bind pose because the pack's generic idle loop did not produce a suitable upright MMA stance on these models.
+- **Real single-actor motion capture:** 27 ACCAD BVH source clips are committed with per-file SHA-256 checksums and CC BY 3.0 attribution. Five are currently connected to both active fighters: jab, cross, roundhouse, high block and dodge. The remaining 22 are available but not yet wired into gameplay.
+- **Paired motion capture:** two genuine synchronized CMU interaction pairs are integrated: arm wrestling and pull/resist. Neither is an MMA takedown or submission capture.
+- **Grappling:** clinch, takedown, sprawl, sweep, pass, mount, back take, frame, escape, submission control, ground-and-pound posture and technical stand-up are currently driven by original paired procedural choreography. They are not labelled as real paired mocap.
 
-A selected set of 27 real ACCAD BVH source clips is bundled with per-file SHA-256 checksums and CC BY 3.0 attribution. It covers single-performer striking, footwork, blocks, dodges, lying/crawling and get-up motion; it is not a complete paired MMA wrestling pack.
+## Active model and animation assets
 
-## Female fighter rig — integrated
+- Male/female model files: `assets/models/quaternius/human_male.glb`, `human_female.glb`.
+- Model source and CC0 notice: `assets/models/quaternius/ASSET_NOTICE.md`.
+- UAL1 animation library: `assets/mocap/quaternius/UAL1_Standard.glb`.
+- UAL1 source and CC0 notice: `assets/mocap/quaternius/UAL1_NOTICE.md`.
+- GLB packer: `pack-gltf-to-glb.js`. It embeds source glTF buffers and textures into GLB containers without changing topology, vertex positions, skin weights, inverse bind matrices or bone names.
+- The separate Innerscene 163-bone female base is archived under `assets/models/source/` but excluded from runtime because its skin deformation failed visual review even with BVH animation disabled.
+- The earlier CharacterCreator male anatomical base remains in the repository for research; it is not the active visible fighter.
 
-- Source: Innerscene female base mesh, GLB, 4.5 MB, publisher-described 163-bone skin rig.
-- Licence stated by publisher: CC0 public-domain dedication.
-- The model is now loaded by the gender-matched ACCAD loader rather than being source-only.
-- The loader updates skinned bounds before normalization; this avoids using the undeformed bind-pose bounds and incorrectly scaling the model.
-- Female bone aliases are mapped to the existing humanoid motion sources, including root/pelvis, spine segments, shoulders, arms, legs, wrists and feet.
-- A lightweight runtime fightwear overlay is attached to the rig: sports top, shorts, trim, hair, gloves and shoes. These are original procedural meshes, not clothing supplied by the model publisher.
-- The eight-clip ACCAD demo pack can now be retargeted to the female rig as well as the male test rig.
-- The source GLB is still a neutral base mesh; the procedural outfit is a functional game prototype, not a finished bespoke character-art pass. Visual clipping, hair silhouette, facial detail and mobile GPU/memory profiling remain release QA.
+## ACCAD retargeting
 
-## Compatible single-actor sources and attribution
+The active Quaternius skeleton has a separate `root` control bone and a dedicated `pelvis`. The retarget name map therefore maps the BVH `Hips` track to `pelvis` and leaves `root` unmapped. This prevents the same source hip motion from being applied twice. The remaining mapped landmarks include spine, head, upper arms, hands, thighs and feet.
 
-- Open Motion Project / ACCAD, The Ohio State University — CC BY 3.0. Attribution: “Open Motion Project by ACCAD / The Ohio State University.”
-- KinemIQ's free motion-capture library describes 115 martial-arts clips from ACCAD under CC BY 3.0 and 170 locomotion clips from 100STYLE under CC BY 4.0. Exports are available as BVH, FBX and GLB/glTF. Verify embedded credit and licence file for every downloaded clip.
-- Useful source pages:
-  - https://kinemiq.app/free-motion-capture-data/
-  - https://kinemiq.app/free-fighting-animations/
-  - https://kinemiq.app/sources/
-  - https://accad.ohio-state.edu/research/motion-lab/mocap-system-and-data
+The five selected BVH clips are:
+- `Male2_E1_JabLeft.bvh`
+- `Male2_E3_CrossLeft.bvh`
+- `Male2_G8_RoundhouseLeft.bvh`
+- `Male2_E11_BlockLeftHigh.bvh`
+- `Male2_E19_DodgeLeft.bvh`
 
-## Recommended single-actor capture set
+The 43 UAL1 clips provide native idle/walk and authored punch/reaction fallbacks. UAL1 clips are authored animation-library data, not motion-capture recordings; ACCAD clips are the real mocap source. Do not conflate the two.
 
-Export as BVH, 30 FPS, in-place where available:
-- idle / fighting stance
-- advance and retreat
-- jab, cross, hook, uppercut, backfist
-- front kick, side kick, roundhouse, push kick
-- high / middle / low block
-- slip left/right, duck left/right
-- hit reaction, fall, ground-to-stand recovery
+## Paired human interaction captures
 
-The ACCAD martial-arts source is principally single-performer striking and footwork. It does not by itself supply a complete paired MMA wrestling set. Clinch pummelling, double-leg entry, sprawl, guard passing, mount transitions, back control, submission mechanics and submission defence need dedicated two-person wrestling capture or a separately licensed source. Do not label a single-person animation as validated two-person wrestling mocap.
+Two matched two-actor interactions are bundled from the CMU Graphics Lab Motion Capture Database:
+- **Pull / resist:** Actor A Subject 18, Trial 3 and Actor B Subject 19, Trial 3 — “A pulls B; B resists”; both clips 4.900 seconds.
+- **Arm wrestle:** Actor A Subject 22, Trial 17 and Actor B Subject 23, Trial 17 — “rush up, arm wrestle”; both clips 6.900 seconds.
+
+Converted FBX source distribution: https://huggingface.co/datasets/gbionics/cmu-fbx
+
+Both pairs are checked for root translation and skeletal tracks, retargeted independently to each fighter, and played from one shared elapsed-time clock. Their adjacent `NOTICE.md` files contain provenance, terms and SHA-256 values. Preview buttons pause normal combat and restore fighter state when playback ends.
+
+**Scope warning:** these are genuine paired human interactions, but not MMA wrestling. They do not validate double-leg takedowns, pummelling, sprawl, BJJ transitions, submissions or ground-and-pound.
 
 ## Import procedure
 
-1. Import the gender-matched base GLB for the selected corner. The loader checks humanoid landmarks before replacing the current model.
-2. For female profiles, the runtime adds its sports fightwear overlay to the neutral CC0 base.
-3. Choose a BVH file in the same corner's “MOTION BVH” file input, or load the bundled ACCAD demo pack.
-4. The importer parses the BVH skeleton, maps target/source bone names using semantic aliases, requires hips/head plus a sufficient set of humanoid landmarks, and retargets the clip to the target skinned mesh.
-5. Multiple BVH clips can be selected in one import. The checked-in ACCAD set includes jab, cross, hook, backfist, front/roundhouse/push kicks, blocks, dodges, stand, walk, lying, crawl and get-up clips.
-6. If a move has no imported clip, the game uses the procedural pose for that move. It does not discard the imported model or mixer.
-7. Before shipping, record each file's source, licence, attribution, SHA-256, frame rate, skeleton notes and a successful playback/retarget test in the asset manifest.
+1. Select a fictional fighter. The runtime loads the gender-matched Quaternius GLB and attaches original FIGHTROOM fightwear overlays.
+2. The runtime loads UAL1 once and assigns the native clips to the selected fighter's mixer.
+3. Five selected ACCAD BVH files are parsed and retargeted onto the active rig. The importer validates the humanoid landmarks and reports the mapped bone count.
+4. If a move has no supported clip, the game uses its procedural fallback. It does not discard the imported model or mixer.
+5. For manual import, choose an animated GLB or BVH in the corresponding corner's motion input. Record source, licence, attribution, SHA-256, frame rate, skeleton notes and playback QA before shipping.
 
-## Actual paired captures integrated — CMU interaction trials
+## Release blockers
 
-Two matched two-actor interactions are now bundled from the CMU Graphics Lab Motion Capture Database:
-- **Pull / resist:** Actor A Subject 18, Trial 3 and Actor B Subject 19, Trial 3 — “A pulls B; B resists”; both clips 4.900 seconds. Files: `assets/mocap/cmu-pairs/pull-resist/actor-a-18-03.fbx` and `actor-b-19-03.fbx`.
-- **Arm wrestle:** Actor A Subject 22, Trial 17 and Actor B Subject 23, Trial 17 — “rush up, arm wrestle”; both clips 6.900 seconds. Files: `assets/mocap/cmu-pairs/arm-wrestle/actor-a-22-17.fbx` and `actor-b-23-17.fbx`.
-- Converted FBX source distribution: https://huggingface.co/datasets/gbionics/cmu-fbx
-- Both pairs are parsed, checked for root translation and skeletal tracks, retargeted independently to each fighter rig, then played from one shared elapsed-time clock. Keyframe counts may differ; time-based playback avoids assuming identical sample counts.
-- Arena preview buttons: “PREVIEW ARM-WRESTLE PAIR” and “PREVIEW PULL / RESIST PAIR”. Normal combat and the bout clock pause during the preview; fighter state and position are restored when the clip finishes.
-- Each pair's provenance, CMU terms, scope warning and SHA-256 values are in its adjacent `NOTICE.md`.
-
-**Important scope:** these are genuine paired human interaction captures. Pull/resist is useful as a paired contact/force interaction prototype, and arm wrestling validates sustained two-person contact timing. Neither is an MMA double-leg, pummelling, sprawl, BJJ transition, submission, ground-and-pound or full wrestling move. Those gameplay actions still use the existing paired procedural position system until suitable licensed grappling captures are acquired. The paid RTK source previously identified remains unpurchased and is not used.
-
-## Paired grappling choreography — integrated (procedural, not mocap)
-
-The arena now drives both fighters from one shared action timeline for clinch pummelling, double-leg takedown entry/drive/finish, sprawl defence, guard sweep, guard pass, mount transition, back-take, frame, escape, submission control, ground-and-pound posture and technical stand-up. Each role receives a distinct attacker/defender pose, and the pair state is cleared together at sequence completion. The choreography is original procedural animation and is explicitly not represented as captured human motion. When a licensed paired capture is available, the separate paired-FBX runtime remains the route for genuine captured movement.
-
-## Current release blockers
-
-- The eight-clip ACCAD pack is now targeted at both male and female rigs; clip-by-clip visual review and biomechanics QA are still required.
-- The CMU pull/resist and arm-wrestling paired demonstrations are integrated; neither replaces dedicated paired MMA grappling capture.
-- Retarget mapping is a conservative humanoid name-map, not a universal retargeter. Unusual skeletons are rejected rather than silently accepted.
-- Root-motion extraction, foot locking, contact-aware blending, per-move retarget calibration and full paired wrestling capture remain future polish.
-- No physical Android test, mobile GPU/memory profile or touch-latency test has been performed.
-
-## Paired package adapter
-
-- `paired-motion.js` validates a shared-world two-subject sample package and samples both subjects at the same fractional frame.
-- `paired-fbx-runtime.js` validates matched FBX actors, their root translation tracks and duration, retargets both clips and exposes a single shared-time playback clock.
-- Unit tests cover mismatched durations, missing root tracks, independent key counts and shared-clock completion.
+- Five ACCAD actions are wired; the remaining 22 source clips still need per-clip retarget calibration and visual review.
+- Fightwear overlays need detailed fit/clipping review on both character rigs.
+- The 30-person roster shares the two base meshes; there are not 30 unique production models or bespoke faces.
+- The arena is procedural, not photorealistic; no crowd, commentary, network play or production audio pipeline is complete.
+- Paired MMA wrestling/submission capture is still missing; most grappling remains procedural.
+- No physical Android device QA, GPU/memory profile or touch-latency test has been completed.
+- Premium subscription/payment is not connected to a live provider.

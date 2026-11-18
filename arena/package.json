@@ -8,7 +8,7 @@
     "test:roster": "node --test roster.test.js",
     "test:grappling": "node --test ground-combat.test.js",
     "test:grapple-choreography": "node --test grappling-choreography.test.js",
-    "test": "npm run test:combat && npm run test:advanced && npm run test:roster && npm run test:creator && npm run test:rig && npm run test:premium && npm run test:grappling && npm run test:grapple-choreography && npm run test:ground-presentation && npm run test:contact && npm run test:mocap-retarget && npm run test:paired-motion && npm run test:paired-fbx",
+    "test": "npm run test:combat && npm run test:advanced && npm run test:roster && npm run test:creator && npm run test:rig && npm run test:premium && npm run test:grappling && npm run test:grapple-choreography && npm run test:ground-presentation && npm run test:contact && npm run test:mocap-retarget && npm run test:paired-motion && npm run test:paired-fbx && npm run test:assets",
     "test:paired-fbx": "node --test paired-fbx-runtime.test.js",
     "test:creator": "node --test character-creator.test.js",
     "test:rig": "node --test character-rig.test.js glb-rig-inspector.test.js mocap-runtime.test.js",
@@ -16,6 +16,7 @@
     "test:ground-presentation": "node --test ground-presentation.test.js",
     "test:mocap-retarget": "node --test mocap-retarget.test.js",
     "test:contact": "node --test contact-physics.test.js",
-    "test:paired-motion": "node --test paired-motion.test.js"
+    "test:paired-motion": "node --test paired-motion.test.js",
+    "test:assets": "node --test quaternius-assets.test.js"
   }
 }

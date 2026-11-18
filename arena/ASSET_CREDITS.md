@@ -2,7 +2,7 @@
 
 ## Motion capture sources evaluated
 
-The project has a GLB import and animation-mapping pipeline. A CC0 male base, a CC0 female neutral base with runtime fightwear, 27 ACCAD single-actor BVH clips, and one matched CMU two-actor interaction capture are committed with source notices and SHA-256 records. The CMU pair is arm wrestling, not an MMA takedown/submission pack. The sources below have been checked for stated terms.
+The project has a GLB import and animation-mapping pipeline. The active runtime uses separate Quaternius CC0 male/female character bases with 65-joint humanoid rigs, the 43-clip Quaternius UAL1 Standard library (CC0), 27 ACCAD single-actor BVH clips (CC BY 3.0), and matched CMU two-actor interaction captures. The Innerscene female neutral base and earlier CharacterCreator male anatomical base are retained as research assets, not used by the default roster. The CMU pairs are arm wrestling and pull/resist, not an MMA takedown/submission pack.
 
 - Open Motion Project / ACCAD, The Ohio State University — CC BY 3.0. Attribution: “Open Motion Project by ACCAD / The Ohio State University.” Source: https://accad.ohio-state.edu/research/motion-lab/mocap-system-and-data
 - 100STYLE Dataset — CC BY 4.0. Attribution: Ian Mason, Sebastian Starke and Taku Komura (2022). Access and export through KinemIQ: https://kinemiq.app/free-motion-capture-data/
@@ -22,7 +22,7 @@ For every additional motion pack, record its source, licence, attribution, SHA-2
 ## Candidate: Innerscene / MakeHuman CC0 base mesh
 - Source page: https://www.innerscene.com/tools/library/3d-parts/male-base-mesh-3d-person-rigged-a-pose-380e6d89
 - Described asset: male neutral A-pose, 163-bone skeleton, skin weights, embedded textures, about 109k triangles; derived from MakeHuman CC0 assets and dedicated as CC0.
-- Status: reviewed, **not downloaded or committed**. It is a male base only, not a complete roster or production-ready fighter. The separate female base below is integrated.
+- Status: reviewed and downloaded as a candidate; not used by runtime. The source female candidate below is also excluded after visual skin-deformation failure.
 - MakeHuman asset license details: https://static.makehumancommunity.org/about/license.html
 - Candidate generation pipeline (MIT code; CC0 MakeHuman assets claimed by upstream): https://github.com/olatunde85/3d-gen — verify each asset and upstream terms before shipping.
 
@@ -33,7 +33,7 @@ For every additional motion pack, record its source, licence, attribution, SHA-2
 - Exact asset: `output/base_body_anim.glb` (8,212,156 bytes; Git blob `bdbdab04eb85903e46c56ff56c7a1ea0cbe9c78b`).
 - Upstream license notes identify generated output GLBs as CC0-1.0. The generator code is GPL-3.0-or-later and is not copied into FIGHTROOM.
 - Direct download: https://raw.githubusercontent.com/kblood/CharacterCreator/852e48f316b90a0937234886630e4fb4cdfd1f78/output/base_body_anim.glb
-- Status: **binary committed in FIGHTROOM** at `arena/assets/models/cc0-base-body-anim.glb`. Its repository Git blob SHA `bdbdab04eb85903e46c56ff56c7a1ea0cbe9c78b` matches the pinned upstream blob SHA. A SHA-256 checksum and licence notice are also committed beside it. The connector cannot display the binary bytes, but the Git object identity verifies the exact upstream asset. This is a male anatomical base with general locomotion clips, not a complete dressed MMA fighter asset. A separate 27-clip ACCAD BVH set is committed and retarget-tested against this rig. The female base is integrated separately; paired MMA wrestling/submission captures remain outstanding.
+- Status: binary retained at `arena/assets/models/cc0-base-body-anim.glb` for research and rig comparison. It is not the default visible fighter. The active runtime character pair is Quaternius Universal Base Characters; see the notice under `arena/assets/models/quaternius/ASSET_NOTICE.md`.
 - License notes: https://github.com/kblood/CharacterCreator/blob/852e48f316b90a0937234886630e4fb4cdfd1f78/LICENSE-NOTES.md
 
 
@@ -41,8 +41,7 @@ For every additional motion pack, record its source, licence, attribution, SHA-2
 - Workflow: `.github/workflows/import-cc0-character.yml`
 - Target branch: `arena-combat-foundation` only; `main` is not modified.
 - The workflow downloads the exact pinned upstream GLB, validates the GLB v2 container, meshes, skin, and embedded clips, and generates a SHA-256 checksum plus this asset notice.
-- Repository status: **imported and verified in the feature branch**; the GLB path, matching upstream Git blob SHA, checksum file and licence notice are present.
-- Even after successful import, the asset remains a male anatomical base with locomotion clips; it is not a finished MMA fighter or a 24-character roster pack.
+- Repository status: imported and verified in the feature branch. This research asset is not used by the default runtime; Quaternius male/female character models are the active roster bases.
 
 
 ## Repository import verification
@@ -58,14 +57,28 @@ For every additional motion pack, record its source, licence, attribution, SHA-2
 - Bone mapping and compatibility checks: `arena/mocap-retarget.js`; incomplete rigs are rejected.
 - External source candidates: Open Motion Project / ACCAD, The Ohio State University (CC BY 3.0) and 100STYLE (CC BY 4.0), distributed in part through KinemIQ exports.
 - Attribution for ACCAD-derived clips: “Open Motion Project by ACCAD / The Ohio State University.”
-- Status: **27 real ACCAD BVH clips are committed** under `arena/assets/mocap/accad/`, with individual SHA-256 values in `manifest.json` and `SHA256SUMS`, plus the CC BY 3.0 notice. Automated in-browser retarget/playback QA is the remaining validation gate.
+- Status: **27 real ACCAD BVH clips are committed** under `arena/assets/mocap/accad/`, with individual SHA-256 values in `manifest.json` and `SHA256SUMS`, plus the CC BY 3.0 notice. Five actions (jab, cross, roundhouse, high block and dodge) are connected to both active Quaternius fighter rigs; 22 source clips remain unwired.
 
 
-## Female fighter base and runtime outfit
+## Quaternius Universal Animation Library 1 — native character motion
+- Source: Quaternius Universal Animation Library Standard, official page https://quaternius.com/packs/universalanimationlibrary.html and download page https://quaternius.itch.io/universal-animation-library.
+- License: CC0 1.0 Universal. The creator states the Standard library contains 43 clips and allows commercial use.
+- Runtime file: `arena/assets/mocap/quaternius/UAL1_Standard.glb`. Its 65-joint naming matches the Quaternius male/female fighter rigs, so clips play natively without retargeting.
+- The native library provides walk/punch/reaction clips; neutral idle restores the validated model bind pose. These are authored animation-library clips, not motion-capture recordings. Five ACCAD BVH clips remain the real single-actor motion-capture actions currently connected to gameplay.
+- Source notice: `arena/assets/mocap/quaternius/UAL1_NOTICE.md`.
+
+## Active male/female fighter models — Quaternius CC0
+- Source: Quaternius Universal Base Characters (Standard), official pack page https://quaternius.com/packs/universalbasecharacters.html and free download https://quaternius.itch.io/universal-base-characters.
+- License: CC0 1.0 Universal. The creator describes the six base models as game-ready, humanoid-rigged and averaging about 13k triangles, and explicitly allows commercial use.
+- FIGHTROOM imports `human_male.glb` and `human_female.glb` under `arena/assets/models/quaternius/`. Both source rigs have 65 matching humanoid joints; the packer embeds external images and buffers without changing mesh topology, skin weights or bone names.
+- Runtime fightwear overlays are original FIGHTROOM geometry. ACCAD BVH clips are a separate CC BY 3.0 source and retain their own attribution requirement.
+- Exact source files, packing method and licence notice: `arena/assets/models/quaternius/ASSET_NOTICE.md` and `arena/pack-gltf-to-glb.js`.
+
+## Female Innerscene candidate — excluded from runtime
 - Source: Innerscene female base mesh, GLB, publisher-described 163-bone skin rig; licence stated by publisher: CC0.
 - Asset: `arena/assets/models/source/female-base-mesh-base_female.glb`; SHA-256: `7e45ef5ef58d4e6a3aa17ef4078cb5ffb02c3964cef67c393973a6d4c0a8cbf8`.
-- The runtime retargets ACCAD BVH motion to this female skeleton and attaches original procedural fightwear (sports top, shorts, trim, hair, gloves and shoes). This is a functional prototype outfit, not a finished character-art pass.
-- Source notice and rig review: `arena/assets/models/source/FEMALE-BASE-SOURCE-NOTICE.md` and `arena/FEMALE_BASE_SOURCE_REVIEW.md`.
+- Rig structure passed inspection, but the skinned mesh visibly deformed into spikes in the Three.js runtime even without BVH animation. It is intentionally excluded until skin bind/deformation is repaired.
+- Source notice and review: `arena/assets/models/source/FEMALE-BASE-SOURCE-NOTICE.md` and `arena/FEMALE_BASE_SOURCE_REVIEW.md`.
 
 ## Matched two-actor capture — CMU arm wrestling
 - Original publisher: Carnegie Mellon University Graphics Lab Motion Capture Database. Matched capture: Subject 22 / Trial 17 (Actor A) and Subject 23 / Trial 17 (Actor B), “rush up, arm wrestle”.

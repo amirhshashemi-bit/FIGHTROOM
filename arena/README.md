@@ -1,6 +1,6 @@
 # FIGHTROOM ARENA — Combat Lab
 
-**Build:** 0.8.0-prealpha · **Status:** playable browser prototype, not release-ready
+**Build:** 0.9.0-prealpha · **Status:** playable browser prototype with automatic male/female model and motion integration; not release-ready
 
 An isolated browser-based MMA combat prototype inside the FIGHTROOM repository. The existing content marketplace remains intact.
 
@@ -15,7 +15,9 @@ Visit `/arena/` on the deployed FIGHTROOM site. Three.js is loaded from jsDelivr
 - Two signature-move loadout slots; standard jab/cross are available to all users, while premium subscribers can equip advanced striking and grappling techniques with keyboard 1/2 or mobile buttons
 - Custom fighter profiles saved locally in the browser and selectable as a playable corner fighter
 - Premium combat catalogue: takedown, ground-and-pound, submissions, spinning backfist, Superman punch, switch kick, question-mark kick, spinning elbow and flying knee are gated behind verified premium entitlement; no purchase/checkout is enabled
-- Optional GLB/glTF motion-capture character import with clip-name mapping onto idle, movement, strikes, blocks, dodges and ground actions
+- Automatic gender-matched Quaternius CC0 GLB loading for both corners: separate textured male/female characters, matching 65-joint humanoid rigs and approximately 13k triangles per base model
+- Original FIGHTROOM overlays add compression tops, shorts, gloves, shoes, and procedural short-hair/ponytail geometry; the source skin and eye textures remain intact
+- The 43-clip Quaternius UAL1 Standard library is loaded once and played natively on both matching rigs (walk, punch and reactions); neutral idle restores the fighter's validated bind pose instead of using the pack's crouched idle loop; five real ACCAD BVH clips are retargeted onto each active fighter (jab, cross, roundhouse, high block and dodge). The remaining 22 ACCAD clips are not yet wired; grappling choreography remains procedural. The incompatible 163-bone Innerscene female candidate and earlier CharacterCreator base remain archived, not used by the default runtime
 - Stance, locomotion, jab, cross, hook, low/high kick, guard and evade for all users; premium takedowns, ground control, ground-and-pound, submissions and advanced striking
 - Strike phases, stamina cost/regeneration, range checks, guard mitigation, hit reactions and basic CPU opponent
 - Keyboard and touch action buttons
@@ -25,10 +27,10 @@ Visit `/arena/` on the deployed FIGHTROOM site. Three.js is loaded from jsDelivr
 - head/body/leg contact-volume checks and basic ground-state actions (early prototype)
 
 ## Controls
-WASD move; J jab; L cross; K hook; U low kick; I high kick; 1/2 equipped signature moves; Space guard; Shift evade; O takedown (Premium); N ground pound (Premium); hold M submission (Premium); B stand up (free recovery). Select fighters in the roster bar. Upload an animated GLB for either corner to use captured animation clips.
+WASD move; J jab; L cross; K hook; U low kick; I high kick; 1/2 equipped signature moves; Space guard; Shift evade; O takedown (Premium); N ground pound (Premium); hold M submission (Premium); B stand up (free recovery). Select fighters in the roster bar. Upload an animated GLB for either corner to use captured animation clips. For a local model showcase with the CPU held idle, add `?showcase=1` to the arena URL.
 
 ## Honest limitations
-This is a first playable combat foundation, not a finished MMA game. The default roster still uses procedural fallback bodies. A pinned CC0 male base-body GLB is committed as a test rig, not automatically applied to the roster. A separate bundled ACCAD pack now contains 27 real single-performer BVH clips with CC BY 3.0 attribution and SHA-256 manifest; browser CI has retargeted eight of these onto the GLB rig successfully. No female base model is bundled yet, so female roster fighters remain on the procedural fallback until a compatible licensed female rig is added. The character creator still adjusts procedural proportions rather than sculpting production-grade anatomical meshes. Height/weight/reach are reflected in procedural dimensions and arm extension. Custom profiles are local to the browser and are not cloud-synced. Ground states and submissions are early gameplay scaffolding, not a complete grappling animation/physics system. Referee scoring is simplified; a dedicated paired-wrestling/submission mocap pack, complete grappling physics, contact-aware animation blending, crowd/audio assets, network play, and bespoke venue art remain future work. Premium subscription/payment is not live: no account provider, server-side receipt verification, or purchase flow is connected. The entitlement adapter fails closed without a verified provider. The browser-side gate is not a security boundary; any online rewards, purchases or competitive actions must also be validated server-side. Premium special moves currently use original procedural animation, not motion capture. Automated desktop and 390×844 touch-viewport browser QA now passes; physical Android device QA remains deliberately deferred until the current build and art pipeline are finalized.
+This remains a pre-alpha browser game, not a finished commercial MMA title. The default male and female corners now use separate textured Quaternius CC0 character models with matching 65-joint humanoid rigs. The original characters are stylized superhero bases with FIGHTROOM compression-top, shorts, glove, shoe and procedural hair overlays; they are not photorealistic bespoke MMA fighters. 43 authored Quaternius UAL1 clips are played natively and five real ACCAD BVH combat clips are retargeted to each active fighter at startup. The ACCAD source pack is 27 clips total; 22 are not yet wired to gameplay. All 30 roster entries do not yet have unique production meshes or bespoke faces. Clothing fit, skinning, animation deformation and performance still need close art review and physical Android QA. The arena remains procedural rather than photorealistic. The paired CMU previews are real synchronized two-actor arm-wrestling and pull/resist captures, not MMA takedowns or submissions; dedicated paired MMA capture data is still missing. Grappling transitions and most ground poses remain procedural gameplay scaffolding, not full-body captured wrestling or ragdoll physics. The creator stores custom profiles locally and does not sculpt new production meshes. Custom profiles are not cloud-synced. Premium subscription/payment is not live: no account provider, server-side receipt verification, or purchase flow is connected; the entitlement adapter fails closed without a verified provider. The browser-side gate is not a security boundary. No physical Android handset QA has been completed. The build still requires detailed visual review, performance testing on the target Android device, additional character art, paired MMA motion capture, network play, crowd/audio assets and bespoke venue art.
 
 See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requirements.
 
@@ -46,8 +48,7 @@ See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requ
 - The selected country appears in the fighter profile/HUD and roster option labels. Existing 24 fictional roster members keep their assigned countries.
 
 ## Professional character asset source review
-- A CC0 rigged male base mesh is available from Innerscene, adapted from MakeHuman: 163-bone skeleton, skin weights, embedded textures, approximately 109k triangles. Source/download page: https://www.innerscene.com/tools/library/3d-parts/male-base-mesh-3d-person-rigged-a-pose-380e6d89
-- This source is a neutral A-pose male base only; it is not a complete fight-ready 24-character pack, and the download has not been committed to this repository. It needs clothing, female counterpart(s), body morphs, and animation retarget/validation before production use.
+- The Innerscene 163-bone neutral base candidates are retained for research only; the female candidate failed visual skin-deformation review and is excluded from the runtime. The current default characters use Quaternius Universal Base Characters instead.
 - MakeHuman core graphics assets are CC0; source code licensing is separate. Asset terms are documented by MakeHuman Community: https://static.makehumancommunity.org/about/license.html
 - Ara 3D Gen is another open-source character generation pipeline using CC0 MakeHuman data and exports GLB/FBX; evaluate the exact source assets and export pipeline before adopting. https://github.com/olatunde85/3d-gen
 
@@ -74,7 +75,7 @@ See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for source terms and attribution requ
 - Pinned upstream: CharacterCreator commit `852e48f316b90a0937234886630e4fb4cdfd1f78`; upstream Git blob `bdbdab04eb85903e46c56ff56c7a1ea0cbe9c78b`.
 - Repository blob SHA matches the pinned upstream Git blob; SHA-256 is recorded in `assets/models/cc0-base-body-anim.sha256`.
 - Licence notice: `assets/models/CC0-ASSET-NOTICE.md` (CC0-1.0 for generated GLB output).
-- This is an anatomical male base with general locomotion animations. It has not passed visual, clothing, fight-clip, retarget or Android performance QA; it is not yet the default model.
+- This was the initial CharacterCreator asset-import milestone. That anatomical base is retained for research; the active runtime now uses the Quaternius male/female game-ready character pair.
 
 
 ## Premium combat implementation (pre-alpha 0.6)

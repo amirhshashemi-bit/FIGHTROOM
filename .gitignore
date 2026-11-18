@@ -1,0 +1,4 @@
+﻿# Rebuildable source copies are kept in the laptop backup archive; runtime uses the self-contained GLB files.
+/arena/assets/models/quaternius/*.gltf
+/arena/assets/models/quaternius/*.bin
+/arena/assets/models/quaternius/T_*.png

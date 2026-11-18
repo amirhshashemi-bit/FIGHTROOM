@@ -40,10 +40,20 @@ export function inspectHumanoidRig(root) {
 export function applyCharacterMorphs(root, profile = {}) {
   const proportions = profile.body || {};
   const applied = [];
+  const gender = String(profile.gender || (String(profile.division || '').startsWith('Women') ? 'female' : 'male')).toLowerCase();
+  const genderWeights = { gender_female: gender === 'female' ? 1 : 0, gender_male: gender === 'female' ? 0 : 1 };
   root?.traverse?.(node => {
     const dictionary = node.morphTargetDictionary;
     const influences = node.morphTargetInfluences;
     if (!dictionary || !influences) return;
+    for (const [key, value] of Object.entries(genderWeights)) {
+      const match = Object.keys(dictionary).find(name => clean(name) === clean(key));
+      if (!match) continue;
+      const index = dictionary[match];
+      if (!Number.isInteger(index) || index < 0 || index >= influences.length) continue;
+      influences[index] = value;
+      applied.push(key);
+    }
     for (const [key, aliases] of Object.entries(MORPH_TARGETS)) {
       const match = Object.keys(dictionary).find(name => aliases.some(alias => clean(alias) === clean(name)));
       if (!match) continue;

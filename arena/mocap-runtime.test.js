@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { hasFighterClip, applyGrappleRigPose } from './mocap-runtime.js';
+import { hasFighterClip, applyGrappleRigPose, restoreFighterRestPose } from './mocap-runtime.js';
 class FakeQuaternion {
  constructor(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z}
  clone(){return new FakeQuaternion(this.x,this.y,this.z)}
@@ -47,4 +47,19 @@ test('maps committed ACCAD source clip names to supported gameplay actions',()=>
   {name:'Male2_A10_LieToCrouch'},{name:'Male2_E3_Advance'},{name:'Male2_E5_Retreat'}
  ]};
  for(const action of ['idle','jab','cross','hook','high','low','guard','dodge','ground-control','stand-up','advance','retreat'])assert.equal(hasFighterClip(fighter,action),true,action);
+});
+
+test('restores the imported fighter bind pose after an animation instead of leaving a stale floor pose',()=>{
+ const vector=(x,y,z)=>({x,y,z,copy(v){this.x=v.x;this.y=v.y;this.z=v.z;return this}});
+ const quaternion=(x,y,z,w)=>({x,y,z,w,copy(q){this.x=q.x;this.y=q.y;this.z=q.z;this.w=q.w;return this}});
+ const bone={position:vector(9,9,9),quaternion:quaternion(9,9,9,9),scale:vector(9,9,9)};
+ const rest={position:vector(1,2,3),quaternion:quaternion(.1,.2,.3,.9),scale:vector(1,1,1)};
+ let stopped=false,updated=false;
+ const fighter={restPose:[{bone,...rest}],mixer:{stopAllAction(){stopped=true}},externalModel:{updateMatrixWorld(value){updated=value}},currentAction:{},currentClip:'male2_jab'};
+ assert.equal(restoreFighterRestPose(fighter),true);
+ assert.equal(stopped,true);assert.equal(updated,true);
+ assert.deepEqual([bone.position.x,bone.position.y,bone.position.z],[1,2,3]);
+ assert.deepEqual([bone.quaternion.x,bone.quaternion.y,bone.quaternion.z,bone.quaternion.w],[.1,.2,.3,.9]);
+ assert.deepEqual([bone.scale.x,bone.scale.y,bone.scale.z],[1,1,1]);
+ assert.equal(fighter.currentAction,null);assert.equal(fighter.currentClip,'rest');
 });
