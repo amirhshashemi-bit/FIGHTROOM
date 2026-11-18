@@ -12,9 +12,10 @@ test('desktop arena renders WebGL and responds to keyboard strike and movement',
   await expect(page.locator('.creator-panel')).toBeVisible();
   await expect(page.locator('.roster-toolbar')).toBeVisible();
   expect(await page.locator('#p-mocap-file').getAttribute('accept')).toContain('.bvh');
+  await page.waitForFunction(() => { const p=window.__fightroomDebug().player; return p.fightersReady===true && p.boutPhase==='fight' && p.groundState==='standing'; }, null, { timeout: 10000 });
   const startPosition = await page.evaluate(() => window.__fightroomDebug().player.rootPosition);
   await page.keyboard.down('w');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(900);
   await page.keyboard.up('w');
   const endPosition = await page.evaluate(() => window.__fightroomDebug().player.rootPosition);
   expect(Math.hypot(endPosition[0] - startPosition[0], endPosition[2] - startPosition[2])).toBeGreaterThan(0.2);
