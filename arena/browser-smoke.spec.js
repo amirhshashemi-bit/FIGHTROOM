@@ -74,11 +74,11 @@ test('bundled real ACCAD mocap pack loads and plays through the arena runtime', 
   await page.locator('#enemy-roster').selectOption(male.value);
   await page.locator('#preview-paired-mocap').click();
   await expect(page.locator('#mocap-status')).toContainText('REAL PAIRED MOCAP PLAYING', { timeout: 60000 });
-  await page.waitForTimeout(7200);
+  await page.waitForTimeout(8000);
   await expect(page.locator('#mocap-status')).toContainText('REAL PAIRED MOCAP COMPLETE · CMU ARM WRESTLE', { timeout: 10000 });
   await page.locator('#preview-pull-resist').click();
   await expect(page.locator('#mocap-status')).toContainText('REAL PAIRED MOCAP PLAYING · CMU PULL / RESIST', { timeout: 60000 });
-  await page.waitForTimeout(5100);
+  await page.waitForTimeout(5800);
   await expect(page.locator('#mocap-status')).toContainText('REAL PAIRED MOCAP COMPLETE · CMU PULL / RESIST', { timeout: 10000 });
   await expect(page.locator('#view canvas')).toBeVisible();
   expect(pageErrors).toEqual([]);

@@ -34,7 +34,7 @@ for(let y of [0.35,1.15,1.95]){const pts=[];for(let i=0;i<=8;i++){const a=i*Math
 const matLine=new THREE.Mesh(new THREE.PlaneGeometry(10,10),new THREE.MeshStandardMaterial({color:0x303d4c,roughness:1,transparent:true,opacity:.18}));matLine.rotation.x=-Math.PI/2;matLine.position.y=-.05;scene.add(matLine);
 const clock=new THREE.Clock();let elapsed=0,ended=false,roundSeconds=300,player,enemy;
 let bout=createBout({rounds:3,roundSeconds:300,restSeconds:60}),restCountdown=0;
-let premiumAccess=false,pairedDemo=null,pairedDemoActive=false,pairedDemoRestore=null,pairedDemoLabel='';
+let premiumAccess=false,pairedDemo=null,pairedDemoActive=false,pairedDemoLoading=false,pairedDemoRestore=null,pairedDemoLabel='';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const lerp=(a,b,t)=>a+(b-a)*t;const V=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
 function material(color,roughness=.65,metalness=0){return new THREE.MeshStandardMaterial({color,roughness,metalness})}
 const skinA=material(0xb97855),skinB=material(0x80533f),shortA=material(0x171f2a),shortB=material(0x12314a),gloveA=material(0xa92732),gloveB=material(0x176ba6),wrap=material(0xe5e7e9),hairA=material(0x17171a),hairB=material(0x211a17);
@@ -236,7 +236,8 @@ async function ensureFighterIdleMotion(f){
 }
 async function previewPairedMocap(kind='arm-wrestle'){
  const status=byId('mocap-status');
- if(pairedDemoActive)return;
+ if(pairedDemoActive||pairedDemoLoading)return;
+ pairedDemoLoading=true;
  try{
   status.textContent='Loading both fighter rigs and matched CMU A/B motion files…';
   await Promise.all([ensureFighterMocapModel(player),ensureFighterMocapModel(enemy)]);
@@ -255,9 +256,10 @@ async function previewPairedMocap(kind='arm-wrestle'){
   player.root.position.set(-.72,0,0);enemy.root.position.set(.72,0,0);
   player.root.rotation.y=Math.PI/2;enemy.root.rotation.y=-Math.PI/2;
   pairedDemo=await loadPairedFbxMotion(THREE,player,enemy,files[0],files[1],kind);
-  pairedDemoLabel=pack.label;pairedDemoActive=true;
+  pairedDemoLabel=pack.label;pairedDemoLoading=false;pairedDemoActive=true;
   status.textContent='REAL PAIRED MOCAP PLAYING · CMU '+pack.label+' · '+pairedDemo.clock.duration.toFixed(1)+' SEC · BOTH ACTORS SYNCHRONIZED';
  }catch(error){
+  pairedDemoLoading=false;
   if(pairedDemoRestore){restorePairedDemoPositions()}
   status.textContent='PAIRED MOCAP FAILED: '+error.message;console.error(error);
  }
@@ -380,8 +382,9 @@ function restorePairedDemoPositions(){
  restore(player,pairedDemoRestore.player);restore(enemy,pairedDemoRestore.enemy);
  pairedDemoRestore=null;
 }
-let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended){
- if(pairedDemoActive){
+let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended||pairedDemoLoading||pairedDemoActive){
+ if(pairedDemoLoading){player.move.set(0,0,0);enemy.move.set(0,0,0)}
+ else if(pairedDemoActive){
   player.move.set(0,0,0);enemy.move.set(0,0,0);
   const tick=updatePairedFbxMotion(pairedDemo,dt);
   if(tick.done){
