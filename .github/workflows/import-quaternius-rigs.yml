@@ -26,20 +26,21 @@ jobs:
           curl --fail --location --retry 3 "$base/human_female.glb" -o /tmp/female-source.glb
           ls -lh /tmp/*-source.glb
       - name: Install glTF optimization tools
-        run: npm install --no-save @gltf-transform/core@4.2.1 @gltf-transform/extensions@4.2.1 @gltf-transform/functions@4.2.1
+        run: npm install --no-save @gltf-transform/core@4.2.1 @gltf-transform/extensions@4.2.1 @gltf-transform/functions@4.2.1 sharp@0.33.5
       - name: Strip unused animations and optimize geometry
         run: |
           cat > arena/optimize-rigs.mjs <<'EOF'
           import { NodeIO } from '@gltf-transform/core';
-          import { KHRONOS_EXTENSIONS } from '@gltf-transform/extensions';
-          import { dedup, quantize, prune } from '@gltf-transform/functions';
+          import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+          import { dedup, quantize, prune, textureCompress } from '@gltf-transform/functions';
+          import sharp from 'sharp';
           import fs from 'node:fs/promises';
-          const io=new NodeIO().registerExtensions(KHRONOS_EXTENSIONS);
+          const io=new NodeIO().registerExtensions(ALL_EXTENSIONS);
           for (const [src,dst] of [['/tmp/male-source.glb','arena/assets/models/quaternius-male.glb'],['/tmp/female-source.glb','arena/assets/models/quaternius-female.glb']]) {
             const doc=await io.read(src);
             const root=doc.getRoot();
             for (const animation of root.listAnimations()) animation.dispose();
-            await doc.transform(dedup(),quantize(),prune());
+            await doc.transform(dedup(),quantize(),prune(),textureCompress({encoder:sharp,targetFormat:'webp',resize:[1024,1024],slots:/^(?!normalTexture).*$/}));
             const skins=root.listSkins(),meshes=root.listMeshes();
             if(!skins.length||!meshes.length)throw new Error('Optimized model lost its skin or mesh: '+dst);
             const bytes=await io.writeBinary(doc);
