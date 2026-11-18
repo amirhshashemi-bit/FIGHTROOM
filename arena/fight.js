@@ -200,7 +200,7 @@ async function loadBundledAccadPack(which){
  const f=which==='player'?player:enemy,status=byId('mocap-status');
  try{
   status.textContent='Loading licensed ACCAD test rig and real motion-capture clips…';
-  const gender=f.profile?.gender==='female'?'female':'male';
+  const gender=f.profile?.gender||(String(f.profile?.division||'').startsWith('Women')?'female':'male');
   if(gender==='female'){status.textContent='FEMALE GLB MODEL NOT BUNDLED YET · import a compatible female GLB, then add ACCAD BVH clips';return;}
   const modelResponse=await fetch(new URL('./assets/models/cc0-base-body-anim.glb',import.meta.url));
   if(!modelResponse.ok)throw new Error('CC0 test rig download failed: '+modelResponse.status);
