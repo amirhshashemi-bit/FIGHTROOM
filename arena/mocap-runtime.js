@@ -25,12 +25,13 @@ function addMaleFightwear(THREE,model,fighter){
  add(hipBone,'FIGHTROOM_MALE_FIGHT_SHORTS',new THREE.CylinderGeometry(.19,.205,.22,24,1,true),cloth,[0,-.015,0]);
  add(hipBone,'FIGHTROOM_MALE_SHORTS_WAISTBAND',new THREE.TorusGeometry(.198,.012,6,24),trim,[0,.095,0]).rotation.x=Math.PI/2;
  for(const [boneName,side] of [['hand_l','L'],['hand_r','R']]){const bone=find([boneName]);if(bone)add(bone,'FIGHTROOM_GLOVE_'+side,new THREE.SphereGeometry(.048,12,10),trim,[0,0,.018])}
- for(const [boneName,side] of [['foot_l','L'],['foot_r','R']]){const bone=find([boneName]);if(bone){const shoe=add(bone,'FIGHTROOM_MMA_SHOE_'+side,new THREE.BoxGeometry(.13,.07,.23),cloth,[0,-.012,.045]);shoe.material=cloth}}
+ // Keep the source model's own feet. Added box shoes do not share a stable
+ // local foot orientation across BVH/GLB rigs and can appear as floating blocks.
  const hairGroup=new THREE.Group();hairGroup.name='FIGHTROOM_MALE_HAIR_GROUP';headBone.add(hairGroup);model.updateMatrixWorld(true);const headWorldQ=headBone.getWorldQuaternion(new THREE.Quaternion()),modelWorldQ=model.getWorldQuaternion(new THREE.Quaternion());hairGroup.quaternion.copy(headWorldQ.invert().multiply(modelWorldQ));
  add(hairGroup,'FIGHTROOM_MALE_HAIR_CAP',new THREE.SphereGeometry(.098,16,10,0,Math.PI*2,0,Math.PI*.58),hair,[0,.115,0]);
  const fringe=add(hairGroup,'FIGHTROOM_MALE_HAIR_FRINGE',new THREE.BoxGeometry(.12,.035,.05),hair,[0,.075,.085]);fringe.rotation.x=.12;
  for(const side of [-1,1])add(hairGroup,'FIGHTROOM_MALE_SIDEBURN_'+side,new THREE.CapsuleGeometry(.014,.065,4,8),hair,[side*.078,.015,.005]);
- return {outfit:'compression-top-shorts-gloves-shoes-short-hair',pieces:12};
+ return {outfit:'compression-top-shorts-gloves-short-hair',pieces:10};
 }
 function addFemaleFightwear(THREE,model,fighter){
  const find=names=>{let hit=null;model.traverse(o=>{if(!hit&&o.isBone&&names.includes(o.name.toLowerCase()))hit=o});return hit};
@@ -46,12 +47,13 @@ function addFemaleFightwear(THREE,model,fighter){
  add(hipBone,'FIGHTROOM_FEMALE_FIGHT_SHORTS',new THREE.CylinderGeometry(.18,.19,.19,24,1,true),cloth,[0,-.005,0]);
  add(hipBone,'FIGHTROOM_SHORTS_WAISTBAND',new THREE.TorusGeometry(.184,.012,6,24),trim,[0,.09,0]).rotation.x=Math.PI/2;
  for(const [boneName,side] of [['wrist.L','L'],['wrist.R','R'],['hand_l','L'],['hand_r','R']]){const bone=find([boneName.toLowerCase()]);if(bone&&!bone.children.some(c=>c.name==='FIGHTROOM_GLOVE_'+side))add(bone,'FIGHTROOM_GLOVE_'+side,new THREE.SphereGeometry(.043,12,10),trim,[0,0,.018])}
- for(const [boneName,side] of [['foot.L','L'],['foot.R','R'],['foot_l','L'],['foot_r','R']]){const bone=find([boneName.toLowerCase()]);if(bone&&!bone.children.some(c=>c.name==='FIGHTROOM_MMA_SHOE_'+side)){const shoe=add(bone,'FIGHTROOM_MMA_SHOE_'+side,new THREE.BoxGeometry(.12,.065,.22),cloth,[0,-.012,.045]);shoe.material=cloth}}
+ // Do not add synthetic box shoes: the model's own feet remain aligned
+ // with its skeleton and avoid detached geometry on differently oriented rigs.
  const hairGroup=new THREE.Group();hairGroup.name='FIGHTROOM_FEMALE_HAIR_GROUP';headBone.add(hairGroup);model.updateMatrixWorld(true);const headWorldQ=headBone.getWorldQuaternion(new THREE.Quaternion()),modelWorldQ=model.getWorldQuaternion(new THREE.Quaternion());hairGroup.quaternion.copy(headWorldQ.invert().multiply(modelWorldQ));
  add(hairGroup,'FIGHTROOM_FEMALE_HAIR_CAP',new THREE.SphereGeometry(.1,16,10,0,Math.PI*2,0,Math.PI*.6),hair,[0,.115,0]);
  const fringe=add(hairGroup,'FIGHTROOM_FEMALE_HAIR_FRINGE',new THREE.BoxGeometry(.12,.035,.05),hair,[0,.075,.085]);fringe.rotation.x=.12;
  const pony=add(hairGroup,'FIGHTROOM_FEMALE_HAIR_PONYTAIL',new THREE.CapsuleGeometry(.025,.19,4,8),hair,[0,-.015,-.12]);pony.rotation.x=-.25;
- return {outfit:'sports-top-shorts-gloves-shoes-ponytail',pieces:11};
+ return {outfit:'sports-top-shorts-gloves-ponytail',pieces:9};
 }
 export function applyGrappleRigPose(THREE,fighter,pose){
  const rig=fighter?.grappleRig;if(!rig||!pose)return false;
