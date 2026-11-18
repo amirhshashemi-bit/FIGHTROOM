@@ -200,27 +200,43 @@ function aimBoneSegment(THREE,bone,child,targetDirection){
  bone.updateMatrixWorld(true);
  return true;
 }
+export function getFighterGuardProfile(profile={},mode='high'){
+ const style=String(profile.style||'').toLowerCase();
+ const stance=String(profile.stance||'orthodox').toLowerCase();
+ const kind=style.includes('muay')||style.includes('thai')?'muay-thai':style.includes('karate')||style.includes('distance')?'long-range':style.includes('kickbox')?'kickboxing':style.includes('wrest')||style.includes('sambo')||style.includes('grappl')||style.includes('judo')?'wrestling':'boxing';
+ return {kind,lead:stance.includes('southpaw')?'right':'left',mode:['high','body','long'].includes(mode)?mode:'high'};
+}
 function applyFighterGuardPose(THREE,fighter,guarding=false){
  const rig=fighter?.grappleRig,root=fighter?.root;if(!rig||!root)return false;
- const reach=guarding ? 1 : .78;
- applyGrappleRigPose(THREE,fighter,{rootPitch:.025,roll:0,turn:0,lean:guarding ? .16 : .1,left:reach,right:reach,drive:0,spread:.22,level:0});
+ const guardProfile=getFighterGuardProfile(fighter.profile,fighter.guardMode);
+ const {kind,lead,mode}=guardProfile;
+ const muay=kind==='muay-thai',karate=kind==='long-range',kickbox=kind==='kickboxing',wrestler=kind==='wrestling';
+ const reach=guarding?1:.78;
+ applyGrappleRigPose(THREE,fighter,{rootPitch:mode==='body'?.055:.025,roll:0,turn:karate?-.09:0,lean:guarding?(karate?.08:.16):.1,left:reach,right:reach,drive:0,spread:karate?.3:wrestler?.16:.22,level:mode==='body'?.08:0,guard:true});
  root.updateMatrixWorld(true);
  const rootRotation=root.getWorldQuaternion(new THREE.Quaternion());
  const front=new THREE.Vector3(0,0,1).applyQuaternion(rootRotation).normalize();
+ const up=new THREE.Vector3(0,1,0);
  for(const side of ['left','right']){
   const upper=rig.bones.get(side+'UpperArm'),fore=rig.bones.get(side+'ForeArm'),hand=rig.bones.get(side+'Hand');
   if(!upper||!fore||!hand)continue;
   const shoulder=upper.getWorldPosition(new THREE.Vector3());
   const localShoulder=root.worldToLocal(shoulder.clone());
   const outward=new THREE.Vector3(Math.sign(localShoulder.x)||(side==='left'?-1:1),0,0).applyQuaternion(rootRotation).normalize();
-  const upperDirection=front.clone().multiplyScalar(.12).add(new THREE.Vector3(0,-.08,0)).add(outward.clone().multiplyScalar(.12));
+  const isLead=side===lead;
+  let upperForward=muay?.08:karate?(isLead?.34:.02):kickbox?.2:wrestler?.04:.14;
+  let handHeight=mode==='body'?.03:mode==='long'?.17:muay?.22:karate?.12:kickbox?.16:.19;
+  let foreForward=mode==='long'&&isLead?.58:karate&&isLead?.3:kickbox&&isLead?.22:muay?.04:.13;
+  if(mode==='body'){upperForward*=.55;foreForward*=.45;handHeight-=.12;}
+  const upperDirection=front.clone().multiplyScalar(upperForward).add(up.clone().multiplyScalar(-.06)).add(outward.clone().multiplyScalar(karate&&isLead?.05:.13));
   aimBoneSegment(THREE,upper,fore,upperDirection);
   root.updateMatrixWorld(true);
   const inward=outward.clone().negate();
-  const foreDirection=front.clone().multiplyScalar(.15).add(new THREE.Vector3(0,.15,0)).add(inward.multiplyScalar(.10));
+  const foreDirection=front.clone().multiplyScalar(foreForward).add(up.clone().multiplyScalar(handHeight)).add(inward.multiplyScalar(muay?.08:karate&&isLead?.02:.12));
   aimBoneSegment(THREE,fore,hand,foreDirection);
  }
  root.updateMatrixWorld(true);
+ fighter.guardPoseApplied=true;
  return true;
 }
 
@@ -228,15 +244,19 @@ export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
  if(!fighter?.mixer||fighter.pairedMotion)return;
  fighter.guardPoseApplied=false;
  if(!fighter.action){
-  if(fighter.submitting)playFighterClip(THREE,fighter,'submission');
-  else if(fighter.motionOverrideTime>0){fighter.motionOverrideTime=Math.max(0,fighter.motionOverrideTime-dt);playFighterClip(THREE,fighter,fighter.motionOverride||'stand-up');if(fighter.motionOverrideTime===0)fighter.motionOverride=null;}
-  else if(fighter.groundState&&fighter.groundState!=='standing'&&fighter.groundState!=='clinch')playFighterClip(THREE,fighter,'ground-control');
-  else if(fighter.guard)playFighterClip(THREE,fighter,'guard');
-  else if(fighter.dodge>0)playFighterClip(THREE,fighter,'dodge');
-  else if(moveSpeed>.2)playFighterClip(THREE,fighter,'advance');
-  else{playFighterClip(THREE,fighter,'idle');fighter.guardPoseApplied=applyFighterGuardPose(THREE,fighter,false)}
+  if(fighter.submitting){fighter.guardPoseActive=false;playFighterClip(THREE,fighter,'submission');}
+  else if(fighter.motionOverrideTime>0){fighter.guardPoseActive=false;fighter.motionOverrideTime=Math.max(0,fighter.motionOverrideTime-dt);playFighterClip(THREE,fighter,fighter.motionOverride||'stand-up');if(fighter.motionOverrideTime===0)fighter.motionOverride=null;}
+  else if(fighter.groundState&&fighter.groundState!=='standing'&&fighter.groundState!=='clinch'){fighter.guardPoseActive=false;playFighterClip(THREE,fighter,'ground-control');}
+  else if(fighter.guard){
+   if(!fighter.guardPoseActive){restoreFighterRestPose(fighter);fighter.guardPoseActive=true;}
+  }
+  else if(fighter.dodge>0){fighter.guardPoseActive=false;playFighterClip(THREE,fighter,'dodge');}
+  else if(moveSpeed>.2){fighter.guardPoseActive=false;playFighterClip(THREE,fighter,'advance');}
+  else{fighter.guardPoseActive=false;playFighterClip(THREE,fighter,'idle');}
  }
  fighter.mixer.update(dt);
+ if(!fighter.action&&fighter.guard&&(!fighter.groundState||fighter.groundState==='standing'||fighter.groundState==='clinch'))applyFighterGuardPose(THREE,fighter,true);
+ else if(!fighter.action&&!fighter.guard&&fighter.dodge<=0&&!(fighter.motionOverrideTime>0)&&!fighter.submitting&&moveSpeed<=.2&&(!fighter.groundState||fighter.groundState==='standing'))applyFighterGuardPose(THREE,fighter,false);
 }
 
 export async function loadFighterBVH(THREE,file,fighter){

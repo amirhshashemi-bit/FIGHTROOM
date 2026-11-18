@@ -54,6 +54,7 @@ function fighter(profile,side){const name=profile.name,skin=material(profile.ski
  return state}
 player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('leila-farhadi'),1);
 function pose(f,t,moveSpeed,dt){
+ if(f.guard){const opponent=f===player?enemy:player;f.guardMode=opponent.action==='takedown'||opponent.action==='ground-pound'?'body':distance(f,opponent)>2.1?'long':'high';}
  if(f.mixer){
   updateFighterMocap(THREE,f,dt,moveSpeed);
   if(f.grapplePose&&f.grappleRig){f.externalModel.visible=true;f.rig.visible=false;applyGrappleRigPose(THREE,f,f.grapplePose);return;}

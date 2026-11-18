@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { hasFighterClip, applyGrappleRigPose, restoreFighterRestPose } from './mocap-runtime.js';
+import { hasFighterClip, applyGrappleRigPose, restoreFighterRestPose, getFighterGuardProfile } from './mocap-runtime.js';
 class FakeQuaternion {
  constructor(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z}
  clone(){return new FakeQuaternion(this.x,this.y,this.z)}
@@ -62,4 +62,24 @@ test('restores the imported fighter bind pose after an animation instead of leav
  assert.deepEqual([bone.quaternion.x,bone.quaternion.y,bone.quaternion.z,bone.quaternion.w],[.1,.2,.3,.9]);
  assert.deepEqual([bone.scale.x,bone.scale.y,bone.scale.z],[1,1,1]);
  assert.equal(fighter.currentAction,null);assert.equal(fighter.currentClip,'rest');
+});
+
+test('fighter guard profiles differ by striking style and stance',()=>{
+ const boxer=getFighterGuardProfile({style:'Boxing counterpuncher',stance:'Orthodox'});
+ const kickbox=getFighterGuardProfile({style:'Technical kickboxing',stance:'Southpaw'});
+ const muay=getFighterGuardProfile({style:'Muay Thai pressure',stance:'Southpaw'});
+ const wrestler=getFighterGuardProfile({style:'Sambo pressure',stance:'Southpaw'});
+ assert.deepEqual(boxer,{kind:'boxing',lead:'left',mode:'high'});
+ assert.deepEqual(kickbox,{kind:'kickboxing',lead:'right',mode:'high'});
+ assert.deepEqual(muay,{kind:'muay-thai',lead:'right',mode:'high'});
+ assert.equal(wrestler.kind,'wrestling');
+ assert.notEqual(boxer.kind,kickbox.kind);
+ assert.notEqual(kickbox.kind,muay.kind);
+});
+test('guard profile changes posture for high, body and distance states',()=>{
+ const profile={style:'Technical kickboxing',stance:'Southpaw'};
+ assert.equal(getFighterGuardProfile(profile,'high').mode,'high');
+ assert.equal(getFighterGuardProfile(profile,'body').mode,'body');
+ assert.equal(getFighterGuardProfile(profile,'long').mode,'long');
+ assert.equal(getFighterGuardProfile(profile,'unknown').mode,'high');
 });
