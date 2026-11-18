@@ -1,7 +1,7 @@
 import { resolveCountryCode, countryNameForCode } from './countries.js';
 // FIGHTROOM custom fighter profiles and premium movement catalogue.
 // Local profile storage is a prototype only; purchase entitlements must be server-verified.
-export const CREATOR_STORAGE_KEY = 'fightroom.arena.custom-fighter.v1';
+export const CREATOR_STORAGE_KEY = 'fightroom.arena.custom-fighter.v1';\nexport const CREATOR_SCHEMA_VERSION = 2;
 export const MOVE_CATALOG = [
   {id:'signature-jab',name:'Signature Jab',category:'Boxing',price:90,baseMove:'jab',clip:'jab',premium:false},
   {id:'signature-cross',name:'Power Cross',category:'Boxing',price:110,baseMove:'cross',clip:'cross',premium:false},
@@ -26,7 +26,7 @@ const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||min));
 export function normalizeCustomFighter(raw={}){
  const d=DEFAULT_CUSTOM_FIGHTER,b=raw.body||{};
  return {
-  ...d,...raw,id:'custom-player',custom:true,
+  ...d,...raw,id:'custom-player',custom:true,schemaVersion:CREATOR_SCHEMA_VERSION,
   name:String(raw.name||d.name).trim().slice(0,24)||d.name,
   gender:raw.gender==='female'?'female':'male',
   countryCode:resolveCountryCode(raw.countryCode||raw.country||d.countryCode),
@@ -44,7 +44,13 @@ export function normalizeCustomFighter(raw={}){
  };
 }
 export function loadCustomFighter(){
- try{const raw=JSON.parse(localStorage.getItem(CREATOR_STORAGE_KEY)||'null');return raw?normalizeCustomFighter(raw):null}catch{return null}
+ try{
+  const raw=JSON.parse(localStorage.getItem(CREATOR_STORAGE_KEY)||'null');
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))return null;
+  const clean=normalizeCustomFighter(raw);
+  if(raw.schemaVersion!==CREATOR_SCHEMA_VERSION)localStorage.setItem(CREATOR_STORAGE_KEY,JSON.stringify(clean));
+  return clean;
+ }catch{return null}
 }
 export function saveCustomFighter(profile){
  const clean=normalizeCustomFighter(profile);
