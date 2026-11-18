@@ -1,6 +1,6 @@
 {
   "name": "fightroom-arena-combat",
-  "version": "0.9.2-prealpha",
+  "version": "0.9.3-prealpha",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,6 +19,8 @@
     "test:contact": "node --test contact-physics.test.js",
     "test:paired-motion": "node --test paired-motion.test.js",
     "test:assets": "node --test quaternius-assets.test.js",
-    "test:performance": "node --test performance.test.js"
+    "test:performance": "node --test performance.test.js",
+    "test:browser": "playwright test",
+    "test:all": "npm test && npm run test:browser"
   }
 }

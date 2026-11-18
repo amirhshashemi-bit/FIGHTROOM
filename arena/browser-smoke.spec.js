@@ -12,12 +12,17 @@ test('desktop arena renders WebGL and responds to keyboard strike and movement',
   await expect(page.locator('.creator-panel')).toBeVisible();
   await expect(page.locator('.roster-toolbar')).toBeVisible();
   expect(await page.locator('#p-mocap-file').getAttribute('accept')).toContain('.bvh');
+  const startPosition = await page.evaluate(() => window.__fightroomDebug().player.rootPosition);
+  await page.keyboard.down('w');
+  await page.waitForTimeout(500);
+  await page.keyboard.up('w');
+  const endPosition = await page.evaluate(() => window.__fightroomDebug().player.rootPosition);
+  expect(Math.hypot(endPosition[0] - startPosition[0], endPosition[2] - startPosition[2])).toBeGreaterThan(0.2);
   await page.keyboard.down('j');
+  await page.waitForFunction(() => window.__fightroomDebug().player.action === 'jab', null, { timeout: 3000 });
   await page.waitForTimeout(420);
   await page.keyboard.up('j');
-  await page.keyboard.down('w');
-  await page.waitForTimeout(350);
-  await page.keyboard.up('w');
+  await page.waitForFunction(() => window.__fightroomDebug().player.action === null, null, { timeout: 5000 });
   await page.waitForTimeout(1700);
   const context = await canvas.evaluate(node => node.getContext('webgl2') ? 'webgl2' : node.getContext('webgl') ? 'webgl' : 'none');
   expect(context).not.toBe('none');
@@ -169,5 +174,26 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   await page.waitForTimeout(5800);
   await expect(page.locator('#mocap-status')).toContainText('REAL PAIRED MOCAP COMPLETE · CMU PULL / RESIST', { timeout: 10000 });
   await expect(page.locator('#view canvas')).toBeVisible();
+  expect(pageErrors).toEqual([]);
+});
+
+test('a missing fighter mocap model falls back to playable built-in combat instead of freezing controls', async ({ page }) => {
+  await page.route('**/assets/models/quaternius/human_male.glb', route => route.abort());
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('http://127.0.0.1:4173/arena/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#view canvas')).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('#fighter-loading')).toBeHidden({ timeout: 60000 });
+  const fallback = await page.evaluate(() => window.__fightroomDebug().player);
+  expect(fallback.proceduralFallbackReady).toBe(true);
+  expect(fallback.rigVisible).toBe(true);
+  const before = fallback.rootPosition;
+  await page.keyboard.down('w');
+  await page.waitForTimeout(450);
+  await page.keyboard.up('w');
+  const after = await page.evaluate(() => window.__fightroomDebug().player.rootPosition);
+  expect(Math.hypot(after[0] - before[0], after[2] - before[2])).toBeGreaterThan(0.15);
+  await page.locator('[data-action="jab"]').click();
+  await page.waitForFunction(() => window.__fightroomDebug().player.action === 'jab', null, { timeout: 3000 });
   expect(pageErrors).toEqual([]);
 });

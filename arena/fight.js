@@ -50,7 +50,7 @@ function fighter(profile,side){const name=profile.name,skin=material(profile.ski
  const belt=new THREE.Mesh(new THREE.BoxGeometry(.43,.055,.29),material(0xc2a56c,.5,.35));rig.add(belt);belt.position.y=1.02;
  const eyes=[];const eyeMat=material(profile.eye??0x151515,.35);for(const s of [-1,1]){const e=sphere(rig,'eye',.018,eyeMat,V(s*.07,1.68,.17));eyes.push(e)}
  for(const sideKey of ['L','R']){for(const part of ['upperArm','foreArm']){const m=limbs[part+sideKey];m.scale.x=proportions.arms;m.scale.z=proportions.arms}for(const part of ['thigh','shin']){const m=limbs[part+sideKey];m.scale.x=proportions.legs;m.scale.z=proportions.legs}}
- const state={name,profile,root,rig,body,limbs,side,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,knockVector:V(),move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,frameTimer:0,motionOverride:null,motionOverrideTime:0,skin};
+ const state={name,profile,root,rig,body,limbs,side,proceduralFallbackReady:false,hp:100,stamina:100,energy:0,action:null,actionTime:0,actionDuration:0,guard:false,dodge:0,evadeVector:V(),hitFlash:0,stun:0,knock:0,knockVector:V(),move:V(),yaw:0,aiThink:0,lastHit:0,grounded:true,groundState:'standing',submitting:false,submissionProgress:0,submissionFrom:null,frameTimer:0,motionOverride:null,motionOverrideTime:0,skin};
  return state}
 player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('leila-farhadi'),1);
 function pose(f,t,moveSpeed,dt){
@@ -59,7 +59,8 @@ function pose(f,t,moveSpeed,dt){
   updateFighterMocap(THREE,f,dt,moveSpeed);
   if(f.grapplePose&&f.grappleRig){f.externalModel.visible=true;f.rig.visible=false;applyGrappleRigPose(THREE,f,f.grapplePose);return;}
   const groundClipMissing=f.groundState==='submission'?!hasFighterClip(f,'submission'):(f.groundState!=='standing'&&!hasFighterClip(f,'ground-control'));
-  const unsupported=(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||groundClipMissing;
+  const locomotionClipMissing=moveSpeed>.2&&!hasFighterClip(f,'advance');
+  const unsupported=(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||groundClipMissing||locomotionClipMissing;
   if(!unsupported){f.externalModel.visible=true;f.rig.visible=false;return;}
   // Missing strike clips must animate the imported humanoid, never swap it
   // for the old capsule test rig. Drive the mapped skeleton procedurally.
@@ -249,6 +250,7 @@ async function loadBundledAccadPack(which){
  const f=which==='player'?player:enemy,status=byId('mocap-status');
  try{
   fightersReady=false;
+  f.proceduralFallbackReady=false;
   f.root.visible=false;
   showFighterLoading('Loading '+which.toUpperCase()+' fighter model and motion data...');
   status.textContent='Loading licensed fighter base and real ACCAD motion-capture clips…';
@@ -274,9 +276,15 @@ async function loadBundledAccadPack(which){
   status.textContent=report;byId('stage-mocap-status').textContent=report;
   updateFighterReadiness(which.toUpperCase()+' READY · WAITING FOR THE OTHER FIGHTER');
  }catch(error){
-  f.root.visible=false;
-  const report='ACCAD PACK LOAD FAILED: '+error.message;status.textContent=report;byId('stage-mocap-status').textContent=report;
-  updateFighterReadiness('LOAD FAILED · '+which.toUpperCase()+' · '+error.message);
+  // A failed optional mocap download must never disable the entire fight.
+  // Keep the built-in articulated fighter visible and allow procedural combat.
+  f.proceduralFallbackReady=true;
+  f.root.visible=true;
+  f.rig.visible=true;
+  if(f.externalModel)f.externalModel.visible=false;
+  const report='MOCAP LOAD FAILED · '+which.toUpperCase()+' · BUILT-IN COMBAT FALLBACK ENABLED · '+error.message;
+  status.textContent=report;byId('stage-mocap-status').textContent=report;
+  updateFighterReadiness(report);
   console.error(error)
  }
 }
@@ -439,12 +447,17 @@ function restorePairedDemoPositions(){
 const showcaseMode=new URLSearchParams(location.search).get('showcase')==='1';
 let lastUi=0,fightersReady=false,lastFrameAt=0;
 function fighterAssetsReady(f){return Boolean(f.externalModel&&f.rigReport?.compatible&&f.outfitReport&&f.clips?.length===58&&f.clips.filter(c=>c.name.toLowerCase().startsWith('male2_')).length===15&&f.clips.some(c=>c.name==='Idle_Loop'))}
+function fighterCanFight(f){return fighterAssetsReady(f)||f.proceduralFallbackReady===true}
 function updateFighterReadiness(message=''){
- const ready=fighterAssetsReady(player)&&fighterAssetsReady(enemy);
+ const ready=fighterCanFight(player)&&fighterCanFight(enemy);
  fightersReady=ready;
  const overlay=byId('fighter-loading');
  if(overlay)overlay.hidden=ready;
  if(!ready&&message)showFighterLoading(message,message.startsWith('LOAD FAILED'));
+ if(ready&&[player,enemy].some(f=>f.proceduralFallbackReady)){
+  const status='PLAYABLE FALLBACK ACTIVE · MISSING MOCAP PACK USES BUILT-IN COMBAT ANIMATION';
+  byId('mocap-status').textContent=status;byId('stage-mocap-status').textContent=status;
+ }
  return ready;
 }
 const frameInterval=1000/quality.maxFPS;
@@ -497,14 +510,15 @@ window.__fightroomDebug=()=>Object.fromEntries([['player',player],['enemy',enemy
  const point=node=>node?f.root.worldToLocal(node.getWorldPosition(new THREE.Vector3()).clone()).toArray():null;
  const rotationDelta=node=>{const base=f.grappleRig?.base.get(node);return base?1-Math.abs(node.quaternion.dot(base)):null};
  const arm=side=>{const upper=f.grappleRig?.bones.get(side+'UpperArm'),fore=f.grappleRig?.bones.get(side+'ForeArm'),hand=f.grappleRig?.bones.get(side+'Hand');const a=point(upper),b=point(fore),c=point(hand);if(!a||!b||!c)return null;const upperDirection=new THREE.Vector3(...b).sub(new THREE.Vector3(...a)).normalize(),foreDirection=new THREE.Vector3(...c).sub(new THREE.Vector3(...b)).normalize();return {upperBone:upper.name,foreBone:fore.name,handBone:hand.name,shoulder:a,elbow:b,wrist:c,elbowDot:upperDirection.dot(foreDirection),upperRotationDelta:rotationDelta(upper),foreRotationDelta:rotationDelta(fore)}};
- return [key,{name:f.name,profile:f.profile?.id,rootScale:f.root.scale.toArray(),rootPosition:f.root.position.toArray(),screenX:(screenPoint.x+1)/2,modelScale:f.externalModel?.scale.toArray(),modelPosition:f.externalModel?.position.toArray(),modelVisible:f.externalModel?.visible,rigVisible:f.rig.visible,modelBounds:box?{min:box.min.toArray(),max:box.max.toArray(),size:box.getSize(new THREE.Vector3()).toArray()}:null,clips:f.clips?.map(c=>c.name),currentClip:f.currentClip,action:f.action,guard:f.guard,guardMode:f.guardMode||'high',dodge:f.dodge,guardPoseApplied:f.guardPoseApplied,arms:{left:arm('left'),right:arm('right')},outfit:f.outfitReport,rig:f.rigReport}]}));
+ return [key,{name:f.name,profile:f.profile?.id,proceduralFallbackReady:f.proceduralFallbackReady===true,rootScale:f.root.scale.toArray(),rootPosition:f.root.position.toArray(),screenX:(screenPoint.x+1)/2,modelScale:f.externalModel?.scale.toArray(),modelPosition:f.externalModel?.position.toArray(),modelVisible:f.externalModel?.visible,rigVisible:f.rig.visible,modelBounds:box?{min:box.min.toArray(),max:box.max.toArray(),size:box.getSize(new THREE.Vector3()).toArray()}:null,clips:f.clips?.map(c=>c.name),currentClip:f.currentClip,action:f.action,guard:f.guard,guardMode:f.guardMode||'high',dodge:f.dodge,guardPoseApplied:f.guardPoseApplied,arms:{left:arm('left'),right:arm('right')},outfit:f.outfitReport,rig:f.rigReport}]}));
 loop();updateUI();
 (async()=>{
  byId('stage-mocap-status').textContent='LOADING MALE/FEMALE RIGS + NATIVE ANIMATION + REAL ACCAD…';
  await loadBundledAccadPack('player');
  await loadBundledAccadPack('enemy');
  const ready=updateFighterReadiness('MODEL OR MOTION LOAD INCOMPLETE · GAME LOCKED');
- const report=ready?'AUTO FIGHTERS CONNECTED · 43 NATIVE CLIPS + 15 REAL ACCAD CLIPS EACH · READY':'MODEL OR MOTION LOAD INCOMPLETE · GAME LOCKED';
+ const fullMocapReady=fighterAssetsReady(player)&&fighterAssetsReady(enemy);
+ const report=fullMocapReady?'AUTO FIGHTERS CONNECTED · 43 NATIVE CLIPS + 15 REAL ACCAD CLIPS EACH · READY':ready?'PLAYABLE · BUILT-IN COMBAT FALLBACK AVAILABLE':'MODEL OR MOTION LOAD INCOMPLETE · GAME LOCKED';
  byId('mocap-status').textContent=report;byId('stage-mocap-status').textContent=report;enemy.aiThink=showcaseMode?9999:15;
  if(!ready)showFighterLoading('A fighter model or motion pack could not be verified. Check the connection and reload.',true);
 })().catch(error=>{const message='AUTO FIGHTER LOAD FAILED: '+error.message;byId('mocap-status').textContent=message;byId('stage-mocap-status').textContent=message;showFighterLoading(message,true);fightersReady=false;console.error(error)});

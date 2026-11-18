@@ -182,7 +182,7 @@ export function playFighterClip(THREE,fighter,action){
  if(fighter.currentClip===clip.name)return true;
  const next=fighter.clipActions.get(clip.name);if(!next)return false;
  const previous=fighter.currentAction;
- next.reset();next.enabled=true;next.setEffectiveWeight(1);next.timeScale=action==='retreat'?-1:1;
+ next.reset();next.enabled=true;next.setEffectiveWeight(1);next.timeScale=1;
  if(action==='advance'||action==='retreat'||action==='guard')next.setLoop(THREE.LoopRepeat,Infinity);
  else{next.setLoop(THREE.LoopOnce,1);next.clampWhenFinished=true}
  if(previous)next.crossFadeFrom(previous,.12,true);next.play();
