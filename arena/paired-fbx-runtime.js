@@ -35,6 +35,7 @@ export function advancePairClock(clock,dt){
 }
 export async function loadPairedFbxMotion(THREE,fighterA,fighterB,fileA,fileB,label='paired-interaction'){
  if(!fighterA?.externalModel||!fighterB?.externalModel)throw new Error('Both fighters need compatible loaded GLB models first');
+ if(!fileA?.arrayBuffer||!fileB?.arrayBuffer)throw new Error('Both paired FBX files are required');
  const [{FBXLoader},SkeletonUtils]=await Promise.all([
   import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js'),
   import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js')
@@ -44,34 +45,49 @@ export async function loadPairedFbxMotion(THREE,fighterA,fighterB,fileA,fileB,la
  const sourceA=loader.parse(bufferA,''),sourceB=loader.parse(bufferB,'');
  const report=validatePairedFbxScenes(sourceA,sourceB);
  if(!report.ok)throw new Error('Invalid synchronized pair: '+report.errors.join(', '));
- const sources=[sourceA,sourceB],fighters=[fighterA,fighterB],clips=[];
+
+ // Preflight both actors completely before touching either live fighter mixer.
+ // A bad second rig/clip must never leave the first fighter playing alone.
+ const sources=[sourceA,sourceB],fighters=[fighterA,fighterB],staged=[];
  for(let i=0;i<2;i++){
   const fighter=fighters[i],source=sources[i],target=findTargetMesh(fighter.externalModel),sourceRoot=findRootBone(source);
   if(!target)throw new Error('Actor '+(i+1)+' target model has no skinned mesh');
+  if(!sourceRoot)throw new Error('Actor '+(i+1)+' source root bone is missing');
   const targetNames=target.skeleton.bones.map(b=>b.name),sourceNames=[],sourceBones=[];
   source.updateMatrixWorld(true);
   source.traverse(node=>{if(node.isBone){sourceNames.push(node.name);sourceBones.push(node)}});
   const names=buildRetargetNameMap(targetNames,sourceNames),mapping=validateRetargetMap(names);
   if(!mapping.compatible)throw new Error('Actor '+(i+1)+' rig map incomplete: '+mapping.mappedCore+'/6 core landmarks');
   source.skeleton=new THREE.Skeleton(sourceBones);
-  const sourceHip=sourceRoot.name;
   const clip=SkeletonUtils.retargetClip(target,source,source.animations[0],{
-   names,hip:sourceHip,fps:30,preserveHipPosition:false,useFirstFramePosition:false,preserveMatrix:true,preservePosition:false
+   names,hip:sourceRoot.name,fps:30,preserveHipPosition:false,useFirstFramePosition:false,preserveMatrix:true,preservePosition:false
   });
   if(!clip?.tracks?.length)throw new Error('Actor '+(i+1)+' retarget produced no tracks');
   clip.name='cmu-'+String(label).replace(/[^a-z0-9-]/gi,'-')+'-actor-'+(i+1);
-  if(!fighter.mixer)fighter.mixer=new THREE.AnimationMixer(fighter.externalModel);
-  fighter.mixer.stopAllAction();
-  fighter.clips=[...(fighter.clips||[]),clip];
-  fighter.clipActions=fighter.clipActions||new Map();
-  const action=fighter.mixer.clipAction(clip);
-  action.reset();action.enabled=true;action.setEffectiveWeight(1);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();
-  fighter.currentAction=action;fighter.currentClip=clip.name;
-  clips.push({fighter,mixer:fighter.mixer,action,mappedBones:mapping.mappedCount});
+  staged.push({fighter,clip,mappedBones:mapping.mappedCount});
  }
- const runtimeDuration=Math.min(report.duration,...clips.map(actor=>actor.action.getClip().duration));
- const pair={clock:createPairClock(runtimeDuration),actors:clips,report:{...report,runtimeDuration},active:true};
- for(const actor of clips)actor.fighter.pairedMotion=pair;
+ // Only after both retargets pass do we create actions on the live mixers.
+ for(const actor of staged){
+  actor.mixer=actor.fighter.mixer||new THREE.AnimationMixer(actor.fighter.externalModel);
+  actor.action=actor.mixer.clipAction(actor.clip);
+  actor.action.reset();actor.action.enabled=true;actor.action.setEffectiveWeight(1);
+  actor.action.setLoop(THREE.LoopOnce,1);actor.action.clampWhenFinished=true;
+ }
+ const runtimeDuration=Math.min(report.duration,...staged.map(actor=>actor.action.getClip().duration));
+ const pair={clock:createPairClock(runtimeDuration),actors:staged.map(({fighter,mixer,action,mappedBones})=>({fighter,mixer,action,mappedBones})),report:{...report,runtimeDuration},active:true};
+
+ // Commit only after both clips and both mixer actions have been prepared.
+ for(const actor of staged){
+  actor.mixer.stopAllAction();
+  actor.action.reset();actor.action.enabled=true;actor.action.setEffectiveWeight(1);
+  actor.action.setLoop(THREE.LoopOnce,1);actor.action.clampWhenFinished=true;actor.action.play();
+  actor.fighter.mixer=actor.mixer;
+  actor.fighter.clips=[...(actor.fighter.clips||[]),actor.clip];
+  actor.fighter.clipActions=actor.fighter.clipActions||new Map();
+  actor.fighter.clipActions.set(actor.clip.name,actor.action);
+  actor.fighter.currentAction=actor.action;actor.fighter.currentClip=actor.clip.name;
+  actor.fighter.pairedMotion=pair;
+ }
  return pair;
 }
 export function updatePairedFbxMotion(pair,dt){
