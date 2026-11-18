@@ -1,6 +1,6 @@
 # FIGHTROOM ARENA — Combat Lab
 
-**Build:** 0.6.0-prealpha · **Status:** playable browser prototype, not release-ready
+**Build:** 0.8.0-prealpha · **Status:** playable browser prototype, not release-ready
 
 An isolated browser-based MMA combat prototype inside the FIGHTROOM repository. The existing content marketplace remains intact.
 
