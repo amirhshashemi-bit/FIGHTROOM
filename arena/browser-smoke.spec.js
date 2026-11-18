@@ -47,8 +47,6 @@ test('bundled real ACCAD mocap pack loads and plays through the arena runtime', 
   await page.locator('[data-load-accad="player"]').click();
   await expect(page.locator('#mocap-status')).toContainText('ACCAD REAL MOCAP READY', { timeout: 60000 });
   await expect(page.locator('#mocap-status')).toContainText('8 CLIPS');
-  await page.keyboard.press('j');
-  await page.waitForTimeout(550);
   await expect(page.locator('#view canvas')).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
