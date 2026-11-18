@@ -200,9 +200,10 @@ async function loadBundledAccadPack(which){
  const f=which==='player'?player:enemy,status=byId('mocap-status');
  try{
   status.textContent='Loading licensed ACCAD test rig and real motion-capture clips…';
-  const modelResponse=await fetch(new URL('./assets/models/cc0-base-body-anim.glb',import.meta.url));
+  const gender=f.profile?.gender==='female'?'female':'male';
+  const modelResponse=await fetch(new URL('./assets/models/quaternius-'+gender+'.glb',import.meta.url));
   if(!modelResponse.ok)throw new Error('CC0 test rig download failed: '+modelResponse.status);
-  const modelFile=new File([await modelResponse.arrayBuffer()],'accad-test-rig.glb',{type:'model/gltf-binary'});
+  const modelFile=new File([await modelResponse.arrayBuffer()],'quaternius-'+gender+'-test-rig.glb',{type:'model/gltf-binary'});
   const modelInfo=await loadFighterGLB(THREE,GLTFLoader,modelFile,f);f.root.scale.y=1;
   let loaded=0,lastInfo=null;
   for(const name of ACCAD_DEMO_CLIPS){
@@ -211,7 +212,7 @@ async function loadBundledAccadPack(which){
    const file=new File([await response.arrayBuffer()],name,{type:'application/octet-stream'});
    lastInfo=await loadFighterBVH(THREE,file,f);loaded++;
   }
-  status.textContent=which.toUpperCase()+' · ACCAD REAL MOCAP READY · '+loaded+' CLIPS · '+lastInfo.mappedBones+' BONES MAPPED · TEST RIG (MALE BASE)';
+  status.textContent=which.toUpperCase()+' · ACCAD REAL MOCAP READY · '+loaded+' CLIPS · '+lastInfo.mappedBones+' BONES MAPPED · '+gender.toUpperCase()+' BASE RIG';
  }catch(error){status.textContent='ACCAD PACK LOAD FAILED: '+error.message;console.error(error)}
 }
 document.querySelectorAll('[data-load-accad]').forEach(btn=>btn.addEventListener('click',()=>loadBundledAccadPack(btn.dataset.loadAccad)));
