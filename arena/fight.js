@@ -416,7 +416,7 @@ function restorePairedDemoPositions(){
  pairedDemoRestore=null;
 }
 const showcaseMode=new URLSearchParams(location.search).get('showcase')==='1';
-let lastUi=0,fightersReady=false;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);if(!fightersReady){renderer.render(scene,camera);return;}if(showcaseMode){for(const f of [player,enemy]){f.action=null;f.actionTime=0;f.actionDuration=0;f.guard=false;f.dodge=0;f.stun=0;f.knock=0;f.groundState='standing';f.submitting=false;f.motionOverride=null;f.motionOverrideTime=0;f.grapplePose=null;f.grapplePair=null;f.pairedMotion=false;f.move.set(0,0,0);pose(f,elapsed,0,dt)}renderer.render(scene,camera);return;}elapsed+=dt;if(!ended||pairedDemoLoading||pairedDemoActive){
+let lastUi=0,fightersReady=false;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);if(!fightersReady){renderer.render(scene,camera);return;}if(showcaseMode&&!pairedDemoActive&&!pairedDemoLoading){enemy.aiThink=9999;enemy.action=null;enemy.actionTime=0;enemy.actionDuration=0;enemy.guard=false;enemy.dodge=0;enemy.stun=0;enemy.knock=0;enemy.groundState='standing';enemy.submitting=false;enemy.motionOverride=null;enemy.motionOverrideTime=0;enemy.grapplePose=null;enemy.grapplePair=null;enemy.move.set(0,0,0);}elapsed+=dt;if(!ended||pairedDemoLoading||pairedDemoActive){
  if(pairedDemoLoading){player.move.set(0,0,0);enemy.move.set(0,0,0)}
  else if(pairedDemoActive){
   player.move.set(0,0,0);enemy.move.set(0,0,0);
