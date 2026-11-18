@@ -42,3 +42,23 @@ The ACCAD martial-arts source is principally single-performer striking and footw
 - No dedicated two-person wrestling/submission mocap is integrated.
 - Retarget mapping is a conservative humanoid name-map, not a universal retargeter. Unusual skeletons are rejected rather than silently accepted.
 - Root-motion extraction, foot locking, contact-aware blending and per-move retarget calibration remain future polish.
+
+
+## Paired grappling source — commercial candidate, not acquired (2026-11-18)
+
+A suitable two-person source has now been identified: RealTime Kinetics (RTK) BJJ captures on Hugging Face, including side-control attacks and De La Riva sequences. The commercial-tier packs contain two BVH actor files plus shared-frame world-space motion data at 60 FPS. The shared frame preserves both actors' relative position and orientation, which is required for contact-aware paired animation.
+
+- Example: https://huggingface.co/datasets/rtk-training/bjj-sidecontrol-lesson001-commercial
+- Example: https://huggingface.co/datasets/rtk-training/bjj-delariva-lesson006-commercial
+- Licence: RTK Motion Single-Capture Commercial License; the publisher states commercial game use is permitted after purchase.
+- Price stated by publisher: USD $99 for one capture; each additional capture requires a separate license.
+- Access is gated and requires purchase plus Hugging Face approval.
+- Status: **not purchased, not downloaded, not committed, and not used**. Do not fetch or use this material until the project owner explicitly approves the cost and obtains the license.
+
+The free KungFu-Fiesta video/pose dataset is CC BY-NC 4.0 and is therefore not suitable for commercial game integration. The SFU motion database is also research-only. Do not bypass these restrictions.
+
+### Import plan after a licensed capture is obtained
+1. Preserve both subject BVH files and the shared-frame data together.
+2. Verify the license file, dataset slug, frame rate, frame count and SHA-256 manifest.
+3. Map both skeletons to the FIGHTROOM humanoid rig; validate paired root transforms and contact distance.
+4. Build paired clips for the licensed action only, then run visual retarget QA before adding any additional capture.
