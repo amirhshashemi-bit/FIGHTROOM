@@ -201,6 +201,7 @@ async function loadBundledAccadPack(which){
  try{
   status.textContent='Loading licensed ACCAD test rig and real motion-capture clips…';
   const gender=f.profile?.gender==='female'?'female':'male';
+  if(gender==='female'){status.textContent='FEMALE GLB MODEL NOT BUNDLED YET · import a compatible female GLB, then add ACCAD BVH clips';return;}
   const modelResponse=await fetch(new URL('./assets/models/cc0-base-body-anim.glb',import.meta.url));
   if(!modelResponse.ok)throw new Error('CC0 test rig download failed: '+modelResponse.status);
   const modelFile=new File([await modelResponse.arrayBuffer()],'cc0-male-test-rig.glb',{type:'model/gltf-binary'});
