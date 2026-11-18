@@ -14,9 +14,10 @@ const aliases={
 };
 export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  const loader=new GLTFLoader(),buffer=await file.arrayBuffer();
- const gltf=await loader.parseAsync(buffer,'');
+ const {DRACOLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/DRACOLoader.js');
+ const dracoLoader=new DRACOLoader();dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');loader.setDRACOLoader(dracoLoader);
+ const gltf=await loader.parseAsync(buffer,'');dracoLoader.dispose();
  if(!gltf.scene)throw new Error('GLB has no scene');
- if(!gltf.animations?.length)throw new Error('GLB has no animation clips');
  const model=gltf.scene;model.name='FIGHTROOM_MOCAP_CHARACTER';
  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  const rigReport=inspectHumanoidRig(model);
@@ -30,7 +31,7 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  const appliedMorphs=applyCharacterMorphs(model,fighter.profile);
  fighter.rigReport=rigReport;fighter.appliedMorphs=appliedMorphs;
  fighter.mixer=new THREE.AnimationMixer(model);
- fighter.clips=gltf.animations;
+ fighter.clips=gltf.animations||[];
  fighter.clipActions=new Map();
  for(const clip of gltf.animations)fighter.clipActions.set(clip.name,fighter.mixer.clipAction(clip));
  fighter.currentClip=null;
