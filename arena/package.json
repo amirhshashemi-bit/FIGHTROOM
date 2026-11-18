@@ -1,5 +1,5 @@
 {
-  "name": "fightroom-arena-combat",
+  "name": "fightroom-arena-combat",\n  "version": "0.9.1-prealpha",
   "private": true,
   "type": "module",
   "scripts": {
