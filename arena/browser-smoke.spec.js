@@ -9,6 +9,7 @@ test('desktop arena renders WebGL and responds to keyboard strike and movement',
   await expect(page.locator('#p-health')).toBeAttached();
   await expect(page.locator('[data-action="takedown"]')).toBeVisible();
   await expect(page.locator('.creator-panel')).toBeVisible();
+  await expect(page.locator('.roster-toolbar')).toBeVisible();
   expect(await page.locator('#p-mocap-file').getAttribute('accept')).toContain('.bvh');
   await page.keyboard.down('j');
   await page.waitForTimeout(420);
@@ -31,6 +32,11 @@ test('Android-sized viewport renders grappling and defensive touch controls', as
   const canvas = page.locator('#view canvas');
   await expect(canvas).toBeVisible({ timeout: 30000 });
   await expect(page.locator('.creator-panel')).toBeHidden();
+  await expect(page.locator('.roster-toolbar')).toBeHidden();
+  await page.locator('#toggle-roster').click();
+  await expect(page.locator('.roster-toolbar')).toBeVisible();
+  await page.locator('#toggle-roster').click();
+  await expect(page.locator('.roster-toolbar')).toBeHidden();
   await page.locator('#toggle-creator').click();
   await expect(page.locator('.creator-panel')).toBeVisible();
   await page.locator('#toggle-creator').click();
