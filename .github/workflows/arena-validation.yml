@@ -3,6 +3,7 @@ concurrency:
   group: arena-validation-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - "arena/**"
@@ -26,6 +27,7 @@ jobs:
           node --check arena/venue-builder.js
           node --check arena/mocap.js
           node --check arena/mocap-runtime.js
+          node --check arena/paired-fbx-runtime.js
           node --check arena/roster.js
           node --check arena/character-creator.js
           node --check arena/countries.js
