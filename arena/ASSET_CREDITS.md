@@ -57,14 +57,14 @@ For every additional motion pack, record its source, licence, attribution, SHA-2
 - Bone mapping and compatibility checks: `arena/mocap-retarget.js`; incomplete rigs are rejected.
 - External source candidates: Open Motion Project / ACCAD, The Ohio State University (CC BY 3.0) and 100STYLE (CC BY 4.0), distributed in part through KinemIQ exports.
 - Attribution for ACCAD-derived clips: “Open Motion Project by ACCAD / The Ohio State University.”
-- Status: **27 real ACCAD BVH clips are committed** under `arena/assets/mocap/accad/`, with individual SHA-256 values in `manifest.json` and `SHA256SUMS`, plus the CC BY 3.0 notice. Five actions (jab, cross, roundhouse, high block and dodge) are connected to both active Quaternius fighter rigs; 22 source clips remain unwired.
+- Status: **27 real ACCAD BVH clips are committed** under `arena/assets/mocap/accad/`, with individual SHA-256 values in `manifest.json` and `SHA256SUMS`, plus the CC BY 3.0 notice. Fifteen actions (jab, cross, hooks, roundhouse, high block, dodge, advance, retreat, sidesteps and push kicks) are connected to both active Quaternius fighter rigs; 12 source clips remain unwired.
 
 
 ## Quaternius Universal Animation Library 1 — native character motion
 - Source: Quaternius Universal Animation Library Standard, official page https://quaternius.com/packs/universalanimationlibrary.html and download page https://quaternius.itch.io/universal-animation-library.
 - License: CC0 1.0 Universal. The creator states the Standard library contains 43 clips and allows commercial use.
 - Runtime file: `arena/assets/mocap/quaternius/UAL1_Standard.glb`. Its 65-joint naming matches the Quaternius male/female fighter rigs, so clips play natively without retargeting.
-- The native library provides walk/punch/reaction clips; neutral idle restores the validated model bind pose. These are authored animation-library clips, not motion-capture recordings. Five ACCAD BVH clips remain the real single-actor motion-capture actions currently connected to gameplay.
+- The native library provides walk/punch/reaction clips; neutral idle restores the validated model bind pose. These are authored animation-library clips, not motion-capture recordings. Fifteen ACCAD BVH clips remain the real single-actor motion-capture actions currently connected to gameplay.
 - Source notice: `arena/assets/mocap/quaternius/UAL1_NOTICE.md`.
 
 ## Active male/female fighter models — Quaternius CC0
