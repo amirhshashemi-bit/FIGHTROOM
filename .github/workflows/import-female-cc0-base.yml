@@ -45,6 +45,7 @@ jobs:
           const rig=inspectGlbDocument(d);
           const jointNames=[...new Set(d.skins.flatMap(s=>(s.joints||[]).map(i=>d.nodes?.[i]?.name||'node_'+i)))];
           console.log(JSON.stringify({bytes:b.length,version:d.asset?.version,meshes:d.meshes.length,skins:d.skins.length,joints,nodes:d.nodes?.length||0,animations:d.animations?.length||0,boneMatches:rig.boneMatches,coreBonesFound:rig.coreBonesFound,jointNames},null,2));
+          if(!rig.humanoidCoreCandidate||rig.coreBonesFound<5)throw new Error('Female base does not match minimum humanoid core aliases');
           NODE
       - name: Record CC0 source and integrity
         shell: bash
