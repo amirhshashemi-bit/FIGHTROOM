@@ -12,6 +12,25 @@ const aliases={
  'switch-kick':['switch kick','switch-kick'], 'question-mark-kick':['question mark kick','question-mark-kick'],
  'spinning-elbow':['spinning elbow','spinning-elbow'], 'flying-knee':['flying knee','flying-knee'], 'ground-control':['ground control','top control','bottom guard','side control','mount','back control','lie'],
 };
+function addFemaleFightwear(THREE,model,fighter){
+ const find=names=>{let hit=null;model.traverse(o=>{if(!hit&&o.isBone&&names.includes(o.name.toLowerCase()))hit=o});return hit};
+ const topBone=find(['spine03','spine04','spine02','spine01']),hipBone=find(['root']),headBone=find(['head']);
+ if(!topBone||!hipBone||!headBone)throw new Error('Female rig is missing outfit anchor bones');
+ const cloth=new THREE.MeshStandardMaterial({color:Number(fighter.profile?.shorts)||0x26384b,roughness:.82,metalness:.02,side:THREE.DoubleSide});
+ const trim=new THREE.MeshStandardMaterial({color:Number(fighter.profile?.gloves)||0x9e2b43,roughness:.68,metalness:.03,side:THREE.DoubleSide});
+ const hair=new THREE.MeshStandardMaterial({color:Number(fighter.profile?.hair)||0x211914,roughness:.92});
+ const add=(bone,name,geometry,mat,position=[0,0,0])=>{const mesh=new THREE.Mesh(geometry,mat);mesh.name=name;mesh.position.set(...position);mesh.castShadow=true;mesh.receiveShadow=true;bone.add(mesh);return mesh};
+ const top=add(topBone,'FIGHTROOM_FEMALE_SPORTS_TOP',new THREE.CylinderGeometry(.165,.185,.27,24,1,true),cloth,[0,.025,0]);
+ top.material=cloth;
+ add(topBone,'FIGHTROOM_TOP_NECK_TRIM',new THREE.TorusGeometry(.105,.009,6,24),trim,[0,.155,0]).rotation.x=Math.PI/2;
+ add(hipBone,'FIGHTROOM_FEMALE_FIGHT_SHORTS',new THREE.CylinderGeometry(.18,.19,.19,24,1,true),cloth,[0,-.005,0]);
+ add(hipBone,'FIGHTROOM_SHORTS_WAISTBAND',new THREE.TorusGeometry(.184,.012,6,24),trim,[0,.09,0]).rotation.x=Math.PI/2;
+ add(headBone,'FIGHTROOM_HAIR_CAP',new THREE.SphereGeometry(.082,16,10,0,Math.PI*2,0,Math.PI/2),hair,[0,.025,-.012]);
+ const pony=add(headBone,'FIGHTROOM_HAIR_TAIL',new THREE.CapsuleGeometry(.018,.11,4,8),hair,[0,-.045,-.075]);pony.rotation.x=-.28;
+ for(const [boneName,side] of [['wrist.L','L'],['wrist.R','R']]){const bone=find([boneName.toLowerCase()]);if(bone)add(bone,'FIGHTROOM_GLOVE_'+side,new THREE.SphereGeometry(.043,12,10),trim,[0,0,.018])}
+ for(const [boneName,side] of [['foot.L','L'],['foot.R','R']]){const bone=find([boneName.toLowerCase()]);if(bone){const shoe=add(bone,'FIGHTROOM_MMA_SHOE_'+side,new THREE.BoxGeometry(.12,.065,.22),cloth,[0,-.012,.045]);shoe.material=cloth}}
+ return {outfit:'sports-top-shorts-gloves-shoes-hair',pieces:10};
+}
 export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  const loader=new GLTFLoader(),buffer=await file.arrayBuffer();
  const gltf=await loader.parseAsync(buffer,'');
@@ -22,12 +41,16 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  if(!rigReport.compatible)throw new Error('Incompatible humanoid rig: '+rigReport.foundCore+'/7 core landmarks detected');
  if(fighter.externalModel)fighter.root.remove(fighter.externalModel);
  fighter.root.add(model);
+ model.updateMatrixWorld(true);
+ model.traverse(o=>{if(o.isSkinnedMesh&&o.skeleton)o.skeleton.update()});
  const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
- if(size.y>0){const scale=1.78/size.y;model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale)}
+ if(size.y>0){const scale=1.78/size.y;model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);model.updateMatrixWorld(true)}
  fighter.externalModel=model;
  fighter.rig.visible=false;
  const appliedMorphs=applyCharacterMorphs(model,fighter.profile);
- fighter.rigReport=rigReport;fighter.appliedMorphs=appliedMorphs;
+ const gender=fighter.profile?.gender||(String(fighter.profile?.division||'').startsWith('Women')?'female':'male');
+ const outfit=gender==='female'?addFemaleFightwear(THREE,model,fighter):null;
+ fighter.rigReport=rigReport;fighter.appliedMorphs=appliedMorphs;fighter.outfitReport=outfit;
  fighter.mixer=new THREE.AnimationMixer(model);
  fighter.clips=gltf.animations||[];
  fighter.clipActions=new Map();
@@ -35,7 +58,7 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  fighter.currentClip=null;
  fighter.mixer.addEventListener('finished',()=>{if(fighter.action===null)playFighterClip(THREE,fighter,'idle')});
  playFighterClip(THREE,fighter,'idle');
- return {clips:(gltf.animations||[]).map(c=>c.name),height:size.y,rig:rigReport,appliedMorphs};
+ return {clips:(gltf.animations||[]).map(c=>c.name),height:size.y,rig:rigReport,appliedMorphs,outfit};
 }
 export function hasFighterClip(fighter,action){
  if(!fighter?.clips?.length)return false;
@@ -57,7 +80,7 @@ export function playFighterClip(THREE,fighter,action){
  fighter.currentAction=next;fighter.currentClip=clip.name;return true;
 }
 export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
- if(!fighter?.mixer)return;
+ if(!fighter?.mixer||fighter.pairedMotion)return;
  if(!fighter.action){
   if(fighter.submitting)playFighterClip(THREE,fighter,'submission');
   else if(fighter.motionOverrideTime>0){fighter.motionOverrideTime=Math.max(0,fighter.motionOverrideTime-dt);playFighterClip(THREE,fighter,fighter.motionOverride||'stand-up');if(fighter.motionOverrideTime===0)fighter.motionOverride=null;}

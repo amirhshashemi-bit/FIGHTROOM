@@ -16,6 +16,7 @@ import { buildVenue } from './venue-builder.js';
 import { createFightAudio } from './audio.js';
 import { qualityProfile } from './performance.js';
 import { canUseCombatAction, resolvePremiumAccess } from './premium-access.js';
+import { loadPairedFbxMotion, updatePairedFbxMotion } from './paired-fbx-runtime.js';
 
 const mount=document.getElementById('view');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090f18);scene.fog=new THREE.Fog(0x090f18,13,27);
@@ -33,7 +34,7 @@ for(let y of [0.35,1.15,1.95]){const pts=[];for(let i=0;i<=8;i++){const a=i*Math
 const matLine=new THREE.Mesh(new THREE.PlaneGeometry(10,10),new THREE.MeshStandardMaterial({color:0x303d4c,roughness:1,transparent:true,opacity:.18}));matLine.rotation.x=-Math.PI/2;matLine.position.y=-.05;scene.add(matLine);
 const clock=new THREE.Clock();let elapsed=0,ended=false,roundSeconds=300,player,enemy;
 let bout=createBout({rounds:3,roundSeconds:300,restSeconds:60}),restCountdown=0;
-let premiumAccess=false;
+let premiumAccess=false,pairedDemo=null,pairedDemoActive=false,pairedDemoRestore=null,pairedDemoLabel='';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const lerp=(a,b,t)=>a+(b-a)*t;const V=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
 function material(color,roughness=.65,metalness=0){return new THREE.MeshStandardMaterial({color,roughness,metalness})}
 const skinA=material(0xb97855),skinB=material(0x80533f),shortA=material(0x171f2a),shortB=material(0x12314a),gloveA=material(0xa92732),gloveB=material(0x176ba6),wrap=material(0xe5e7e9),hairA=material(0x17171a),hairB=material(0x211a17);
@@ -71,7 +72,7 @@ function currentMoveVector(){
  const v=V(x,0,z);return v.lengthSq()>1?v.normalize():v;
 }
 function setAction(f,type,animationClip=null){
- if(ended||bout.phase!=='fight'||f.action||f.knock>0||f.stun>0)return;
+ if(ended||pairedDemoActive||bout.phase!=='fight'||f.action||f.knock>0||f.stun>0)return;
  if(f===player&&!canUseCombatAction(type,premiumAccess)){document.getElementById('status').textContent='این فن فقط برای اعضای ویژه فعال است';return;}
  if(GRAPPLE_ACTIONS[type]&&GRAPPLE_ACTIONS[type].premium&&f===player&&!premiumAccess){document.getElementById('status').textContent='این فن فقط برای اعضای ویژه فعال است';return;}
  if(['clinch','sprawl','frame','escape','sweep','pass','mount','back-take','defend-submission'].includes(type)){
@@ -197,16 +198,24 @@ async function importMocap(input,which){
 document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
 document.getElementById('e-mocap-file').addEventListener('change',e=>importMocap(e.target,'enemy'));
 const ACCAD_DEMO_CLIPS=['Male2_A1_Stand.bvh','Male2_E1_JabLeft.bvh','Male2_E3_CrossLeft.bvh','Male2_G8_RoundhouseLeft.bvh','Male2_E11_BlockLeftHigh.bvh','Male2_E19_DodgeLeft.bvh','Male2_A9_Lie.bvh','Male2_A10_LieToCrouch.bvh'];
+async function ensureFighterMocapModel(f){
+ if(f.externalModel)return;
+ const gender=f.profile?.gender||(String(f.profile?.division||'').startsWith('Women')?'female':'male');
+ const path=gender==='female'?'./assets/models/source/female-base-mesh-base_female.glb':'./assets/models/cc0-base-body-anim.glb';
+ const response=await fetch(new URL(path,import.meta.url));
+ if(!response.ok)throw new Error('Licensed '+gender+' base model unavailable: '+response.status);
+ const file=new File([await response.arrayBuffer()],gender==='female'?'female-cc0-fightwear-base.glb':'cc0-male-test-rig.glb',{type:'model/gltf-binary'});
+ const info=await loadFighterGLB(THREE,GLTFLoader,file,f);
+ f.root.scale.y=1;
+ if(gender==='female'&&!info.outfit)throw new Error('Female fightwear setup did not complete');
+ return info;
+}
 async function loadBundledAccadPack(which){
  const f=which==='player'?player:enemy,status=byId('mocap-status');
  try{
-  status.textContent='Loading licensed ACCAD test rig and real motion-capture clips…';
+  status.textContent='Loading licensed fighter base and real ACCAD motion-capture clips…';
   const gender=f.profile?.gender||(String(f.profile?.division||'').startsWith('Women')?'female':'male');
-  if(gender==='female'){status.textContent='FEMALE GLB MODEL NOT BUNDLED YET · import a compatible female GLB, then add ACCAD BVH clips';return;}
-  const modelResponse=await fetch(new URL('./assets/models/cc0-base-body-anim.glb',import.meta.url));
-  if(!modelResponse.ok)throw new Error('CC0 test rig download failed: '+modelResponse.status);
-  const modelFile=new File([await modelResponse.arrayBuffer()],'cc0-male-test-rig.glb',{type:'model/gltf-binary'});
-  const modelInfo=await loadFighterGLB(THREE,GLTFLoader,modelFile,f);f.root.scale.y=1;
+  await ensureFighterMocapModel(f);
   let loaded=0,lastInfo=null;
   for(const name of ACCAD_DEMO_CLIPS){
    const response=await fetch(new URL('./assets/mocap/accad/'+name,import.meta.url));
@@ -214,10 +223,47 @@ async function loadBundledAccadPack(which){
    const file=new File([await response.arrayBuffer()],name,{type:'application/octet-stream'});
    lastInfo=await loadFighterBVH(THREE,file,f);loaded++;
   }
-  status.textContent=which.toUpperCase()+' · ACCAD REAL MOCAP READY · '+loaded+' CLIPS · '+lastInfo.mappedBones+' BONES MAPPED · '+gender.toUpperCase()+' BASE RIG';
+  status.textContent=which.toUpperCase()+' · ACCAD REAL MOCAP READY · '+loaded+' CLIPS · '+lastInfo.mappedBones+' BONES MAPPED · '+gender.toUpperCase()+' RIG'+(f.outfitReport?' · FIGHTWEAR READY':'');
  }catch(error){status.textContent='ACCAD PACK LOAD FAILED: '+error.message;console.error(error)}
 }
 document.querySelectorAll('[data-load-accad]').forEach(btn=>btn.addEventListener('click',()=>loadBundledAccadPack(btn.dataset.loadAccad)));
+async function ensureFighterIdleMotion(f){
+ if(hasFighterClip(f,'idle'))return;
+ const name='Male2_A1_Stand.bvh',response=await fetch(new URL('./assets/mocap/accad/'+name,import.meta.url));
+ if(!response.ok)throw new Error('Idle fallback motion missing: '+response.status);
+ const file=new File([await response.arrayBuffer()],name,{type:'application/octet-stream'});
+ await loadFighterBVH(THREE,file,f);
+}
+async function previewPairedMocap(kind='arm-wrestle'){
+ const status=byId('mocap-status');
+ if(pairedDemoActive)return;
+ try{
+  status.textContent='Loading both fighter rigs and matched CMU A/B motion files…';
+  await Promise.all([ensureFighterMocapModel(player),ensureFighterMocapModel(enemy)]);
+  await Promise.all([ensureFighterIdleMotion(player),ensureFighterIdleMotion(enemy)]);
+  const packs={
+   'arm-wrestle':{paths:['./assets/mocap/cmu-pairs/arm-wrestle/actor-a-22-17.fbx','./assets/mocap/cmu-pairs/arm-wrestle/actor-b-23-17.fbx'],names:['CMU-22-17-Actor-A.fbx','CMU-23-17-Actor-B.fbx'],label:'ARM WRESTLE'},
+   'pull-resist':{paths:['./assets/mocap/cmu-pairs/pull-resist/actor-a-18-03.fbx','./assets/mocap/cmu-pairs/pull-resist/actor-b-19-03.fbx'],names:['CMU-18-03-Actor-A.fbx','CMU-19-03-Actor-B.fbx'],label:'PULL / RESIST'}
+  };
+  const pack=packs[kind];if(!pack)throw new Error('Unknown paired motion pack: '+kind);
+  const responses=await Promise.all(pack.paths.map(path=>fetch(new URL(path,import.meta.url))));
+  if(responses.some(response=>!response.ok))throw new Error('CMU paired capture asset missing');
+  const files=await Promise.all(responses.map(async(response,i)=>new File([await response.arrayBuffer()],pack.names[i],{type:'application/octet-stream'})));
+  const captureState=f=>({position:f.root.position.clone(),rotation:f.root.rotation.clone(),action:f.action,actionTime:f.actionTime,actionDuration:f.actionDuration,energy:f.energy,guard:f.guard,dodge:f.dodge,groundState:f.groundState,submitting:f.submitting,submissionFrom:f.submissionFrom,motionOverride:f.motionOverride,motionOverrideTime:f.motionOverrideTime,frameTimer:f.frameTimer});
+  pairedDemoRestore={player:captureState(player),enemy:captureState(enemy)};
+  for(const f of [player,enemy]){f.action=null;f.actionTime=0;f.energy=0;f.guard=false;f.dodge=0;f.groundState='standing';f.submitting=false;f.submissionFrom=null;f.motionOverride=null;f.motionOverrideTime=0;f.frameTimer=0}
+  player.root.position.set(-.72,0,0);enemy.root.position.set(.72,0,0);
+  player.root.rotation.y=Math.PI/2;enemy.root.rotation.y=-Math.PI/2;
+  pairedDemo=await loadPairedFbxMotion(THREE,player,enemy,files[0],files[1],kind);
+  pairedDemoLabel=pack.label;pairedDemoActive=true;
+  status.textContent='REAL PAIRED MOCAP PLAYING · CMU '+pack.label+' · '+pairedDemo.clock.duration.toFixed(1)+' SEC · BOTH ACTORS SYNCHRONIZED';
+ }catch(error){
+  if(pairedDemoRestore){restorePairedDemoPositions()}
+  status.textContent='PAIRED MOCAP FAILED: '+error.message;console.error(error);
+ }
+}
+byId('preview-paired-mocap')?.addEventListener('click',()=>previewPairedMocap('arm-wrestle'));
+byId('preview-pull-resist')?.addEventListener('click',()=>previewPairedMocap('pull-resist'));
 const creatorToggle=byId('toggle-creator'),creatorPanel=document.querySelector('.creator-panel');
 creatorToggle?.addEventListener('click',()=>{
  const expanded=creatorPanel.classList.toggle('mobile-expanded');
@@ -328,26 +374,41 @@ function resolveFighterSpacing(){
 }
 function updateUI(){for(const [prefix,f] of [['p',player],['e',enemy]]){document.getElementById(prefix+'-health').style.width=f.hp+'%';document.getElementById(prefix+'-stamina').style.width=f.stamina+'%';document.getElementById(prefix+'-hp').textContent=Math.ceil(f.hp);document.getElementById(prefix+'-st').textContent=Math.ceil(f.stamina);document.getElementById(prefix+'-name').textContent=f.name;document.getElementById(prefix+'-profile').textContent=f.profile.division+' · '+countryFlag(f.profile.countryCode||resolveCountryCode(f.profile.country))+' '+(f.profile.country||'')+' · '+f.profile.style+' · '+f.profile.height+'cm / '+f.profile.reach+'cm · PWR '+f.profile.power+' / SPD '+f.profile.speed+' / WRS '+f.profile.wrestling+' / CAR '+f.profile.cardio}}
 function endFight(text){ended=true;audio.bell();const r=document.getElementById('result');r.classList.remove('hidden');r.innerHTML=text+'<br><small>Refresh the page to start a new bout.</small>';document.getElementById('status').textContent='BOUT COMPLETE'}
+function restorePairedDemoPositions(){
+ if(!pairedDemoRestore)return;
+ const restore=(f,s)=>{f.root.position.copy(s.position);f.root.rotation.copy(s.rotation);for(const key of ['action','actionTime','actionDuration','energy','guard','dodge','groundState','submitting','submissionFrom','motionOverride','motionOverrideTime','frameTimer'])f[key]=s[key];f.currentAction=null;f.currentClip=null};
+ restore(player,pairedDemoRestore.player);restore(enemy,pairedDemoRestore.enemy);
+ pairedDemoRestore=null;
+}
 let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;if(!ended){
- if(bout.phase==='fight'){bout=tickBout(bout,dt);roundSeconds=bout.remaining;if(bout.phase==='between-rounds'){restCountdown=bout.restSeconds;document.getElementById('status').textContent='ROUND BREAK';audio.bell()}if(bout.phase==='decision')endFight(player.hp>enemy.hp?'PLAYER WINS ON POINTS':player.hp<enemy.hp?'CPU WINS ON POINTS':'DRAW')}
- else if(bout.phase==='between-rounds'){restCountdown-=dt;if(restCountdown<=0){bout=nextRound(bout);roundSeconds=bout.remaining;document.getElementById('round').textContent='ROUND '+bout.round;audio.bell()}}
- if(stoppage({health:player.hp})==='ko-tko')endFight('CPU WINS — TKO');if(stoppage({health:enemy.hp})==='ko-tko')endFight('PLAYER WINS — TKO');
- if(bout.phase==='fight'){
-  const input=currentMoveVector(),moving=input.lengthSq()>.001;
-  const speed=player.guard?1.05:player.stun>0?0:1.45+player.profile.speed*.006;
-  if(moving&&player.groundState==='standing'&&!player.action&&player.knock<=0&&player.stun<=0){
-   player.root.position.x+=input.x*speed*dt;player.root.position.z+=input.z*speed*dt;
-   player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);player.move.copy(input);
-  }else player.move.set(0,0,0);
-  if(player.dodge>0){player.root.position.x+=player.evadeVector.x*3.4*dt;player.root.position.z+=player.evadeVector.z*3.4*dt}
-  cpu(dt);if(enemy.move.lengthSq()&&!enemy.action&&enemy.stun<=0){enemy.root.position.x+=enemy.move.x*(.8+enemy.profile.speed*.004)*dt;enemy.root.position.x=clamp(enemy.root.position.x,.7,3.8);enemy.move.set(enemy.move.x,0,0)}else enemy.move.set(0,0,0);
-  const grapplingPhase=stepGroundPair(player,enemy,dt);if(!grapplingPhase)resolveFighterSpacing();tickFighter(player,dt);tickFighter(enemy,dt);
+ if(pairedDemoActive){
+  player.move.set(0,0,0);enemy.move.set(0,0,0);
+  const tick=updatePairedFbxMotion(pairedDemo,dt);
+  if(tick.done){
+   pairedDemoActive=false;pairedDemo=null;restorePairedDemoPositions();
+   document.getElementById('mocap-status').textContent='REAL PAIRED MOCAP COMPLETE · CMU '+pairedDemoLabel+' · BOTH ACTORS FINISHED TOGETHER';
+  }
  }else{
-  player.move.set(0,0,0);enemy.move.set(0,0,0);player.guard=false;enemy.guard=false;
-  player.stamina=clamp(player.stamina+dt*8,0,100);enemy.stamina=clamp(enemy.stamina+dt*8,0,100);
+  if(bout.phase==='fight'){bout=tickBout(bout,dt);roundSeconds=bout.remaining;if(bout.phase==='between-rounds'){restCountdown=bout.restSeconds;document.getElementById('status').textContent='ROUND BREAK';audio.bell()}if(bout.phase==='decision')endFight(player.hp>enemy.hp?'PLAYER WINS ON POINTS':player.hp<enemy.hp?'CPU WINS ON POINTS':'DRAW')}
+  else if(bout.phase==='between-rounds'){restCountdown-=dt;if(restCountdown<=0){bout=nextRound(bout);roundSeconds=bout.remaining;document.getElementById('round').textContent='ROUND '+bout.round;audio.bell()}}
+  if(stoppage({health:player.hp})==='ko-tko')endFight('CPU WINS — TKO');if(stoppage({health:enemy.hp})==='ko-tko')endFight('PLAYER WINS — TKO');
+  if(bout.phase==='fight'){
+   const input=currentMoveVector(),moving=input.lengthSq()>.001;
+   const speed=player.guard?1.05:player.stun>0?0:1.45+player.profile.speed*.006;
+   if(moving&&player.groundState==='standing'&&!player.action&&player.knock<=0&&player.stun<=0){
+    player.root.position.x+=input.x*speed*dt;player.root.position.z+=input.z*speed*dt;
+    player.root.position.x=clamp(player.root.position.x,-3.8,3.8);player.root.position.z=clamp(player.root.position.z,-3.4,3.4);player.move.copy(input);
+   }else player.move.set(0,0,0);
+   if(player.dodge>0){player.root.position.x+=player.evadeVector.x*3.4*dt;player.root.position.z+=player.evadeVector.z*3.4*dt}
+   cpu(dt);if(enemy.move.lengthSq()&&!enemy.action&&enemy.stun<=0){enemy.root.position.x+=enemy.move.x*(.8+enemy.profile.speed*.004)*dt;enemy.root.position.x=clamp(enemy.root.position.x,.7,3.8);enemy.move.set(enemy.move.x,0,0)}else enemy.move.set(0,0,0);
+   const grapplingPhase=stepGroundPair(player,enemy,dt);if(!grapplingPhase)resolveFighterSpacing();tickFighter(player,dt);tickFighter(enemy,dt);
+  }else{
+   player.move.set(0,0,0);enemy.move.set(0,0,0);player.guard=false;enemy.guard=false;
+   player.stamina=clamp(player.stamina+dt*8,0,100);enemy.stamina=clamp(enemy.stamina+dt*8,0,100);
+  }
  }
  pose(player,elapsed,player.move.length(),dt);pose(enemy,elapsed,enemy.move.length(),dt);
- const d=distance(player,enemy);document.getElementById('status').textContent=player.stun>0?'PLAYER STAGGERED':enemy.stun>0?'CPU STAGGERED':player.action?'PLAYER ATTACK':enemy.action?'CPU ATTACK':d>2.3?'RANGE / FOOTWORK':'IN FIGHT';
+ if(!pairedDemoActive){const d=distance(player,enemy);document.getElementById('status').textContent=player.stun>0?'PLAYER STAGGERED':enemy.stun>0?'CPU STAGGERED':player.action?'PLAYER ATTACK':enemy.action?'CPU ATTACK':d>2.3?'RANGE / FOOTWORK':'IN FIGHT'}
  if(elapsed-lastUi>.1){updateUI();lastUi=elapsed}
  }
  const secs=Math.max(0,Math.ceil(roundSeconds));document.getElementById('clock').textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');

@@ -2,7 +2,7 @@
 
 ## Motion capture sources evaluated
 
-The project has a GLB import and animation-mapping pipeline. A CC0 anatomical base-body GLB with general locomotion clips is committed, but no third-party MMA-specific motion-capture pack is committed or verified yet. The sources below have been checked for stated terms.
+The project has a GLB import and animation-mapping pipeline. A CC0 male base, a CC0 female neutral base with runtime fightwear, 27 ACCAD single-actor BVH clips, and one matched CMU two-actor interaction capture are committed with source notices and SHA-256 records. The CMU pair is arm wrestling, not an MMA takedown/submission pack. The sources below have been checked for stated terms.
 
 - Open Motion Project / ACCAD, The Ohio State University — CC BY 3.0. Attribution: “Open Motion Project by ACCAD / The Ohio State University.” Source: https://accad.ohio-state.edu/research/motion-lab/mocap-system-and-data
 - 100STYLE Dataset — CC BY 4.0. Attribution: Ian Mason, Sebastian Starke and Taku Komura (2022). Access and export through KinemIQ: https://kinemiq.app/free-motion-capture-data/
@@ -16,13 +16,13 @@ All names and profiles in `roster.js` are original fictional creations. They are
 
 ## Release gate
 
-Do not mark motion capture as installed until a real source file is checked into the repository with its matching credit/licence, SHA-256, skeleton notes, and successful retarget/playback test. Do not ship real athlete names, likenesses, personal statistics, UFC branding or official roster data as a commercial roster without a separate rights review.
+For every additional motion pack, record its source, licence, attribution, SHA-256, skeleton notes and successful retarget/playback test before calling it integrated. Do not label the CMU arm-wrestling pair as MMA grappling. Do not ship real athlete names, likenesses, personal statistics, UFC branding or official roster data as a commercial roster without a separate rights review.
 
 
 ## Candidate: Innerscene / MakeHuman CC0 base mesh
 - Source page: https://www.innerscene.com/tools/library/3d-parts/male-base-mesh-3d-person-rigged-a-pose-380e6d89
 - Described asset: male neutral A-pose, 163-bone skeleton, skin weights, embedded textures, about 109k triangles; derived from MakeHuman CC0 assets and dedicated as CC0.
-- Status: reviewed, **not downloaded or committed**. It is a male base only, not a complete roster or production-ready fighter. Clothing, female base, shape morphs, and clip compatibility remain to be built and tested.
+- Status: reviewed, **not downloaded or committed**. It is a male base only, not a complete roster or production-ready fighter. The separate female base below is integrated.
 - MakeHuman asset license details: https://static.makehumancommunity.org/about/license.html
 - Candidate generation pipeline (MIT code; CC0 MakeHuman assets claimed by upstream): https://github.com/olatunde85/3d-gen — verify each asset and upstream terms before shipping.
 
@@ -33,7 +33,7 @@ Do not mark motion capture as installed until a real source file is checked into
 - Exact asset: `output/base_body_anim.glb` (8,212,156 bytes; Git blob `bdbdab04eb85903e46c56ff56c7a1ea0cbe9c78b`).
 - Upstream license notes identify generated output GLBs as CC0-1.0. The generator code is GPL-3.0-or-later and is not copied into FIGHTROOM.
 - Direct download: https://raw.githubusercontent.com/kblood/CharacterCreator/852e48f316b90a0937234886630e4fb4cdfd1f78/output/base_body_anim.glb
-- Status: **binary committed in FIGHTROOM** at `arena/assets/models/cc0-base-body-anim.glb`. Its repository Git blob SHA `bdbdab04eb85903e46c56ff56c7a1ea0cbe9c78b` matches the pinned upstream blob SHA. A SHA-256 checksum and licence notice are also committed beside it. The connector cannot display the binary bytes, but the Git object identity verifies the exact upstream asset. This is a male anatomical base with general locomotion clips, not a complete dressed MMA fighter asset. A separate 27-clip ACCAD BVH set is now committed and retarget-tested against this rig; a compatible female base and paired wrestling/submission captures remain outstanding.
+- Status: **binary committed in FIGHTROOM** at `arena/assets/models/cc0-base-body-anim.glb`. Its repository Git blob SHA `bdbdab04eb85903e46c56ff56c7a1ea0cbe9c78b` matches the pinned upstream blob SHA. A SHA-256 checksum and licence notice are also committed beside it. The connector cannot display the binary bytes, but the Git object identity verifies the exact upstream asset. This is a male anatomical base with general locomotion clips, not a complete dressed MMA fighter asset. A separate 27-clip ACCAD BVH set is committed and retarget-tested against this rig. The female base is integrated separately; paired MMA wrestling/submission captures remain outstanding.
 - License notes: https://github.com/kblood/CharacterCreator/blob/852e48f316b90a0937234886630e4fb4cdfd1f78/LICENSE-NOTES.md
 
 
@@ -59,3 +59,28 @@ Do not mark motion capture as installed until a real source file is checked into
 - External source candidates: Open Motion Project / ACCAD, The Ohio State University (CC BY 3.0) and 100STYLE (CC BY 4.0), distributed in part through KinemIQ exports.
 - Attribution for ACCAD-derived clips: “Open Motion Project by ACCAD / The Ohio State University.”
 - Status: **27 real ACCAD BVH clips are committed** under `arena/assets/mocap/accad/`, with individual SHA-256 values in `manifest.json` and `SHA256SUMS`, plus the CC BY 3.0 notice. Automated in-browser retarget/playback QA is the remaining validation gate.
+
+
+## Female fighter base and runtime outfit
+- Source: Innerscene female base mesh, GLB, publisher-described 163-bone skin rig; licence stated by publisher: CC0.
+- Asset: `arena/assets/models/source/female-base-mesh-base_female.glb`; SHA-256: `7e45ef5ef58d4e6a3aa17ef4078cb5ffb02c3964cef67c393973a6d4c0a8cbf8`.
+- The runtime retargets ACCAD BVH motion to this female skeleton and attaches original procedural fightwear (sports top, shorts, trim, hair, gloves and shoes). This is a functional prototype outfit, not a finished character-art pass.
+- Source notice and rig review: `arena/assets/models/source/FEMALE-BASE-SOURCE-NOTICE.md` and `arena/FEMALE_BASE_SOURCE_REVIEW.md`.
+
+## Matched two-actor capture — CMU arm wrestling
+- Original publisher: Carnegie Mellon University Graphics Lab Motion Capture Database. Matched capture: Subject 22 / Trial 17 (Actor A) and Subject 23 / Trial 17 (Actor B), “rush up, arm wrestle”.
+- Converted FBX distribution: https://huggingface.co/datasets/gbionics/cmu-fbx
+- Runtime integration: `arena/paired-fbx-runtime.js` validates both actors, retargets them to separate fighter rigs and drives both mixers with a shared clock. Preview button: “PREVIEW REAL 2-PERSON MOCAP”.
+- CMU terms permit copying/modification/redistribution and inclusion in commercially sold products, but prohibit reselling the motion data itself, including converted form. The files are game motion assets and are not sold as a standalone pack.
+- Requested published-results acknowledgement: “The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217.”
+- Exact files, hashes and scope warning: `arena/assets/mocap/cmu-pairs/arm-wrestle/NOTICE.md`.
+- Scope: genuine paired human interaction capture; it is not an MMA takedown, BJJ submission or ground-grappling capture. Those still need a suitable licensed paired source.
+
+
+## Matched two-actor CMU interaction captures
+- Original publisher: Carnegie Mellon University Graphics Lab Motion Capture Database; converted FBX distribution: https://huggingface.co/datasets/gbionics/cmu-fbx
+- Pull/resist: Subject 18 / Trial 3 (Actor A) + Subject 19 / Trial 3 (Actor B), 4.9 seconds. Files and SHA-256 values: `arena/assets/mocap/cmu-pairs/pull-resist/NOTICE.md`.
+- Arm wrestle: Subject 22 / Trial 17 (Actor A) + Subject 23 / Trial 17 (Actor B), 6.9 seconds. Files and SHA-256 values: `arena/assets/mocap/cmu-pairs/arm-wrestle/NOTICE.md`.
+- Runtime: `arena/paired-fbx-runtime.js` retargets each actor to a separate fighter skeleton and plays them with a common clock. The two preview buttons are in the arena toolbar.
+- CMU terms allow copying, modification and redistribution, and inclusion in commercial products, but do not allow reselling the motion data itself, including converted versions. These files are game assets, not a standalone animation pack for sale.
+- Neither capture is a dedicated MMA takedown, BJJ, submission or ground-grappling sequence; do not mislabel them as such.

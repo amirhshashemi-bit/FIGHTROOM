@@ -18,6 +18,8 @@
 </select>
 <button id="sound-toggle" type="button">SOUND OFF</button>
 <span>3 ROUNDS · 5 MINUTES · 60 SEC REST · PREMIUM WRESTLING / SPECIALS</span>
+<button id="preview-paired-mocap" type="button">PREVIEW ARM-WRESTLE PAIR</button>
+<button id="preview-pull-resist" type="button">PREVIEW PULL / RESIST PAIR</button>
 </section>
 
 <button id="toggle-creator" class="mobile-tools-toggle" type="button">CUSTOMIZE FIGHTER · MOVE STORE</button>
@@ -27,9 +29,9 @@
 <section class="roster-toolbar" aria-label="Fighter selection">
 <div><label for="player-roster">RED CORNER FIGHTER</label><select id="player-roster"></select><small id="p-profile">Profile</small></div>
 <div><label for="enemy-roster">BLUE CORNER FIGHTER</label><select id="enemy-roster"></select><small id="e-profile">Profile</small></div>
-<div><label for="p-mocap-file">PLAYER MODEL GLB / MOTION BVH</label><input id="p-mocap-file" type="file" multiple accept=".glb,.gltf,.bvh,model/gltf-binary,model/gltf+json"><small>ابتدا مدل GLB متحرک؛ سپس فایل‌های حرکت BVH</small><button type="button" data-load-accad="player">LOAD MALE ACCAD MOCAP TEST RIG</button></div>
-<div><label for="e-mocap-file">CPU MODEL GLB / MOTION BVH</label><input id="e-mocap-file" type="file" multiple accept=".glb,.gltf,.bvh,model/gltf-binary,model/gltf+json"><button type="button" data-load-accad="enemy">LOAD MALE ACCAD MOCAP TEST RIG</button></div>
-<div><label>MOTION CAPTURE STATUS</label><small id="mocap-status" aria-live="polite">ابتدا مدل GLB و سپس کلیپ‌های BVH را انتخاب کن.</small></div>
+<div><label for="p-mocap-file">PLAYER MODEL GLB / MOTION BVH</label><input id="p-mocap-file" type="file" multiple accept=".glb,.gltf,.bvh,model/gltf-binary,model/gltf+json"><small>ابتدا مدل GLB متحرک؛ سپس فایل‌های حرکت BVH</small><button type="button" data-load-accad="player">LOAD GENDER-MATCHED ACCAD MOCAP</button></div>
+<div><label for="e-mocap-file">CPU MODEL GLB / MOTION BVH</label><input id="e-mocap-file" type="file" multiple accept=".glb,.gltf,.bvh,model/gltf-binary,model/gltf+json"><button type="button" data-load-accad="enemy">LOAD GENDER-MATCHED ACCAD MOCAP</button></div>
+<div><label>MOTION CAPTURE STATUS</label><small id="mocap-status" aria-live="polite">مدل زنانه/مردانه و موشن‌کپچر واقعی را بارگذاری کن؛ پیش‌نمایش دونفره از دادهٔ مشترک CMU استفاده می‌کند.</small></div>
 </section>
 <section class="notes"><b>COMBAT LAB / CURRENT SYSTEMS</b><p>Procedural articulated fighters · stance and footwork · strike wind-up / active / recovery · range and guard checks · stamina costs · hit reactions · AI distance management · takedown attempt and sprawl response.</p><p class="warning">Fictional roster profiles with editable attributes. Import a properly licensed animated GLB to replace a fighter model and play its captured clips. The default procedural models remain available as fallback.</p></section>
 <section class="creator-panel" aria-labelledby="creator-title">

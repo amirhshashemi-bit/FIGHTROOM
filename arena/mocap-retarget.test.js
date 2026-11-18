@@ -27,3 +27,15 @@ test('retargets onto Innerscene female base bone names',()=>{
  assert.equal(map['upperarm01.L'],'LeftArm');
  assert.equal(map['upperleg01.R'],'RightUpLeg');
 });
+
+test('maps the real CMU FBX skeleton onto female rig segments',()=>{
+ const target=['root','spine01','spine05','head','clavicle.L','upperarm01.L','upperarm02.L','lowerarm01.L','wrist.L','pelvis.L','upperleg02.L','lowerleg01.L','foot.L','clavicle.R','upperarm01.R','upperarm02.R','lowerarm01.R','wrist.R','pelvis.R','upperleg02.R','lowerleg01.R','foot.R'];
+ const source=['hip','abdomen','chest','neck','head','lCollar','lShldr','lForeArm','lHand','lThigh','lShin','lFoot','rCollar','rShldr','rForeArm','rHand','rThigh','rShin','rFoot'];
+ const map=buildRetargetNameMap(target,source),valid=validateRetargetMap(map);
+ assert.equal(valid.compatible,true);
+ assert.equal(map.root,'hip');
+ assert.equal(map['upperarm01.L'],'lCollar');
+ assert.equal(map['upperarm02.L'],'lShldr');
+ assert.equal(map['lowerarm01.R'],'rForeArm');
+ assert.equal(map['foot.R'],'rFoot');
+});
