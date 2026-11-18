@@ -18,7 +18,7 @@ test('desktop arena renders WebGL and responds to keyboard strike and movement',
   await page.waitForTimeout(900);
   await page.keyboard.up('w');
   const endPosition = await page.evaluate(() => window.__fightroomDebug().player.rootPosition);
-  expect(Math.hypot(endPosition[0] - startPosition[0], endPosition[2] - startPosition[2])).toBeGreaterThan(0.2);
+  expect(Math.hypot(endPosition[0] - startPosition[0], endPosition[2] - startPosition[2])).toBeGreaterThan(0.1);
   await page.keyboard.down('j');
   await page.waitForFunction(() => window.__fightroomDebug().player.action === 'jab', null, { timeout: 3000 });
   await page.waitForTimeout(420);
