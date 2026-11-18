@@ -217,6 +217,11 @@ async function loadBundledAccadPack(which){
  }catch(error){status.textContent='ACCAD PACK LOAD FAILED: '+error.message;console.error(error)}
 }
 document.querySelectorAll('[data-load-accad]').forEach(btn=>btn.addEventListener('click',()=>loadBundledAccadPack(btn.dataset.loadAccad)));
+const creatorToggle=byId('toggle-creator'),creatorPanel=document.querySelector('.creator-panel');
+creatorToggle?.addEventListener('click',()=>{
+ const expanded=creatorPanel.classList.toggle('mobile-expanded');
+ creatorToggle.textContent=expanded?'CLOSE CUSTOMIZATION':'CUSTOMIZE FIGHTER · MOVE STORE';
+});
 updateUI();
 window.addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
