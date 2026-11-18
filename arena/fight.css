@@ -63,3 +63,5 @@
 
 .mobile-tools-toggle{display:none}
 @media(max-width:760px){.mobile-tools-toggle{display:block;width:100%;margin:0 0 10px;padding:11px;border:1px solid #8c7044;border-radius:4px;background:linear-gradient(#87642f,#5e4525);color:#fff1d3;font:700 13px 'Barlow Condensed';letter-spacing:1px}.creator-panel:not(.mobile-expanded){display:none}.creator-panel.mobile-expanded{display:block}}
+
+@media(max-width:760px){.roster-toolbar:not(.mobile-expanded){display:none}.roster-toolbar.mobile-expanded{display:grid}}
