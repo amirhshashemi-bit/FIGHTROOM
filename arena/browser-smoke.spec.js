@@ -93,9 +93,16 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
     const bounds = await button.boundingBox();
     await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
     await page.mouse.down();
-    await page.waitForFunction(() => window.__fightroomDebug().player.currentClip?.toLowerCase().includes('blocklefthigh'), null, { timeout: 5000 });
+    await page.waitForFunction(() => {
+      const state = window.__fightroomDebug().player;
+      return state.guard === true && state.guardPoseApplied === true && state.modelVisible === true && state.rigVisible === false;
+    }, null, { timeout: 5000 });
+    const guarded = await page.evaluate(() => window.__fightroomDebug().player);
+    expect(['high','body','long']).toContain(guarded.guardMode);
+    expect(guarded.arms.left.upperRotationDelta).toBeGreaterThan(0);
+    expect(guarded.arms.right.upperRotationDelta).toBeGreaterThan(0);
     await page.mouse.up();
-    await page.waitForFunction(() => window.__fightroomDebug().player.currentClip === 'rest', null, { timeout: 5000 });
+    await page.waitForFunction(() => window.__fightroomDebug().player.guard === false, null, { timeout: 5000 });
   };
   await page.locator('#player-roster').selectOption(female.value);
   await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 15 REAL ACCAD MOCAP CLIPS', { timeout: 60000 });
@@ -130,7 +137,7 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   await page.locator('#enemy-roster').selectOption(male.value);
   await page.waitForFunction(() => {
     const debug = window.__fightroomDebug();
-    return ['player', 'enemy'].every(key => debug[key].rig?.compatible && debug[key].modelBounds?.size?.[1] > 1.5 && debug[key].clips?.length === 48);
+    return ['player', 'enemy'].every(key => debug[key].rig?.compatible && debug[key].modelBounds?.size?.[1] > 1.5 && debug[key].clips?.length === 58);
   }, null, { timeout: 60000 });
   const pairedDebug = await page.evaluate(() => window.__fightroomDebug());
   for (const actor of Object.values(pairedDebug)) expect(actor.currentClip).toBe('rest');
