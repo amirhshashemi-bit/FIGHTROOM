@@ -4,11 +4,11 @@ const ALIASES={
  neck:['neck'],
  head:['head'],
  leftShoulder:['leftshoulder','shoulderl'],rightShoulder:['rightshoulder','shoulderr'],
- leftUpperArm:['leftarm','leftupperarm','upperarml','leftshoulder'],rightUpperArm:['rightarm','rightupperarm','upperarmr','rightshoulder'],
- leftForeArm:['leftforearm','leftlowerarm','forearml','leftelbow'],rightForeArm:['rightforearm','rightlowerarm','forearmr','rightelbow'],
+ leftUpperArm:['leftarm','leftupperarm','upperarml','leftshoulder','upperarm01l','upperarm02l'],rightUpperArm:['rightarm','rightupperarm','upperarmr','rightshoulder','upperarm01r','upperarm02r'],
+ leftForeArm:['leftforearm','leftlowerarm','forearml','leftelbow','lowerarm01l','lowerarm02l'],rightForeArm:['rightforearm','rightlowerarm','forearmr','rightelbow','lowerarm01r','lowerarm02r'],
  leftHand:['lefthand','handl','leftwrist'],rightHand:['righthand','handr','rightwrist'],
- leftUpLeg:['leftupleg','leftthigh','thighl','lefthip'],rightUpLeg:['rightupleg','rightthigh','thighr','righthip'],
- leftLeg:['leftleg','leftcalf','lowerlegl','leftknee'],rightLeg:['rightleg','rightcalf','lowerlegr','rightknee'],
+ leftUpLeg:['leftupleg','leftthigh','thighl','lefthip','upperleg01l','upperleg02l'],rightUpLeg:['rightupleg','rightthigh','thighr','righthip','upperleg01r','upperleg02r'],
+ leftLeg:['leftleg','leftcalf','lowerlegl','leftknee','lowerleg01l','lowerleg02l'],rightLeg:['rightleg','rightcalf','lowerlegr','rightknee','lowerleg01r','lowerleg02r'],
  leftFoot:['leftfoot','footl','leftankle'],rightFoot:['rightfoot','footr','rightankle']
 };
 const clean=s=>String(s||'').toLowerCase().replace(/mixamorig[:_]?/g,'').replace(/[^a-z0-9]/g,'');
