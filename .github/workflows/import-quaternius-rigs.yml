@@ -29,7 +29,7 @@ jobs:
         run: npm install --no-save @gltf-transform/core@4.2.1 @gltf-transform/extensions@4.2.1 @gltf-transform/functions@4.2.1
       - name: Strip unused animations and optimize geometry
         run: |
-          cat > /tmp/optimize-rigs.mjs <<'EOF'
+          cat > arena/optimize-rigs.mjs <<'EOF'
           import { NodeIO } from '@gltf-transform/core';
           import { KHRONOS_EXTENSIONS } from '@gltf-transform/extensions';
           import { dedup, quantize, prune } from '@gltf-transform/functions';
@@ -49,7 +49,7 @@ jobs:
             if(root.listAnimations().length!==0)throw new Error('Unused source animations were not stripped');
           }
           EOF
-          node /tmp/optimize-rigs.mjs
+          node arena/optimize-rigs.mjs
           sha256sum arena/assets/models/quaternius-*.glb > arena/assets/models/QUATERNIUS_RIG_SHA256SUMS
       - name: Write CC0 attribution and optimization manifest
         run: |
