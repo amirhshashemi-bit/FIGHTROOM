@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 
 test('desktop arena renders WebGL and responds to keyboard strike and movement', async ({ page }) => {
@@ -68,6 +69,26 @@ test('bundled real ACCAD mocap pack loads and plays through the arena runtime', 
   await page.locator('[data-load-accad="player"]').click();
   await expect(page.locator('#mocap-status')).toContainText('ACCAD REAL MOCAP READY', { timeout: 60000 });
   await expect(page.locator('#mocap-status')).toContainText('8 CLIPS');
-  await expect(page.locator('#view canvas')).toBeVisible();
+  const visual = await page.locator('#view canvas').evaluate(canvas => {
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    const width = canvas.width, height = canvas.height;
+    const pixels = new Uint8Array(width * height * 4);
+    gl.finish();
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    let litSamples = 0;
+    for (let i = 0; i < pixels.length; i += 32) {
+      if (pixels[i] + pixels[i + 1] + pixels[i + 2] > 95) litSamples++;
+    }
+    const flipped = new Uint8ClampedArray(pixels.length);
+    const stride = width * 4;
+    for (let y = 0; y < height; y++) flipped.set(pixels.subarray(y * stride, (y + 1) * stride), (height - 1 - y) * stride);
+    const out = document.createElement('canvas');
+    out.width = width; out.height = height;
+    out.getContext('2d').putImageData(new ImageData(flipped, width, height), 0, 0);
+    return { width, height, litSamples, dataUrl: out.toDataURL('image/png') };
+  });
+  expect(visual.litSamples).toBeGreaterThan(100);
+  await fs.mkdir('artifacts', { recursive: true });
+  await fs.writeFile('artifacts/arena-accad-mocap-retarget.png', Buffer.from(visual.dataUrl.split(',')[1], 'base64'));
   expect(pageErrors).toEqual([]);
 });
