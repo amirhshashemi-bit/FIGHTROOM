@@ -16,7 +16,7 @@
 - Imported models are normalized to a 1.78 m standing height **before** being attached to the fighter root. This avoids applying world-space corner offsets as local model coordinates.
 - Original fightwear and hair overlays attach to the Quaternius `spine_03`, `pelvis`, `Head`, `hand_l/r` and `foot_l/r` bones.
 - ACCAD BVH retargeting uses the dedicated `pelvis` as the humanoid hips target and leaves the separate `root` control bone unmapped. This prevents the source Hips track from being applied twice to both root and pelvis.
-- The browser runtime loads the 43-clip Quaternius UAL1 Standard library once and uses its native tracks on both matching rigs. Five ACCAD BVH combat clips (jab, cross, roundhouse, high block and dodge) plus one ACCAD standing capture for neutral idle are retargeted for each active corner; the remaining 21 committed ACCAD clips remain available for further mapping.
+- The browser runtime loads the 43-clip Quaternius UAL1 Standard library once and uses its native tracks on both matching rigs. Five ACCAD BVH combat clips (jab, cross, roundhouse, high block and dodge) are retargeted for each active corner; the remaining 22 committed ACCAD clips remain available for further mapping.
 
 ## Honest limitations
 

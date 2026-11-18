@@ -63,10 +63,17 @@ export function applyGrappleRigPose(THREE,fighter,pose){
  turn(rig.bones.get('neck'),pose.lean*.08,0,0);turn(rig.bones.get('head'),-pose.lean*.06,0,0);
  for(const side of ['left','right']){
   const ext=pose[side==='left'?'left':'right']||0,sign=side==='left'?1:-1;
-  turn(rig.bones.get(side+'Shoulder'),0,0,sign*.12);
-  turn(rig.bones.get(side+'UpperArm'),-.28-ext*.82,0,sign*(.18+ext*.22));
-  turn(rig.bones.get(side+'ForeArm'),-.18-ext*.72,0,sign*.05);
-  turn(rig.bones.get(side+'Hand'),-.08,0,0);
+  if(pose.guard){
+   turn(rig.bones.get(side+'Shoulder'),0,sign*.18,sign*.08);
+   turn(rig.bones.get(side+'UpperArm'),-.42-ext*.12,sign*.52,sign*(.38+ext*.12));
+   turn(rig.bones.get(side+'ForeArm'),-1.15-ext*.15,sign*.12,sign*.04);
+   turn(rig.bones.get(side+'Hand'),-.18,0,0);
+  }else{
+   turn(rig.bones.get(side+'Shoulder'),0,0,sign*.12);
+   turn(rig.bones.get(side+'UpperArm'),-.28-ext*.82,0,sign*(.18+ext*.22));
+   turn(rig.bones.get(side+'ForeArm'),-.18-ext*.72,0,sign*.05);
+   turn(rig.bones.get(side+'Hand'),-.08,0,0);
+  }
   turn(rig.bones.get(side+'UpLeg'),-(pose.drive||0)*.42+(pose.level||0)*.12,0,sign*(pose.spread||0)*.22);
   turn(rig.bones.get(side+'Leg'),(pose.drive||0)*.48+(pose.level||0)*.16,0,0);
   turn(rig.bones.get(side+'Foot'),-(pose.drive||0)*.18,0,0);
@@ -125,21 +132,22 @@ export function restoreFighterRestPose(fighter){
 
 export function playFighterClip(THREE,fighter,action){
  if(!fighter?.mixer||!fighter?.clips?.length)return false;
- const isIdle=action==='idle'||action==='stance';
- const keys=aliases[action]||[action];
- const clip=isIdle
-  ?fighter.clips.find(c=>c.name.toLowerCase().includes('male2_a1_stand'))
-  :fighter.clips.find(c=>keys.some(k=>c.name.toLowerCase().includes(k)));
- if(!clip){if(isIdle)return fighter.currentClip==='rest'||restoreFighterRestPose(fighter);fighter.missingClipAction=action;return false;}
+ if(action==='idle'||action==='stance')return fighter.currentClip==='rest'||restoreFighterRestPose(fighter);
+ const keys=aliases[action]||[action],clip=fighter.clips.find(c=>keys.some(k=>c.name.toLowerCase().includes(k)));
+ if(!clip){fighter.missingClipAction=action;return false;}
  fighter.missingClipAction=null;
  if(fighter.currentClip===clip.name)return true;
  const next=fighter.clipActions.get(clip.name);if(!next)return false;
  const previous=fighter.currentAction;
  next.reset();next.enabled=true;next.setEffectiveWeight(1);next.timeScale=action==='retreat'?-1:1;
- if(isIdle||action==='advance'||action==='retreat'||action==='guard')next.setLoop(THREE.LoopRepeat,Infinity);
+ if(action==='advance'||action==='retreat'||action==='guard')next.setLoop(THREE.LoopRepeat,Infinity);
  else{next.setLoop(THREE.LoopOnce,1);next.clampWhenFinished=true}
  if(previous)next.crossFadeFrom(previous,.12,true);next.play();
  fighter.currentAction=next;fighter.currentClip=clip.name;return true;
+}
+function applyFighterGuardPose(THREE,fighter,guarding=false){
+ const reach=guarding ? 1 : .78;
+ return applyGrappleRigPose(THREE,fighter,{guard:true,rootPitch:.025,roll:0,turn:0,lean:guarding ? .16 : .1,left:reach,right:reach,drive:0,spread:.22,level:0});
 }
 
 export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
@@ -151,7 +159,7 @@ export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
   else if(fighter.guard)playFighterClip(THREE,fighter,'guard');
   else if(fighter.dodge>0)playFighterClip(THREE,fighter,'dodge');
   else if(moveSpeed>.2)playFighterClip(THREE,fighter,'advance');
-  else playFighterClip(THREE,fighter,'idle');
+  else{playFighterClip(THREE,fighter,'idle');applyFighterGuardPose(THREE,fighter,false)}
  }
  fighter.mixer.update(dt);
 }

@@ -206,7 +206,7 @@ async function importMocap(input,which){
 }
 document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
 document.getElementById('e-mocap-file').addEventListener('change',e=>importMocap(e.target,'enemy'));
-const ACCAD_DEMO_CLIPS=['Male2_E1_JabLeft.bvh','Male2_E3_CrossLeft.bvh','Male2_G8_RoundhouseLeft.bvh','Male2_E11_BlockLeftHigh.bvh','Male2_E19_DodgeLeft.bvh','Male2_A1_Stand.bvh'];
+const ACCAD_DEMO_CLIPS=['Male2_E1_JabLeft.bvh','Male2_E3_CrossLeft.bvh','Male2_G8_RoundhouseLeft.bvh','Male2_E11_BlockLeftHigh.bvh','Male2_E19_DodgeLeft.bvh'];
 let quaterniusNativeClipsPromise=null;
 async function loadQuaterniusNativeClips(){
  if(!quaterniusNativeClipsPromise)quaterniusNativeClipsPromise=(async()=>{
@@ -255,13 +255,13 @@ async function loadBundledAccadPack(which){
   const nativeOnly=f.clips.filter(clip=>!clip.name.toLowerCase().startsWith('male2_'));
   f.clips=[...accadClips,...nativeOnly];
   playFighterClip(THREE,f,'idle');
-  const report=which.toUpperCase()+' · UAL1 '+nativeOnly.length+' NATIVE CLIPS + '+(loaded-1)+' REAL ACCAD COMBAT CLIPS + 1 STANDING CAPTURE · '+lastInfo.mappedBones+' BONES MAPPED · '+gender.toUpperCase()+' RIG'+(f.outfitReport?' · FIGHTWEAR READY':'');
+  const report=which.toUpperCase()+' · UAL1 '+nativeOnly.length+' NATIVE CLIPS + '+loaded+' REAL ACCAD MOCAP CLIPS · '+lastInfo.mappedBones+' BONES MAPPED · '+gender.toUpperCase()+' RIG'+(f.outfitReport?' · FIGHTWEAR READY':'');
   status.textContent=report;byId('stage-mocap-status').textContent=report;
  }catch(error){const report='ACCAD PACK LOAD FAILED: '+error.message;status.textContent=report;byId('stage-mocap-status').textContent=report;console.error(error)}
 }
 document.querySelectorAll('[data-load-accad]').forEach(btn=>btn.addEventListener('click',()=>loadBundledAccadPack(btn.dataset.loadAccad)));
 async function ensureFighterIdleMotion(f){
- if(f.clips?.some(clip=>clip.name.toLowerCase().includes('male2_a1_stand')))return;
+ if(hasFighterClip(f,'idle'))return;
  const name='Male2_A1_Stand.bvh',response=await fetch(new URL('./assets/mocap/accad/'+name,import.meta.url));
  if(!response.ok)throw new Error('Idle fallback motion missing: '+response.status);
  const file=new File([await response.arrayBuffer()],name,{type:'application/octet-stream'});
@@ -465,7 +465,7 @@ loop();updateUI();
  byId('stage-mocap-status').textContent='LOADING MALE/FEMALE RIGS + NATIVE ANIMATION + REAL ACCAD…';
  await loadBundledAccadPack('player');
  await loadBundledAccadPack('enemy');
- const ready=[player,enemy].every(f=>f.externalModel&&f.rigReport?.compatible&&f.outfitReport&&f.clips?.length===49&&f.clips.filter(c=>c.name.toLowerCase().startsWith('male2_')).length===6&&f.clips.some(c=>c.name.toLowerCase().includes('male2_a1_stand')));
- const report=ready?'AUTO FIGHTERS CONNECTED · 43 NATIVE CLIPS + 5 REAL ACCAD COMBAT CLIPS + 1 STANDING CAPTURE EACH · READY':'MODEL OR MOTION LOAD INCOMPLETE · CHECK REQUIRED';
+ const ready=[player,enemy].every(f=>f.externalModel&&f.rigReport?.compatible&&f.outfitReport&&f.clips?.length===48&&f.clips.filter(c=>c.name.toLowerCase().startsWith('male2_')).length===5&&f.clips.some(c=>c.name==='Idle_Loop'));
+ const report=ready?'AUTO FIGHTERS CONNECTED · 43 NATIVE CLIPS + 5 REAL ACCAD CLIPS EACH · READY':'MODEL OR MOTION LOAD INCOMPLETE · CHECK REQUIRED';
  byId('mocap-status').textContent=report;byId('stage-mocap-status').textContent=report;enemy.aiThink=showcaseMode?9999:15;fightersReady=true;
 })().catch(error=>{const message='AUTO FIGHTER LOAD FAILED: '+error.message;byId('mocap-status').textContent=message;byId('stage-mocap-status').textContent=message;fightersReady=true;console.error(error)});

@@ -56,15 +56,15 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto('http://127.0.0.1:4173/arena/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#view canvas')).toBeVisible({ timeout: 30000 });
-  await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 5 REAL ACCAD COMBAT CLIPS + 1 STANDING CAPTURE EACH · READY', { timeout: 60000 });
+  await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 5 REAL ACCAD CLIPS EACH · READY', { timeout: 60000 });
   const initial = await page.evaluate(() => window.__fightroomDebug());
   for (const actor of Object.values(initial)) {
     expect(actor.rig.compatible).toBe(true);
     expect(actor.modelBounds.size[1]).toBeGreaterThan(1.5);
-    expect(actor.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(6);
-    expect(actor.clips).toHaveLength(49);
+    expect(actor.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(5);
+    expect(actor.clips).toHaveLength(48);
     expect(actor.outfit).toBeTruthy();
-    expect(actor.currentClip.toLowerCase()).toContain('male2_a1_stand');
+    expect(actor.currentClip).toBe('rest');
   }
   const rosterOptions = await page.locator('#player-roster option').evaluateAll(options => options.map(option => ({ value: option.value, label: option.textContent })));
   const female = rosterOptions.find(option => option.label.includes('Women'));
@@ -72,28 +72,28 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   expect(female).toBeTruthy();
   expect(male).toBeTruthy();
   await page.locator('#player-roster').selectOption(female.value);
-  await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 5 REAL ACCAD COMBAT CLIPS + 1 STANDING CAPTURE', { timeout: 60000 });
+  await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 5 REAL ACCAD MOCAP CLIPS', { timeout: 60000 });
   await expect(page.locator('#mocap-status')).toContainText('FEMALE RIG');
   await expect(page.locator('#mocap-status')).toContainText('FIGHTWEAR READY');
   const femaleDebug = await page.evaluate(() => window.__fightroomDebug().player);
   expect(femaleDebug.rig.compatible).toBe(true);
-  expect(femaleDebug.currentClip.toLowerCase()).toContain('male2_a1_stand');
+  expect(femaleDebug.currentClip).toBe('rest');
   expect(femaleDebug.modelBounds.size[1]).toBeGreaterThan(1.5);
-  expect(femaleDebug.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(6);
+  expect(femaleDebug.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(5);
   await page.locator('#player-roster').selectOption(male.value);
   await expect(page.locator('#mocap-status')).toContainText('MALE RIG', { timeout: 60000 });
   const maleDebug = await page.evaluate(() => window.__fightroomDebug().player);
   expect(maleDebug.rig.compatible).toBe(true);
-  expect(maleDebug.currentClip.toLowerCase()).toContain('male2_a1_stand');
-  expect(maleDebug.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(6);
+  expect(maleDebug.currentClip).toBe('rest');
+  expect(maleDebug.clips.filter(name => name.toLowerCase().startsWith('male2_'))).toHaveLength(5);
   await page.locator('#player-roster').selectOption(female.value);
   await page.locator('#enemy-roster').selectOption(male.value);
   await page.waitForFunction(() => {
     const debug = window.__fightroomDebug();
-    return ['player', 'enemy'].every(key => debug[key].rig?.compatible && debug[key].modelBounds?.size?.[1] > 1.5 && debug[key].clips?.length === 49);
+    return ['player', 'enemy'].every(key => debug[key].rig?.compatible && debug[key].modelBounds?.size?.[1] > 1.5 && debug[key].clips?.length === 48);
   }, null, { timeout: 60000 });
   const pairedDebug = await page.evaluate(() => window.__fightroomDebug());
-  for (const actor of Object.values(pairedDebug)) expect(actor.currentClip.toLowerCase()).toContain('male2_a1_stand');
+  for (const actor of Object.values(pairedDebug)) expect(actor.currentClip).toBe('rest');
   await page.screenshot({ path: 'artifacts/arena-desktop.png', fullPage: true });
   await page.locator('#preview-paired-mocap').click();
   await expect(page.locator('#mocap-status')).toContainText('REAL PAIRED MOCAP PLAYING', { timeout: 60000 });
