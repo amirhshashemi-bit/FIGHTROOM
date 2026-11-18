@@ -145,9 +145,40 @@ export function playFighterClip(THREE,fighter,action){
  if(previous)next.crossFadeFrom(previous,.12,true);next.play();
  fighter.currentAction=next;fighter.currentClip=clip.name;return true;
 }
+function aimBoneSegment(THREE,bone,child,targetDirection){
+ if(!bone||!child||!bone.parent||targetDirection.lengthSq()<1e-8)return false;
+ const start=bone.getWorldPosition(new THREE.Vector3());
+ const current=child.getWorldPosition(new THREE.Vector3()).sub(start);
+ if(current.lengthSq()<1e-8)return false;
+ const delta=new THREE.Quaternion().setFromUnitVectors(current.normalize(),targetDirection.clone().normalize());
+ const nextWorld=delta.multiply(bone.getWorldQuaternion(new THREE.Quaternion()));
+ const parentInverse=bone.parent.getWorldQuaternion(new THREE.Quaternion()).invert();
+ bone.quaternion.copy(parentInverse.multiply(nextWorld));
+ bone.updateMatrixWorld(true);
+ return true;
+}
 function applyFighterGuardPose(THREE,fighter,guarding=false){
+ const rig=fighter?.grappleRig,root=fighter?.root;if(!rig||!root)return false;
  const reach=guarding ? 1 : .78;
- return applyGrappleRigPose(THREE,fighter,{guard:true,rootPitch:.025,roll:0,turn:0,lean:guarding ? .16 : .1,left:reach,right:reach,drive:0,spread:.22,level:0});
+ applyGrappleRigPose(THREE,fighter,{rootPitch:.025,roll:0,turn:0,lean:guarding ? .16 : .1,left:reach,right:reach,drive:0,spread:.22,level:0});
+ root.updateMatrixWorld(true);
+ const rootRotation=root.getWorldQuaternion(new THREE.Quaternion());
+ const front=new THREE.Vector3(0,0,1).applyQuaternion(rootRotation).normalize();
+ for(const side of ['left','right']){
+  const upper=rig.bones.get(side+'UpperArm'),fore=rig.bones.get(side+'ForeArm'),hand=rig.bones.get(side+'Hand');
+  if(!upper||!fore||!hand)continue;
+  const shoulder=upper.getWorldPosition(new THREE.Vector3());
+  const localShoulder=root.worldToLocal(shoulder.clone());
+  const outward=new THREE.Vector3(Math.sign(localShoulder.x)||(side==='left'?-1:1),0,0).applyQuaternion(rootRotation).normalize();
+  const upperDirection=front.clone().multiplyScalar(.12).add(new THREE.Vector3(0,-.08,0)).add(outward.clone().multiplyScalar(.12));
+  aimBoneSegment(THREE,upper,fore,upperDirection);
+  root.updateMatrixWorld(true);
+  const inward=outward.clone().negate();
+  const foreDirection=front.clone().multiplyScalar(.15).add(new THREE.Vector3(0,.15,0)).add(inward.multiplyScalar(.10));
+  aimBoneSegment(THREE,fore,hand,foreDirection);
+ }
+ root.updateMatrixWorld(true);
+ return true;
 }
 
 export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){

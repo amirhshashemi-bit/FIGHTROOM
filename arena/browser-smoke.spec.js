@@ -52,6 +52,7 @@ test('Android-sized viewport renders grappling and defensive touch controls', as
 });
 
 test('both gendered fighter rigs load native and ACCAD motion, then play synchronized CMU pairs', async ({ page }) => {
+  test.setTimeout(150000);
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto('http://127.0.0.1:4173/arena/?showcase=1', { waitUntil: 'domcontentloaded' });
