@@ -7,11 +7,6 @@ on:
     paths:
       - "arena/**"
       - ".github/workflows/arena-browser-qa.yml"
-  push:
-    branches: [arena-combat-foundation]
-    paths:
-      - "arena/**"
-      - ".github/workflows/arena-browser-qa.yml"
 permissions:
   contents: read
   actions: write
