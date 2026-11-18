@@ -1,7 +1,7 @@
 import {resolveCountryCode,countryNameForCode,countryFlag,getCountryOptions} from './countries.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULT_CUSTOM_FIGHTER,MOVE_CATALOG,getBodyMetrics,normalizeCustomFighter} from './character-creator.js';
+import {CREATOR_SCHEMA_VERSION,CREATOR_STORAGE_KEY,DEFAULT_CUSTOM_FIGHTER,MOVE_CATALOG,getBodyMetrics,loadCustomFighter,normalizeCustomFighter} from './character-creator.js';
 
 test('custom fighter profile clamps body dimensions and combat attributes',()=>{
  const p=normalizeCustomFighter({name:'  Test Fighter  ',height:999,reach:1,power:200,body:{shoulders:9,chest:.1,arms:1.1,legs:.9}});
@@ -48,4 +48,26 @@ test('custom fighter gender is normalized and affects body silhouette metrics',(
  assert.equal(female.gender,'female');
  assert.ok(getBodyMetrics(female).hips>getBodyMetrics(male).hips);
  assert.ok(getBodyMetrics(female).shoulders<getBodyMetrics(male).shoulders);
+});
+
+test('legacy custom fighter profiles migrate forward without losing player choices',()=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+ const values=new Map([[CREATOR_STORAGE_KEY,JSON.stringify({name:'Legacy Fighter',gender:'female',countryCode:'IR',stance:'Southpaw',style:'BJJ',power:91,ownedMoves:['signature-jab'],equippedMoves:['signature-jab']})]]);
+ Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{
+  getItem:key=>values.has(key)?values.get(key):null,
+  setItem:(key,value)=>values.set(key,String(value))
+ }});
+ try{
+  const migrated=loadCustomFighter();
+  assert.equal(migrated.schemaVersion,CREATOR_SCHEMA_VERSION);
+  assert.equal(migrated.name,'Legacy Fighter');
+  assert.equal(migrated.gender,'female');
+  assert.equal(migrated.countryCode,'IR');
+  assert.equal(migrated.stance,'Southpaw');
+  assert.equal(migrated.power,91);
+  assert.equal(JSON.parse(values.get(CREATOR_STORAGE_KEY)).schemaVersion,CREATOR_SCHEMA_VERSION);
+ }finally{
+  if(previous)Object.defineProperty(globalThis,'localStorage',previous);
+  else delete globalThis.localStorage;
+ }
 });
