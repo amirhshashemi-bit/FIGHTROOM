@@ -8,6 +8,7 @@ test('desktop arena renders WebGL and responds to keyboard strike and movement',
   await expect(canvas).toBeVisible({ timeout: 30000 });
   await expect(page.locator('#p-health')).toBeAttached();
   await expect(page.locator('[data-action="takedown"]')).toBeVisible();
+  await expect(page.locator('.creator-panel')).toBeVisible();
   expect(await page.locator('#p-mocap-file').getAttribute('accept')).toContain('.bvh');
   await page.keyboard.down('j');
   await page.waitForTimeout(420);
@@ -29,6 +30,11 @@ test('Android-sized viewport renders grappling and defensive touch controls', as
   await page.goto('http://127.0.0.1:4173/arena/', { waitUntil: 'domcontentloaded' });
   const canvas = page.locator('#view canvas');
   await expect(canvas).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('.creator-panel')).toBeHidden();
+  await page.locator('#toggle-creator').click();
+  await expect(page.locator('.creator-panel')).toBeVisible();
+  await page.locator('#toggle-creator').click();
+  await expect(page.locator('.creator-panel')).toBeHidden();
   await page.waitForTimeout(1500);
   const context = await canvas.evaluate(node => node.getContext('webgl2') ? 'webgl2' : node.getContext('webgl') ? 'webgl' : 'none');
   expect(context).not.toBe('none');
@@ -44,6 +50,15 @@ test('bundled real ACCAD mocap pack loads and plays through the arena runtime', 
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto('http://127.0.0.1:4173/arena/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#view canvas')).toBeVisible({ timeout: 30000 });
+  const rosterOptions = await page.locator('#player-roster option').evaluateAll(options => options.map(option => ({ value: option.value, label: option.textContent })));
+  const female = rosterOptions.find(option => option.label.includes('Women'));
+  const male = rosterOptions.find(option => !option.label.includes('Women'));
+  expect(female).toBeTruthy();
+  expect(male).toBeTruthy();
+  await page.locator('#player-roster').selectOption(female.value);
+  await page.locator('[data-load-accad="player"]').click();
+  await expect(page.locator('#mocap-status')).toContainText('FEMALE GLB MODEL NOT BUNDLED YET');
+  await page.locator('#player-roster').selectOption(male.value);
   await page.locator('[data-load-accad="player"]').click();
   await expect(page.locator('#mocap-status')).toContainText('ACCAD REAL MOCAP READY', { timeout: 60000 });
   await expect(page.locator('#mocap-status')).toContainText('8 CLIPS');
