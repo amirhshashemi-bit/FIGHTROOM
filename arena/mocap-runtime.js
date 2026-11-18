@@ -78,6 +78,39 @@ export function applyGrappleRigPose(THREE,fighter,pose){
   turn(rig.bones.get(side+'Leg'),(pose.drive||0)*.48+(pose.level||0)*.16,0,0);
   turn(rig.bones.get(side+'Foot'),-(pose.drive||0)*.18,0,0);
  }
+ // Retarget procedural strikes by segment direction in world space. Euler-only
+ // rotations are not portable across different GLB skeleton rest orientations.
+ const root=fighter.root;
+ if(root){
+  root.updateMatrixWorld(true);
+  const rootQ=root.getWorldQuaternion(new THREE.Quaternion());
+  const forward=new THREE.Vector3(0,0,1).applyQuaternion(rootQ).normalize();
+  const right=new THREE.Vector3(1,0,0).applyQuaternion(rootQ).normalize();
+  const up=new THREE.Vector3(0,1,0);
+  for(const side of ['left','right']){
+   const amount=Math.max(0,Math.min(1.25,pose[side]||0));
+   if(amount>.035){
+    const upper=rig.bones.get(side+'UpperArm'),fore=rig.bones.get(side+'ForeArm'),hand=rig.bones.get(side+'Hand');
+    const outward=right.clone().multiplyScalar(side==='left'?-1:1);
+    const upperDirection=forward.clone().multiplyScalar(.18+amount*.42).add(up.clone().multiplyScalar(-.04)).add(outward.multiplyScalar(.06)).normalize();
+    aimBoneSegment(THREE,upper,fore,upperDirection);
+    root.updateMatrixWorld(true);
+    const foreDirection=forward.clone().multiplyScalar(.22+amount*.58).add(up.clone().multiplyScalar(-.015)).normalize();
+    aimBoneSegment(THREE,fore,hand,foreDirection);
+    root.updateMatrixWorld(true);
+   }
+  }
+  const kick=Math.max(0,Math.min(1.25,pose.drive||0));
+  if(kick>.035){
+   const upper=rig.bones.get('rightUpLeg'),lower=rig.bones.get('rightLeg'),foot=rig.bones.get('rightFoot');
+   const hipDirection=forward.clone().multiplyScalar(.18+kick*.24).add(up.clone().multiplyScalar(.10+kick*.10)).normalize();
+   aimBoneSegment(THREE,upper,lower,hipDirection);
+   root.updateMatrixWorld(true);
+   const lowerDirection=forward.clone().multiplyScalar(.24+kick*.72).add(up.clone().multiplyScalar(.12+kick*.12)).normalize();
+   aimBoneSegment(THREE,lower,foot,lowerDirection);
+   root.updateMatrixWorld(true);
+  }
+ }
  return true;
 }
 export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
@@ -134,7 +167,15 @@ export function playFighterClip(THREE,fighter,action){
  if(!fighter?.mixer||!fighter?.clips?.length)return false;
  if(action==='idle'||action==='stance')return fighter.currentClip==='rest'||restoreFighterRestPose(fighter);
  const keys=aliases[action]||[action],clip=fighter.clips.find(c=>keys.some(k=>c.name.toLowerCase().includes(k)));
- if(!clip){fighter.missingClipAction=action;return false;}
+ if(!clip){
+  // Do not leave the previous jab/walk clip running under a procedural move.
+  fighter.mixer.stopAllAction();
+  fighter.currentAction=null;
+  fighter.currentClip=null;
+  restoreFighterRestPose(fighter);
+  fighter.missingClipAction=action;
+  return false;
+ }
  fighter.missingClipAction=null;
  if(fighter.currentClip===clip.name)return true;
  const next=fighter.clipActions.get(clip.name);if(!next)return false;
