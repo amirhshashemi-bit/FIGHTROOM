@@ -59,6 +59,7 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   await expect(page.locator('#view canvas')).toBeVisible({ timeout: 30000 });
   await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 5 REAL ACCAD CLIPS EACH · READY', { timeout: 60000 });
   const initial = await page.evaluate(() => window.__fightroomDebug());
+  console.log('ARM_POSE_DEBUG', JSON.stringify(initial.player.arms), JSON.stringify(initial.enemy.arms));
   for (const actor of Object.values(initial)) {
     expect(actor.rig.compatible).toBe(true);
     expect(actor.modelBounds.size[1]).toBeGreaterThan(1.5);
