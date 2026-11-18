@@ -1,0 +1,69 @@
+name: Import female CC0 base mesh (source-only)
+on:
+  push:
+    branches: [arena-combat-foundation]
+    paths: [".github/workflows/import-female-cc0-base.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch-inspect-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: arena-combat-foundation
+          fetch-depth: 0
+      - name: Fetch pinned CC0 female base
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p arena/assets/models/source
+          curl --fail --location --retry 3 --retry-delay 2 "https://files.innerscene.com/library/female-base-mesh-3d-person-rigged-a-pose-dba97ed5/c5dce4aeeb1e549cec36/female-base-mesh-base_female.glb" --output arena/assets/models/source/female-base-mesh-base_female.glb
+          size="$(stat -c '%s' arena/assets/models/source/female-base-mesh-base_female.glb)"
+          test "$size" -gt 1000000
+          test "$size" -lt 8000000
+      - name: Validate GLB mesh and rig structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const path='arena/assets/models/source/female-base-mesh-base_female.glb';
+          const b=fs.readFileSync(path);
+          if(b.toString('ascii',0,4)!=='glTF')throw new Error('Invalid GLB magic');
+          if(b.readUInt32LE(4)!==2)throw new Error('Expected glTF 2.0');
+          if(b.readUInt32LE(8)!==b.length)throw new Error('GLB length mismatch');
+          const n=b.readUInt32LE(12);
+          if(b.toString('ascii',16,20)!=='JSON')throw new Error('Missing JSON chunk');
+          const d=JSON.parse(b.toString('utf8',20,20+n).trim());
+          if(!Array.isArray(d.meshes)||!d.meshes.length)throw new Error('No mesh');
+          if(!Array.isArray(d.skins)||!d.skins.length)throw new Error('No skin');
+          const joints=d.skins.reduce((sum,s)=>sum+(s.joints||[]).length,0);
+          if(joints<100)throw new Error('Expected humanoid skeleton; found '+joints);
+          console.log(JSON.stringify({bytes:b.length,version:d.asset?.version,meshes:d.meshes.length,skins:d.skins.length,joints,nodes:d.nodes?.length||0,animations:d.animations?.length||0},null,2));
+          NODE
+      - name: Record CC0 source and integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum arena/assets/models/source/female-base-mesh-base_female.glb > arena/assets/models/source/female-base-mesh-base_female.sha256
+          cat > arena/assets/models/source/FEMALE-BASE-SOURCE-NOTICE.md <<'EOF'
+          # Female base mesh — source asset only
+          - Source: https://www.innerscene.com/tools/library/3d-parts/female-base-mesh-3d-person-rigged-a-pose-dba97ed5
+          - Licence: CC0 public-domain dedication, as stated on the source page.
+          - Publisher describes a 163-bone rig with skin weights.
+          - This is an unclothed neutral base. It is stored for pipeline development only and must not be loaded as a playable fighter.
+          - Clothing, hair, rig mapping, retarget/playback and visual/mobile QA are required before runtime integration.
+          - SHA-256 is recorded beside the asset.
+          EOF
+      - name: Commit source asset to feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add arena/assets/models/source/
+          if git diff --cached --quiet; then echo "No source asset changes."; exit 0; fi
+          git commit -m "Add source-only CC0 female base mesh for rig pipeline"
+          git push origin HEAD:arena-combat-foundation
