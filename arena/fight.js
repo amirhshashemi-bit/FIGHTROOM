@@ -75,7 +75,7 @@ function pose(f,t,moveSpeed,dt){
  }
  animateFighter(f,t,moveSpeed,dt);
  }
-function resize(){const w=mount.clientWidth,h=mount.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(mount);resize();
+function resize(){const w=mount.clientWidth||window.innerWidth,h=mount.clientHeight||window.innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;const mobile=w<600,tablet=w<900;camera.position.set(0,mobile?4.15:tablet?3.85:3.55,mobile?7:tablet?5.2:3.95);camera.lookAt(0,1.02,0);camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(mount);resize();
 const keys=new Set(),touchMove=new Set();
 function currentMoveVector(){
  const x=(keys.has('d')?1:0)-(keys.has('a')?1:0)+(touchMove.has('right')?1:0)-(touchMove.has('left')?1:0);
@@ -493,10 +493,11 @@ selectVenue('las-vegas');document.getElementById('venue-select')?.addEventListen
 document.getElementById('sound-toggle')?.addEventListener('click',()=>{audioEnabled=!audioEnabled;audio.setEnabled(audioEnabled);document.getElementById('sound-toggle').textContent=audioEnabled?'SOUND ON':'SOUND OFF'});
 window.__fightroomDebug=()=>Object.fromEntries([['player',player],['enemy',enemy]].map(([key,f])=>{
  const box=f.externalModel?new THREE.Box3().setFromObject(f.externalModel):null;
+ const screenPoint=f.root.getWorldPosition(new THREE.Vector3());screenPoint.y+=1.1;screenPoint.project(camera);
  const point=node=>node?f.root.worldToLocal(node.getWorldPosition(new THREE.Vector3()).clone()).toArray():null;
  const rotationDelta=node=>{const base=f.grappleRig?.base.get(node);return base?1-Math.abs(node.quaternion.dot(base)):null};
  const arm=side=>{const upper=f.grappleRig?.bones.get(side+'UpperArm'),fore=f.grappleRig?.bones.get(side+'ForeArm'),hand=f.grappleRig?.bones.get(side+'Hand');const a=point(upper),b=point(fore),c=point(hand);if(!a||!b||!c)return null;const upperDirection=new THREE.Vector3(...b).sub(new THREE.Vector3(...a)).normalize(),foreDirection=new THREE.Vector3(...c).sub(new THREE.Vector3(...b)).normalize();return {upperBone:upper.name,foreBone:fore.name,handBone:hand.name,shoulder:a,elbow:b,wrist:c,elbowDot:upperDirection.dot(foreDirection),upperRotationDelta:rotationDelta(upper),foreRotationDelta:rotationDelta(fore)}};
- return [key,{name:f.name,profile:f.profile?.id,rootScale:f.root.scale.toArray(),rootPosition:f.root.position.toArray(),modelScale:f.externalModel?.scale.toArray(),modelPosition:f.externalModel?.position.toArray(),modelVisible:f.externalModel?.visible,rigVisible:f.rig.visible,modelBounds:box?{min:box.min.toArray(),max:box.max.toArray(),size:box.getSize(new THREE.Vector3()).toArray()}:null,clips:f.clips?.map(c=>c.name),currentClip:f.currentClip,action:f.action,guard:f.guard,guardMode:f.guardMode||'high',dodge:f.dodge,guardPoseApplied:f.guardPoseApplied,arms:{left:arm('left'),right:arm('right')},outfit:f.outfitReport,rig:f.rigReport}]}));
+ return [key,{name:f.name,profile:f.profile?.id,rootScale:f.root.scale.toArray(),rootPosition:f.root.position.toArray(),screenX:(screenPoint.x+1)/2,modelScale:f.externalModel?.scale.toArray(),modelPosition:f.externalModel?.position.toArray(),modelVisible:f.externalModel?.visible,rigVisible:f.rig.visible,modelBounds:box?{min:box.min.toArray(),max:box.max.toArray(),size:box.getSize(new THREE.Vector3()).toArray()}:null,clips:f.clips?.map(c=>c.name),currentClip:f.currentClip,action:f.action,guard:f.guard,guardMode:f.guardMode||'high',dodge:f.dodge,guardPoseApplied:f.guardPoseApplied,arms:{left:arm('left'),right:arm('right')},outfit:f.outfitReport,rig:f.rigReport}]}));
 loop();updateUI();
 (async()=>{
  byId('stage-mocap-status').textContent='LOADING MALE/FEMALE RIGS + NATIVE ANIMATION + REAL ACCAD…';

@@ -33,6 +33,18 @@ test('Android-sized viewport renders grappling and defensive touch controls', as
   const canvas = page.locator('#view canvas');
   await expect(canvas).toBeVisible({ timeout: 30000 });
   await expect(page.locator('#fighter-loading')).toBeHidden({ timeout: 60000 });
+  await page.waitForTimeout(120);
+  const mobileFraming = await page.evaluate(() => window.__fightroomDebug());
+  for (const actor of Object.values(mobileFraming)) {
+    expect(actor.screenX).toBeGreaterThan(0.05);
+    expect(actor.screenX).toBeLessThan(0.95);
+  }
+  const headerOverlap = await page.evaluate(() => {
+    const elements = [document.querySelector('.top .build'), document.querySelector('.top>div'), document.querySelector('.top>a')];
+    const rects = elements.map(element => element.getBoundingClientRect());
+    return rects.some((a, index) => rects.slice(index + 1).some(b => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top));
+  });
+  expect(headerOverlap).toBe(false);
   await expect(page.locator('.creator-panel')).toBeHidden();
   await expect(page.locator('.roster-toolbar')).toBeHidden();
   await page.locator('#toggle-roster').click();
