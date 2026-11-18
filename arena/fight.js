@@ -3,7 +3,7 @@ import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/
 import { ROSTER, getFighter } from './roster.js';
 import { getCountryOptions, countryFlag, resolveCountryCode } from './countries.js';
 import { DEFAULT_CUSTOM_FIGHTER, MOVE_CATALOG, getBodyMetrics, loadCustomFighter, normalizeCustomFighter, saveCustomFighter } from './character-creator.js';
-import { loadFighterGLB, loadFighterBVH, playFighterClip, updateFighterMocap, hasFighterClip } from './mocap-runtime.js';
+import { loadFighterGLB, loadFighterBVH, playFighterClip, updateFighterMocap, hasFighterClip, applyGrappleRigPose } from './mocap-runtime.js';
 import { animateFighter } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
 import { chooseCpuAction } from './combat-ai.js';
@@ -56,8 +56,9 @@ player=fighter(getFighter('mateo-cruz'),-1);enemy=fighter(getFighter('kwame-boat
 function pose(f,t,moveSpeed,dt){
  if(f.mixer){
   updateFighterMocap(THREE,f,dt,moveSpeed);
+  if(f.grapplePose&&f.grappleRig){f.externalModel.visible=true;f.rig.visible=false;applyGrappleRigPose(THREE,f,f.grapplePose);return;}
   const groundClipMissing=f.groundState==='submission'?!hasFighterClip(f,'submission'):(f.groundState!=='standing'&&!hasFighterClip(f,'ground-control'));
-  const unsupported=Boolean(f.grapplePose)||(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||groundClipMissing;
+  const unsupported=(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||groundClipMissing;
   if(!unsupported){f.externalModel.visible=true;f.rig.visible=false;return;}
   // Keep the imported mixer alive: procedural fallback is temporary and can
   // hand control back to a later supported mocap clip without re-importing.

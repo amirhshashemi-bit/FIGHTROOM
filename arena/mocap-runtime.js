@@ -31,6 +31,26 @@ function addFemaleFightwear(THREE,model,fighter){
  for(const [boneName,side] of [['foot.L','L'],['foot.R','R']]){const bone=find([boneName.toLowerCase()]);if(bone){const shoe=add(bone,'FIGHTROOM_MMA_SHOE_'+side,new THREE.BoxGeometry(.12,.065,.22),cloth,[0,-.012,.045]);shoe.material=cloth}}
  return {outfit:'sports-top-shorts-gloves-shoes-hair',pieces:10};
 }
+export function applyGrappleRigPose(THREE,fighter,pose){
+ const rig=fighter?.grappleRig;if(!rig||!pose)return false;
+ for(const [bone,base] of rig.base)bone.quaternion.copy(base);
+ const turn=(bone,x=0,y=0,z=0)=>{if(!bone)return;const delta=new THREE.Quaternion().setFromEuler(new THREE.Euler(x,y,z,'XYZ'));bone.quaternion.copy(rig.base.get(bone)).multiply(delta)};
+ turn(rig.bones.get('hips'),pose.rootPitch+(pose.level||0)*.12,pose.turn*.12,pose.roll);
+ const spineCount=Math.max(1,rig.spines.length);
+ rig.spines.forEach((bone,i)=>turn(bone,-pose.lean*(.22+.28*(i+1)/spineCount),pose.turn*.12,pose.roll*.2));
+ turn(rig.bones.get('neck'),pose.lean*.08,0,0);turn(rig.bones.get('head'),-pose.lean*.06,0,0);
+ for(const side of ['left','right']){
+  const ext=pose[side==='left'?'left':'right']||0,sign=side==='left'?1:-1;
+  turn(rig.bones.get(side+'Shoulder'),0,0,sign*.12);
+  turn(rig.bones.get(side+'UpperArm'),-.28-ext*.82,0,sign*(.18+ext*.22));
+  turn(rig.bones.get(side+'ForeArm'),-.18-ext*.72,0,sign*.05);
+  turn(rig.bones.get(side+'Hand'),-.08,0,0);
+  turn(rig.bones.get(side+'UpLeg'),-(pose.drive||0)*.42+(pose.level||0)*.12,0,sign*(pose.spread||0)*.22);
+  turn(rig.bones.get(side+'Leg'),(pose.drive||0)*.48+(pose.level||0)*.16,0,0);
+  turn(rig.bones.get(side+'Foot'),-(pose.drive||0)*.18,0,0);
+ }
+ return true;
+}
 export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  const loader=new GLTFLoader(),buffer=await file.arrayBuffer();
  const gltf=await loader.parseAsync(buffer,'');
@@ -42,6 +62,10 @@ export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  if(fighter.externalModel)fighter.root.remove(fighter.externalModel);
  fighter.root.add(model);
  model.updateMatrixWorld(true);
+ const grappleBones=new Map(),grappleSpines=[];
+ model.traverse(node=>{if(!node.isBone)return;const semantic=semanticBone(node.name);if(semantic==='spine')grappleSpines.push(node);else if(semantic&&!grappleBones.has(semantic))grappleBones.set(semantic,node)});
+ const grappleBase=new Map();for(const bone of [...grappleBones.values(),...grappleSpines])grappleBase.set(bone,bone.quaternion.clone());
+ fighter.grappleRig={bones:grappleBones,spines:grappleSpines,base:grappleBase};
  model.traverse(o=>{if(o.isSkinnedMesh&&o.skeleton)o.skeleton.update()});
  const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
  if(size.y>0){const scale=1.78/size.y;model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);model.updateMatrixWorld(true)}
