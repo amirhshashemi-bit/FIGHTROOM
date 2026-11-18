@@ -48,3 +48,11 @@ test('does not call an incomplete skeleton humanoid-compatible', () => {
   const r=inspectGlbDocument({nodes:[{name:'Hips'}],skins:[{joints:[0]}],meshes:[{}],animations:[{name:'Walk'}]});
   assert.equal(r.humanoidCoreCandidate,false);
 });
+
+test('recognizes Innerscene female base core bone naming',()=>{
+ const names=['root','spine01','head','upperarm01.L','upperarm01.R','upperleg01.L','upperleg01.R'];
+ const doc={nodes:names.map(name=>({name})),skins:[{joints:[0,1,2,3,4,5,6]}],meshes:[{}],animations:[]};
+ const r=inspectGlbDocument(doc);
+ assert.equal(r.humanoidCoreCandidate,true);
+ assert.equal(r.coreBonesFound,7);
+});
