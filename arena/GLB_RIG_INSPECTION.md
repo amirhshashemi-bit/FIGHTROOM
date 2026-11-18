@@ -18,6 +18,6 @@ The cloud workflow inspected the pinned CC0 male base model:
 - Clothing, female rig compatibility and Android performance are not verified.
 
 ## Female base candidate
-A separate female CC0 source is being added under assets/models/source/ for inspection only. It must not be loaded as a visible fighter until clothing, hair, rig mapping, animation playback and visual QA pass.
+A separate female CC0 source has been imported under assets/models/source/ for inspection only; it is intentionally excluded from the runtime roster. It must not be loaded as a visible fighter until clothing, hair, rig mapping, animation playback and visual QA pass.
 
 The former stale “next gate: inspect the real model” wording is superseded: male GLB structural inspection is complete; dressed production character integration is not.
