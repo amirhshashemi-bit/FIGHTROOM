@@ -4,10 +4,10 @@ const CORE_BONES = {
   hips: ['hips','mixamorig:hips','pelvis','root'],
   spine: ['spine','mixamorig:spine','spine1','spine_01'],
   head: ['head','mixamorig:head'],
-  leftUpperArm: ['leftarm','mixamorig:leftarm','upperarm_l','upperarm.l','leftupperarm'],
-  rightUpperArm: ['rightarm','mixamorig:rightarm','upperarm_r','upperarm.r','rightupperarm'],
-  leftUpperLeg: ['leftupleg','mixamorig:leftupleg','thigh_l','thigh.l','leftupperleg'],
-  rightUpperLeg: ['rightupleg','mixamorig:rightupleg','thigh_r','thigh.r','rightupperleg']
+  leftUpperArm: ['leftarm','mixamorig:leftarm','upperarm_l','upperarm.l','leftupperarm','upperarm01.l','upperarm02.l'],
+  rightUpperArm: ['rightarm','mixamorig:rightarm','upperarm_r','upperarm.r','rightupperarm','upperarm01.r','upperarm02.r'],
+  leftUpperLeg: ['leftupleg','mixamorig:leftupleg','thigh_l','thigh.l','leftupperleg','upperleg01.l','upperleg02.l'],
+  rightUpperLeg: ['rightupleg','mixamorig:rightupleg','thigh_r','thigh.r','rightupperleg','upperleg01.r','upperleg02.r']
 };
 const MORPH_TARGETS = {
   shoulders: ['shoulder_width','shoulders','wide_shoulders','shoulderwidth'],
