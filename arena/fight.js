@@ -214,7 +214,7 @@ async function importMocap(input,which){
 }
 document.getElementById('p-mocap-file').addEventListener('change',e=>importMocap(e.target,'player'));
 document.getElementById('e-mocap-file').addEventListener('change',e=>importMocap(e.target,'enemy'));
-const ACCAD_DEMO_CLIPS=['Male2_E1_JabLeft.bvh','Male2_E3_CrossLeft.bvh','Male2_G8_RoundhouseLeft.bvh','Male2_E11_BlockLeftHigh.bvh','Male2_E19_DodgeLeft.bvh'];
+const ACCAD_DEMO_CLIPS=['Male2_E1_JabLeft.bvh','Male2_E3_CrossLeft.bvh','Male2_G8_RoundhouseLeft.bvh','Male2_E11_BlockLeftHigh.bvh','Male2_E19_DodgeLeft.bvh','Male2_E5_HookLeft.bvh','Male2_E6_HookRight.bvh','Male2_E11_BackfistLeft.bvh','Male2_E12_BackfistRight.bvh','Male2_E3_Advance.bvh','Male2_E5_Retreat.bvh','Male2_E9_SideStepLeft.bvh','Male2_E10_SideStepRight.bvh','Male2_G17_PushKickLeft.bvh','Male2_G18_PushKickRight.bvh'];
 let quaterniusNativeClipsPromise=null;
 async function loadQuaterniusNativeClips(){
  if(!quaterniusNativeClipsPromise)quaterniusNativeClipsPromise=(async()=>{
@@ -478,7 +478,7 @@ loop();updateUI();
  byId('stage-mocap-status').textContent='LOADING MALE/FEMALE RIGS + NATIVE ANIMATION + REAL ACCAD…';
  await loadBundledAccadPack('player');
  await loadBundledAccadPack('enemy');
- const ready=[player,enemy].every(f=>f.externalModel&&f.rigReport?.compatible&&f.outfitReport&&f.clips?.length===48&&f.clips.filter(c=>c.name.toLowerCase().startsWith('male2_')).length===5&&f.clips.some(c=>c.name==='Idle_Loop'));
- const report=ready?'AUTO FIGHTERS CONNECTED · 43 NATIVE CLIPS + 5 REAL ACCAD CLIPS EACH · READY':'MODEL OR MOTION LOAD INCOMPLETE · CHECK REQUIRED';
+ const ready=[player,enemy].every(f=>f.externalModel&&f.rigReport?.compatible&&f.outfitReport&&f.clips?.length===58&&f.clips.filter(c=>c.name.toLowerCase().startsWith('male2_')).length===15&&f.clips.some(c=>c.name==='Idle_Loop'));
+ const report=ready?'AUTO FIGHTERS CONNECTED · 43 NATIVE CLIPS + 15 REAL ACCAD CLIPS EACH · READY':'MODEL OR MOTION LOAD INCOMPLETE · CHECK REQUIRED';
  byId('mocap-status').textContent=report;byId('stage-mocap-status').textContent=report;enemy.aiThink=showcaseMode?9999:15;fightersReady=true;
 })().catch(error=>{const message='AUTO FIGHTER LOAD FAILED: '+error.message;byId('mocap-status').textContent=message;byId('stage-mocap-status').textContent=message;fightersReady=true;console.error(error)});

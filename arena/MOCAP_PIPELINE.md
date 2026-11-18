@@ -5,7 +5,7 @@
 - **Male/female fighters:** separate Quaternius Universal Base Characters (Standard) GLBs, CC0 1.0. Both use matching 65-joint humanoid skeletons and approximately 13k triangles. The runtime normalizes each model to 1.78 m before attaching it to the fighter root.
 - **FIGHTROOM art overlays:** compression tops, shorts, gloves, shoes, short male hair and a female ponytail are procedural meshes attached to the rig; these are original project assets, not part of the Quaternius pack.
 - **Native animation:** Quaternius Universal Animation Library 1 (Standard), 43 clips, CC0 1.0. The clip tracks use the same 65 bone names as the fighter models and play directly on both rigs without retargeting. The runtime loads this library once, then disposes its temporary preview geometry/materials/textures. Idle uses a captured, validated bind pose because the pack's generic idle loop did not produce a suitable upright MMA stance on these models.
-- **Real single-actor motion capture:** 27 ACCAD BVH source clips are committed with per-file SHA-256 checksums and CC BY 3.0 attribution. Five are currently connected to both active fighters: jab, cross, roundhouse, high block and dodge. The remaining 22 are available but not yet wired into gameplay.
+- **Real single-actor motion capture:** 27 ACCAD BVH source clips are committed with per-file SHA-256 checksums and CC BY 3.0 attribution. Fifteen are now connected to both active fighters: jab, cross, roundhouse, high block, dodge, left/right hooks, left/right backfists, advance, retreat, left/right sidesteps and left/right push kicks. The remaining 12 are available but not yet wired into gameplay.
 - **Paired motion capture:** two genuine synchronized CMU interaction pairs are integrated: arm wrestling and pull/resist. Neither is an MMA takedown or submission capture.
 - **Grappling:** clinch, takedown, sprawl, sweep, pass, mount, back take, frame, escape, submission control, ground-and-pound posture and technical stand-up are currently driven by original paired procedural choreography. They are not labelled as real paired mocap.
 
@@ -23,12 +23,17 @@
 
 The active Quaternius skeleton has a separate `root` control bone and a dedicated `pelvis`. The retarget name map therefore maps the BVH `Hips` track to `pelvis` and leaves `root` unmapped. This prevents the same source hip motion from being applied twice. The remaining mapped landmarks include spine, head, upper arms, hands, thighs and feet.
 
-The five selected BVH clips are:
+The fifteen BVH clips currently wired into both active fighters are:
 - `Male2_E1_JabLeft.bvh`
 - `Male2_E3_CrossLeft.bvh`
 - `Male2_G8_RoundhouseLeft.bvh`
 - `Male2_E11_BlockLeftHigh.bvh`
 - `Male2_E19_DodgeLeft.bvh`
+- `Male2_E5_HookLeft.bvh` and `Male2_E6_HookRight.bvh`
+- `Male2_E11_BackfistLeft.bvh` and `Male2_E12_BackfistRight.bvh`
+- `Male2_E3_Advance.bvh` and `Male2_E5_Retreat.bvh`
+- `Male2_E9_SideStepLeft.bvh` and `Male2_E10_SideStepRight.bvh`
+- `Male2_G17_PushKickLeft.bvh` and `Male2_G18_PushKickRight.bvh`
 
 The 43 UAL1 clips provide native idle/walk and authored punch/reaction fallbacks. UAL1 clips are authored animation-library data, not motion-capture recordings; ACCAD clips are the real mocap source. Do not conflate the two.
 
@@ -48,13 +53,13 @@ Both pairs are checked for root translation and skeletal tracks, retargeted inde
 
 1. Select a fictional fighter. The runtime loads the gender-matched Quaternius GLB and attaches original FIGHTROOM fightwear overlays.
 2. The runtime loads UAL1 once and assigns the native clips to the selected fighter's mixer.
-3. Five selected ACCAD BVH files are parsed and retargeted onto the active rig. The importer validates the humanoid landmarks and reports the mapped bone count.
+3. Fifteen selected ACCAD BVH files are parsed and retargeted onto the active rig. The importer validates the humanoid landmarks and reports the mapped bone count.
 4. If a move has no supported clip, the game uses its procedural fallback. It does not discard the imported model or mixer.
 5. For manual import, choose an animated GLB or BVH in the corresponding corner's motion input. Record source, licence, attribution, SHA-256, frame rate, skeleton notes and playback QA before shipping.
 
 ## Release blockers
 
-- Five ACCAD actions are wired; the remaining 22 source clips still need per-clip retarget calibration and visual review.
+- Fifteen ACCAD actions are wired; the remaining 12 source clips still need per-clip retarget calibration and visual review.
 - Fightwear overlays need detailed fit/clipping review on both character rigs.
 - The 30-person roster shares the two base meshes; there are not 30 unique production models or bespoke faces.
 - The arena is procedural, not photorealistic; no crowd, commentary, network play or production audio pipeline is complete.
