@@ -125,22 +125,21 @@ export function restoreFighterRestPose(fighter){
 
 export function playFighterClip(THREE,fighter,action){
  if(!fighter?.mixer||!fighter?.clips?.length)return false;
- if(action==='idle'||action==='stance')return fighter.currentClip==='rest'||restoreFighterRestPose(fighter);
- const keys=aliases[action]||[action],clip=fighter.clips.find(c=>keys.some(k=>c.name.toLowerCase().includes(k)));
- if(!clip){fighter.missingClipAction=action;return false;}
+ const isIdle=action==='idle'||action==='stance';
+ const keys=aliases[action]||[action];
+ const clip=isIdle
+  ?fighter.clips.find(c=>c.name.toLowerCase().includes('male2_a1_stand'))
+  :fighter.clips.find(c=>keys.some(k=>c.name.toLowerCase().includes(k)));
+ if(!clip){if(isIdle)return fighter.currentClip==='rest'||restoreFighterRestPose(fighter);fighter.missingClipAction=action;return false;}
  fighter.missingClipAction=null;
  if(fighter.currentClip===clip.name)return true;
  const next=fighter.clipActions.get(clip.name);if(!next)return false;
  const previous=fighter.currentAction;
  next.reset();next.enabled=true;next.setEffectiveWeight(1);next.timeScale=action==='retreat'?-1:1;
- if(action==='idle'||action==='advance'||action==='retreat'||action==='guard')next.setLoop(THREE.LoopRepeat,Infinity);
+ if(isIdle||action==='advance'||action==='retreat'||action==='guard')next.setLoop(THREE.LoopRepeat,Infinity);
  else{next.setLoop(THREE.LoopOnce,1);next.clampWhenFinished=true}
  if(previous)next.crossFadeFrom(previous,.12,true);next.play();
  fighter.currentAction=next;fighter.currentClip=clip.name;return true;
-}
-function applyFighterGuardPose(THREE,fighter,guarding=false){
- const reach=guarding ? 1 : .78;
- return applyGrappleRigPose(THREE,fighter,{rootPitch:.035,roll:0,turn:0,lean:guarding ? .2 : .14,left:reach,right:reach,drive:0,spread:.5,level:0});
 }
 
 export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
@@ -149,10 +148,10 @@ export function updateFighterMocap(THREE,fighter,dt,moveSpeed=0){
   if(fighter.submitting)playFighterClip(THREE,fighter,'submission');
   else if(fighter.motionOverrideTime>0){fighter.motionOverrideTime=Math.max(0,fighter.motionOverrideTime-dt);playFighterClip(THREE,fighter,fighter.motionOverride||'stand-up');if(fighter.motionOverrideTime===0)fighter.motionOverride=null;}
   else if(fighter.groundState&&fighter.groundState!=='standing'&&fighter.groundState!=='clinch')playFighterClip(THREE,fighter,'ground-control');
-  else if(fighter.guard){playFighterClip(THREE,fighter,'idle');applyFighterGuardPose(THREE,fighter,true)}
+  else if(fighter.guard)playFighterClip(THREE,fighter,'guard');
   else if(fighter.dodge>0)playFighterClip(THREE,fighter,'dodge');
   else if(moveSpeed>.2)playFighterClip(THREE,fighter,'advance');
-  else{playFighterClip(THREE,fighter,'idle');applyFighterGuardPose(THREE,fighter,false)}
+  else playFighterClip(THREE,fighter,'idle');
  }
  fighter.mixer.update(dt);
 }
