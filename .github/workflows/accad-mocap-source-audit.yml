@@ -1,0 +1,45 @@
+name: ACCAD mocap source audit
+on:
+  push:
+    branches: [arena-combat-foundation]
+    paths:
+      - ".github/workflows/accad-mocap-source-audit.yml"
+permissions:
+  contents: read
+  actions: write
+jobs:
+  source-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download public ACCAD Male 2 BVH archive
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 2             "https://accad.ohio-state.edu/sites/accad.osu.edu/files/Male2_bvh.zip"             -o /tmp/Male2_bvh.zip
+          echo "Archive bytes: $(stat -c%s /tmp/Male2_bvh.zip)"
+          unzip -t /tmp/Male2_bvh.zip
+      - name: Inspect BVH clip inventory and skeleton headers
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/accad-mocap
+          unzip -q /tmp/Male2_bvh.zip -d /tmp/accad-mocap
+          find /tmp/accad-mocap -type f | sort > /tmp/accad-mocap-files.txt
+          echo "Files found: $(wc -l < /tmp/accad-mocap-files.txt)"
+          find /tmp/accad-mocap -type f -iname '*.bvh' | sort | head -40
+          python3 - <<'PY'
+          from pathlib import Path
+          files=list(Path('/tmp/accad-mocap').rglob('*.bvh'))
+          print('BVH count:',len(files))
+          for f in files[:12]:
+              text=f.read_text(errors='ignore')
+              print(f.name, 'frames=', next((x.split(':',1)[1].strip() for x in text.splitlines() if x.strip().startswith('Frames:')), 'unknown'), 'bytes=',f.stat().st_size)
+          PY
+      - name: Upload source archive and inventory for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: accad-male2-bvh-source-audit
+          path: |
+            /tmp/Male2_bvh.zip
+            /tmp/accad-mocap-files.txt
+          retention-days: 14

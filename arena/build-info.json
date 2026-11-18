@@ -1,0 +1,15 @@
+{
+  "version": "0.9.3-prealpha",
+  "releaseChannel": "prealpha",
+  "schemaVersion": 2,
+  "minimumCompatibleVersion": "0.9.0-prealpha",
+  "assets": {
+    "fighterModels": "quaternius-humanoid-65-joint-v1",
+    "authoredAnimationLibrary": "ual1-standard-43-clips-v1",
+    "realSingleActorMocap": "accad-27-clips-cc-by-3.0-v1",
+    "pairedInteractionCaptures": "cmu-two-pairs-v1"
+  },
+  "updatePolicy": "versioned-static-release",
+  "saveMigration": "character-creator-schema-v2",
+  "rendererProfile": "low-tier-30fps-0.8dpr-no-shadows-single-key-light"
+}

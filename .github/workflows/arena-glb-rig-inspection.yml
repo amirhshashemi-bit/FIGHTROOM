@@ -1,0 +1,28 @@
+name: Arena GLB rig inspection
+on:
+  push:
+    branches: [arena-combat-foundation]
+    paths:
+      - "arena/assets/models/**"
+      - "arena/glb-rig-inspector.js"
+      - "arena/glb-rig-inspector.test.js"
+      - ".github/workflows/arena-glb-rig-inspection.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: arena-combat-foundation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Test GLB inspection logic
+        working-directory: arena
+        run: node --test glb-rig-inspector.test.js
+      - name: Inspect pinned base model
+        working-directory: arena
+        run: node glb-rig-inspector.js assets/models/cc0-base-body-anim.glb

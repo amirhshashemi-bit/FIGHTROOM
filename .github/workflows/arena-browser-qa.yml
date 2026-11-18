@@ -1,0 +1,55 @@
+name: Arena browser visual QA
+concurrency:
+  group: arena-browser-qa-container-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arena-combat-foundation
+    paths:
+      - "arena/**"
+      - ".github/workflows/arena-browser-qa.yml"
+  pull_request:
+    paths:
+      - "arena/**"
+      - ".github/workflows/arena-browser-qa.yml"
+permissions:
+  contents: read
+  actions: write
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.0-noble
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        working-directory: arena
+        run: npm install --no-save @playwright/test@1.58.0
+      - name: Start local project server
+        run: |
+          python3 -m http.server 4173 --directory . > /tmp/fightroom-http.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/arena/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/fightroom-http.log
+          exit 1
+      - name: Run desktop and Android-sized browser checks
+        working-directory: arena
+        run: npm run test:browser
+      - name: Upload visual QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arena-browser-visual-qa
+          path: |
+            arena/artifacts/
+            arena/test-results/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1,0 +1,84 @@
+name: Import pinned CC0 character base
+on:
+  push:
+    branches: [arena-combat-foundation]
+    paths:
+      - ".github/workflows/import-cc0-character.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch-verify-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: arena-combat-foundation
+          fetch-depth: 0
+      - name: Fetch pinned upstream GLB
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p arena/assets/models
+          curl --fail --location --retry 3 --retry-delay 2 \
+            "https://raw.githubusercontent.com/kblood/CharacterCreator/852e48f316b90a0937234886630e4fb4cdfd1f78/output/base_body_anim.glb" \
+            --output arena/assets/models/cc0-base-body-anim.glb
+          actual_size="$(stat -c '%s' arena/assets/models/cc0-base-body-anim.glb)"
+          test "$actual_size" -eq 8212156
+      - name: Validate GLB container and animation payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const path = 'arena/assets/models/cc0-base-body-anim.glb';
+          const b = fs.readFileSync(path);
+          if (b.toString('ascii', 0, 4) !== 'glTF') throw new Error('Invalid GLB magic');
+          if (b.readUInt32LE(4) !== 2) throw new Error('Expected glTF 2.0');
+          if (b.readUInt32LE(8) !== b.length) throw new Error('GLB declared length mismatch');
+          const jsonLength = b.readUInt32LE(12);
+          if (b.toString('ascii', 16, 20) !== 'JSON') throw new Error('Missing GLB JSON chunk');
+          const doc = JSON.parse(b.toString('utf8', 20, 20 + jsonLength).trim());
+          if (!Array.isArray(doc.meshes) || doc.meshes.length < 1) throw new Error('No mesh payload');
+          if (!Array.isArray(doc.skins) || doc.skins.length < 1) throw new Error('No skin/skeleton payload');
+          if (!Array.isArray(doc.animations) || doc.animations.length < 1) throw new Error('No embedded animation clips');
+          console.log(JSON.stringify({
+            bytes: b.length,
+            meshes: doc.meshes.length,
+            skins: doc.skins.length,
+            animations: doc.animations.map(x => x.name || 'unnamed'),
+            nodes: doc.nodes?.length || 0
+          }, null, 2));
+          NODE
+      - name: Record asset integrity and licence
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum arena/assets/models/cc0-base-body-anim.glb > arena/assets/models/cc0-base-body-anim.sha256
+          cat > arena/assets/models/CC0-ASSET-NOTICE.md <<'EOF'
+          # CC0 animated base-body asset
+
+          - Asset: `cc0-base-body-anim.glb`
+          - Upstream: https://github.com/kblood/CharacterCreator
+          - Pinned upstream commit: `852e48f316b90a0937234886630e4fb4cdfd1f78`
+          - Upstream path: `output/base_body_anim.glb`
+          - Upstream source blob: `bdbdab04eb85903e46c56ff56c7a1ea0cbe9c78b`
+          - Asset licence: CC0-1.0, as declared for generated GLB outputs in upstream `LICENSE-NOTES.md`.
+          - Upstream licence notes: https://github.com/kblood/CharacterCreator/blob/852e48f316b90a0937234886630e4fb4cdfd1f78/LICENSE-NOTES.md
+          - The generator source code has a separate GPL-3.0-or-later licence and is not copied into FIGHTROOM.
+          - This is an anatomical male base with general locomotion clips. It is not a dressed MMA fighter and is not evidence of MMA-specific motion capture.
+          - SHA-256 is recorded beside the asset after retrieval.
+          EOF
+      - name: Commit verified asset to feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add arena/assets/models/
+          if git diff --cached --quiet; then
+            echo "No asset changes to commit."
+            exit 0
+          fi
+          git commit -m "Add pinned CC0 animated base character asset"
+          git push origin HEAD:arena-combat-foundation

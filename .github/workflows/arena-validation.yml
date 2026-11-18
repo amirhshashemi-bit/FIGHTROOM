@@ -1,0 +1,50 @@
+name: Arena combat validation
+concurrency:
+  group: arena-validation-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arena-combat-foundation
+    paths:
+      - "arena/**"
+      - ".github/workflows/arena-validation.yml"
+  pull_request:
+    paths:
+      - "arena/**"
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check ES module syntax
+        run: |
+          node --check arena/fight.js
+          node --check arena/motion.js
+          node --check arena/combat-rules.js
+          node --check arena/combat-ai.js
+          node --check arena/hitboxes.js
+          node --check arena/ground-combat.js
+          node --check arena/referee.js
+          node --check arena/venue-builder.js
+          node --check arena/mocap.js
+          node --check arena/mocap-runtime.js
+          node --check arena/paired-fbx-runtime.js
+          node --check arena/roster.js
+          node --check arena/character-creator.js
+          node --check arena/countries.js
+          node --check arena/character-rig.js
+          node --check arena/audio.js
+          node --check arena/performance.js
+          node --check arena/character-creator.js
+      - name: Run deterministic combat and AI tests
+        working-directory: arena
+        run: npm test
+      - name: Validate versioned build metadata
+        run: node -e "const b=require('./arena/build-info.json'); if(!b.version || !Number.isInteger(b.schemaVersion)) process.exit(1); console.log('Build '+b.version+' / save schema '+b.schemaVersion+' validated')"
+      - name: Validate venue catalogue
+        run: node -e "const v=require('./arena/data/venues.json'); if(v.venues.length!==10) process.exit(1); console.log('10 venue records validated')"
