@@ -11,4 +11,4 @@
   },
   "updatePolicy": "versioned-static-release",
   "saveMigration": "character-creator-schema-v2"
-}\n
+}
