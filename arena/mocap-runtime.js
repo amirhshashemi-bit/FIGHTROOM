@@ -14,9 +14,7 @@ const aliases={
 };
 export async function loadFighterGLB(THREE,GLTFLoader,file,fighter){
  const loader=new GLTFLoader(),buffer=await file.arrayBuffer();
- const {DRACOLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/DRACOLoader.js');
- const dracoLoader=new DRACOLoader();dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');loader.setDRACOLoader(dracoLoader);
- const gltf=await loader.parseAsync(buffer,'');dracoLoader.dispose();
+ const gltf=await loader.parseAsync(buffer,'');
  if(!gltf.scene)throw new Error('GLB has no scene');
  const model=gltf.scene;model.name='FIGHTROOM_MOCAP_CHARACTER';
  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
