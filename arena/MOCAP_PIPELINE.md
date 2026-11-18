@@ -66,6 +66,10 @@ Two matched two-actor interactions are now bundled from the CMU Graphics Lab Mot
 
 **Important scope:** these are genuine paired human interaction captures. Pull/resist is useful as a paired contact/force interaction prototype, and arm wrestling validates sustained two-person contact timing. Neither is an MMA double-leg, pummelling, sprawl, BJJ transition, submission, ground-and-pound or full wrestling move. Those gameplay actions still use the existing paired procedural position system until suitable licensed grappling captures are acquired. The paid RTK source previously identified remains unpurchased and is not used.
 
+## Paired grappling choreography — integrated (procedural, not mocap)
+
+The arena now drives both fighters from one shared action timeline for clinch pummelling, double-leg takedown entry/drive/finish, sprawl defence, guard sweep, guard pass, mount transition, back-take, frame, escape, submission control, ground-and-pound posture and technical stand-up. Each role receives a distinct attacker/defender pose, and the pair state is cleared together at sequence completion. The choreography is original procedural animation and is explicitly not represented as captured human motion. When a licensed paired capture is available, the separate paired-FBX runtime remains the route for genuine captured movement.
+
 ## Current release blockers
 
 - The eight-clip ACCAD pack is now targeted at both male and female rigs; clip-by-clip visual review and biomechanics QA are still required.

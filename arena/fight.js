@@ -17,6 +17,7 @@ import { createFightAudio } from './audio.js';
 import { qualityProfile } from './performance.js';
 import { canUseCombatAction, resolvePremiumAccess } from './premium-access.js';
 import { loadPairedFbxMotion, updatePairedFbxMotion } from './paired-fbx-runtime.js';
+import { createGrapplePair, updateGrapplePair } from './grappling-choreography.js';
 
 const mount=document.getElementById('view');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090f18);scene.fog=new THREE.Fog(0x090f18,13,27);
@@ -56,7 +57,7 @@ function pose(f,t,moveSpeed,dt){
  if(f.mixer){
   updateFighterMocap(THREE,f,dt,moveSpeed);
   const groundClipMissing=f.groundState==='submission'?!hasFighterClip(f,'submission'):(f.groundState!=='standing'&&!hasFighterClip(f,'ground-control'));
-  const unsupported=(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||groundClipMissing;
+  const unsupported=Boolean(f.grapplePose)||(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||groundClipMissing;
   if(!unsupported){f.externalModel.visible=true;f.rig.visible=false;return;}
   // Keep the imported mixer alive: procedural fallback is temporary and can
   // hand control back to a later supported mocap clip without re-importing.
@@ -71,6 +72,7 @@ function currentMoveVector(){
  const z=(keys.has('s')?1:0)-(keys.has('w')?1:0)+(touchMove.has('down')?1:0)-(touchMove.has('up')?1:0);
  const v=V(x,0,z);return v.lengthSq()>1?v.normalize():v;
 }
+function beginGrapplePair(attacker,defender,type){return createGrapplePair(type,attacker,defender)}
 function setAction(f,type,animationClip=null){
  if(ended||pairedDemoActive||bout.phase!=='fight'||f.action||f.knock>0||f.stun>0)return;
  if(f===player&&!canUseCombatAction(type,premiumAccess)){document.getElementById('status').textContent='این فن فقط برای اعضای ویژه فعال است';return;}
@@ -82,6 +84,7 @@ function setAction(f,type,animationClip=null){
   if(!result.ok){document.getElementById('status').textContent=result.reason==='premium-required'?'این فن فقط برای اعضای ویژه فعال است':'حرکت در این موقعیت قابل اجرا نیست';return}
   f.groundState=result.attackerState;def.groundState=result.defenderState;
   f.stamina=result.attackerStamina;def.stamina=result.defenderStamina;
+  beginGrapplePair(f,def,type);
   if(type==='clinch'){const mid=(f.root.position.x+def.root.position.x)/2;f.root.position.x=mid-(f.side<0?.38:-.38);def.root.position.x=mid+(f.side<0?.38:-.38)}
   if(type==='frame'){f.guard=true;f.frameTimer=.65;}
   playFighterClip(THREE,f,type==='defend-submission'?'submission':type);
@@ -92,11 +95,11 @@ function setAction(f,type,animationClip=null){
   const def=f===player?enemy:player;
   if(type==='submission'&&['top-control','mount','back-control'].includes(f.groundState)){
    const tr=transitionGround(f.groundState,'submission',{stamina:f.stamina});
-   if(tr.ok&&f.stamina>=tr.staminaCost){f.submissionFrom=f.groundState;f.groundState='submission';f.submitting=true;f.submissionProgress=0;f.stamina-=tr.staminaCost;playFighterClip(THREE,f,animationClip||'submission');document.getElementById('status').textContent='HOLD SUBMISSION TO FINISH'}
+   if(tr.ok&&f.stamina>=tr.staminaCost){f.submissionFrom=f.groundState;f.groundState='submission';f.submitting=true;f.submissionProgress=0;f.stamina-=tr.staminaCost;beginGrapplePair(f,def,'submission');playFighterClip(THREE,f,animationClip||'submission');document.getElementById('status').textContent='HOLD SUBMISSION TO FINISH'}
   }else if(type==='ground-pound'&&f.groundState==='top-control'){
-   const spec=MOVES['ground-pound'];if(f.stamina>=spec.cost){f.stamina-=spec.cost;f.action='ground-pound';f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;playFighterClip(THREE,f,animationClip||'ground-pound')}
+   const spec=MOVES['ground-pound'];if(f.stamina>=spec.cost){beginGrapplePair(f,def,'ground-pound');f.stamina-=spec.cost;f.action='ground-pound';f.actionTime=0;f.actionDuration=spec.duration;f.energy=0;f.guard=false;playFighterClip(THREE,f,animationClip||'ground-pound')}
   }
-  else if(type==='stand-up'&&f.groundState!=='standing'){f.groundState='standing';def.groundState='standing';f.submitting=false;def.submitting=false;f.stamina=Math.max(0,f.stamina-10);f.motionOverride=def.motionOverride='stand-up';f.motionOverrideTime=def.motionOverrideTime=1.2;playFighterClip(THREE,f,'stand-up');playFighterClip(THREE,def,'stand-up')}
+  else if(type==='stand-up'&&f.groundState!=='standing'){beginGrapplePair(f,def,'stand-up');f.groundState='standing';def.groundState='standing';f.submitting=false;def.submitting=false;f.stamina=Math.max(0,f.stamina-10);f.motionOverride=def.motionOverride='stand-up';f.motionOverrideTime=def.motionOverrideTime=1.2;playFighterClip(THREE,f,'stand-up');playFighterClip(THREE,def,'stand-up')}
   updateUI();return;
  }
  if(type==='guard'){f.guard=true;playFighterClip(THREE,f,'guard');return}
@@ -312,7 +315,7 @@ function applyHit(att,def,type){
  if(result.result==='blocked')audio.block();else{audio.strike();audio.impact()}
  if(type==='takedown'&&result.result==='hit'){
   const grappling=resolveGrappleAction({action:'takedown',attackerState:att.groundState,defenderState:def.groundState,attackerStamina:att.stamina,defenderStamina:def.stamina,attackerSkill:att.profile.wrestling,defenderSkill:def.profile.wrestling,premium:att!==player||premiumAccess});
-  if(grappling.ok){att.groundState=grappling.attackerState;def.groundState=grappling.defenderState;att.stamina=grappling.attackerStamina;def.stamina=grappling.defenderStamina;def.knock=Math.max(def.knock,.42)}
+  if(grappling.ok){att.groundState=grappling.attackerState;def.groundState=grappling.defenderState;att.stamina=grappling.attackerStamina;def.stamina=grappling.defenderStamina;beginGrapplePair(att,def,'takedown');def.knock=Math.max(def.knock,.42)}
   else{def.stun=Math.max(def.stun,.18);document.getElementById('status').textContent='TAKEDOWN DEFENDED'}
  }
  
@@ -407,7 +410,8 @@ let lastUi=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock
    }else player.move.set(0,0,0);
    if(player.dodge>0){player.root.position.x+=player.evadeVector.x*3.4*dt;player.root.position.z+=player.evadeVector.z*3.4*dt}
    cpu(dt);if(enemy.move.lengthSq()&&!enemy.action&&enemy.stun<=0){enemy.root.position.x+=enemy.move.x*(.8+enemy.profile.speed*.004)*dt;enemy.root.position.x=clamp(enemy.root.position.x,.7,3.8);enemy.move.set(enemy.move.x,0,0)}else enemy.move.set(0,0,0);
-   const grapplingPhase=stepGroundPair(player,enemy,dt);if(!grapplingPhase)resolveFighterSpacing();tickFighter(player,dt);tickFighter(enemy,dt);
+   const pair=player.grapplePair||enemy.grapplePair;if(pair&&pair.active)updateGrapplePair(pair,dt);
+  const grapplingPhase=stepGroundPair(player,enemy,dt);if(!grapplingPhase)resolveFighterSpacing();tickFighter(player,dt);tickFighter(enemy,dt);
   }else{
    player.move.set(0,0,0);enemy.move.set(0,0,0);player.guard=false;enemy.guard=false;
    player.stamina=clamp(player.stamina+dt*8,0,100);enemy.stamina=clamp(enemy.stamina+dt*8,0,100);
