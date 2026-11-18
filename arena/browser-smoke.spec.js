@@ -80,6 +80,14 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
     await page.waitForFunction(expected => window.__fightroomDebug().player.currentClip?.toLowerCase().includes(expected), clipName, { timeout: 5000 });
     await page.waitForFunction(() => window.__fightroomDebug().player.currentClip === 'rest', null, { timeout: 7000 });
   };
+  const assertImportedModelStrike = async action => {
+    await page.locator(`[data-action="${action}"]`).click();
+    await page.waitForFunction(expected => window.__fightroomDebug().player.action === expected, action, { timeout: 3000 });
+    const state = await page.evaluate(() => window.__fightroomDebug().player);
+    expect(state.modelVisible, `${action} must keep the imported fighter mesh visible`).toBe(true);
+    expect(state.rigVisible, `${action} must not reveal the capsule test rig`).toBe(false);
+    await page.waitForFunction(() => window.__fightroomDebug().player.action === null, null, { timeout: 7000 });
+  };
   const assertGuardMotion = async () => {
     const button = page.locator('[data-action="guard"]');
     const bounds = await button.boundingBox();
@@ -101,6 +109,8 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   await assertMotion('jab', 'jableft');
   await assertMotion('cross', 'crossleft');
   await assertMotion('high', 'roundhouseleft');
+  await assertImportedModelStrike('hook');
+  await assertImportedModelStrike('low');
   await assertGuardMotion();
   await assertMotion('dodge', 'dodgeleft');
   await page.locator('#player-roster').selectOption(male.value);
@@ -112,6 +122,8 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   await assertMotion('jab', 'jableft');
   await assertMotion('cross', 'crossleft');
   await assertMotion('high', 'roundhouseleft');
+  await assertImportedModelStrike('hook');
+  await assertImportedModelStrike('low');
   await assertGuardMotion();
   await assertMotion('dodge', 'dodgeleft');
   await page.locator('#player-roster').selectOption(female.value);

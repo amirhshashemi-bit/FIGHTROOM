@@ -28,6 +28,7 @@ function shape(type,p){
  if(type==='ground-pound'){m.left=.9*h;m.right=.9*h;m.lean=.24*h;m.level=-.10*h}
  return m;
 }
+export function getActionPose(type,progress){return shape(type,clamp(progress,0,1));}
 function segment(mesh,a,b,dt){
  const d=b.clone().sub(a),q=new THREE.Quaternion().setFromUnitVectors(V(0,1,0),d.clone().normalize());
  const gp=mesh.geometry.parameters||{},base=(gp.length||.3)+2*(gp.radius||.07),k=1-Math.exp(-dt*25);

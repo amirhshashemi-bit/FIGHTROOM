@@ -4,7 +4,7 @@ import { ROSTER, getFighter } from './roster.js';
 import { getCountryOptions, countryFlag, resolveCountryCode } from './countries.js';
 import { DEFAULT_CUSTOM_FIGHTER, MOVE_CATALOG, getBodyMetrics, loadCustomFighter, normalizeCustomFighter, saveCustomFighter } from './character-creator.js';
 import { loadFighterGLB, loadFighterBVH, playFighterClip, updateFighterMocap, hasFighterClip, applyGrappleRigPose } from './mocap-runtime.js';
-import { animateFighter } from './motion.js';
+import { animateFighter, getActionPose } from './motion.js';
 import { MOVES, resolveStrike } from './combat-rules.js';
 import { chooseCpuAction } from './combat-ai.js';
 import { classifyContact } from './hitboxes.js';
@@ -60,8 +60,16 @@ function pose(f,t,moveSpeed,dt){
   const groundClipMissing=f.groundState==='submission'?!hasFighterClip(f,'submission'):(f.groundState!=='standing'&&!hasFighterClip(f,'ground-control'));
   const unsupported=(f.action&&!hasFighterClip(f,f.action))||(f.guard&&!hasFighterClip(f,'guard'))||(f.dodge>0&&!hasFighterClip(f,'dodge'))||(f.submitting&&!hasFighterClip(f,'submission'))||groundClipMissing;
   if(!unsupported){f.externalModel.visible=true;f.rig.visible=false;return;}
-  // Keep the imported mixer alive: procedural fallback is temporary and can
-  // hand control back to a later supported mocap clip without re-importing.
+  // Missing strike clips must animate the imported humanoid, never swap it
+  // for the old capsule test rig. Drive the mapped skeleton procedurally.
+  if(f.action){
+   f.externalModel.visible=true;f.rig.visible=false;
+   const m=getActionPose(f.action,f.actionTime/Math.max(.01,f.actionDuration));
+   applyGrappleRigPose(THREE,f,{rootPitch:(m.level||0)*.35,roll:0,turn:m.turn||0,lean:m.lean||0,left:m.left||0,right:m.right||0,drive:m.kick||0,spread:.08,level:m.level||0});
+   return;
+  }
+  // Non-strike fallbacks retain the legacy procedural rig until their own
+  // imported humanoid pose implementation is available.
   f.externalModel.visible=false;f.rig.visible=true;
  }
  animateFighter(f,t,moveSpeed,dt);
