@@ -1,7 +1,7 @@
 # راهنمای نسخه‌بندی و ارتقای FIGHTROOM ARENA
 
 ## وضعیت فعلی
-- نسخه: 0.9.1-prealpha
+- نسخه: 0.9.2-prealpha
 - شاخه توسعه: `arena-combat-foundation`
 - مسیر یگانه بازی: `arena/`
 - اطلاعات نسخه و سازگاری: `build-info.json`

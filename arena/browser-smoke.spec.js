@@ -6,6 +6,7 @@ test('desktop arena renders WebGL and responds to keyboard strike and movement',
   await page.goto('http://127.0.0.1:4173/arena/', { waitUntil: 'domcontentloaded' });
   const canvas = page.locator('#view canvas');
   await expect(canvas).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('#fighter-loading')).toBeHidden({ timeout: 60000 });
   await expect(page.locator('#p-health')).toBeAttached();
   await expect(page.locator('[data-action="takedown"]')).toBeVisible();
   await expect(page.locator('.creator-panel')).toBeVisible();
@@ -31,6 +32,7 @@ test('Android-sized viewport renders grappling and defensive touch controls', as
   await page.goto('http://127.0.0.1:4173/arena/', { waitUntil: 'domcontentloaded' });
   const canvas = page.locator('#view canvas');
   await expect(canvas).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('#fighter-loading')).toBeHidden({ timeout: 60000 });
   await expect(page.locator('.creator-panel')).toBeHidden();
   await expect(page.locator('.roster-toolbar')).toBeHidden();
   await page.locator('#toggle-roster').click();
@@ -58,6 +60,7 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   await page.goto('http://127.0.0.1:4173/arena/?showcase=1', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#view canvas')).toBeVisible({ timeout: 30000 });
   await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 15 REAL ACCAD CLIPS EACH · READY', { timeout: 60000 });
+  await expect(page.locator('#fighter-loading')).toBeHidden();
   const initial = await page.evaluate(() => window.__fightroomDebug());
   console.log('ARM_POSE_DEBUG', JSON.stringify(initial.player.arms), JSON.stringify(initial.enemy.arms));
   for (const actor of Object.values(initial)) {
@@ -108,6 +111,7 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   await expect(page.locator('#mocap-status')).toContainText('43 NATIVE CLIPS + 15 REAL ACCAD MOCAP CLIPS', { timeout: 60000 });
   await expect(page.locator('#mocap-status')).toContainText('FEMALE RIG');
   await expect(page.locator('#mocap-status')).toContainText('FIGHTWEAR READY');
+  await expect(page.locator('#fighter-loading')).toBeHidden();
   const femaleDebug = await page.evaluate(() => window.__fightroomDebug().player);
   expect(femaleDebug.rig.compatible).toBe(true);
   expect(femaleDebug.currentClip).toBe('rest');
@@ -122,6 +126,7 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
   await assertMotion('dodge', 'dodgeleft');
   await page.locator('#player-roster').selectOption(male.value);
   await expect(page.locator('#mocap-status')).toContainText('MALE RIG', { timeout: 60000 });
+  await expect(page.locator('#fighter-loading')).toBeHidden();
   const maleDebug = await page.evaluate(() => window.__fightroomDebug().player);
   expect(maleDebug.rig.compatible).toBe(true);
   expect(maleDebug.currentClip).toBe('rest');
@@ -139,6 +144,7 @@ test('both gendered fighter rigs load native and ACCAD motion, then play synchro
     const debug = window.__fightroomDebug();
     return ['player', 'enemy'].every(key => debug[key].rig?.compatible && debug[key].modelBounds?.size?.[1] > 1.5 && debug[key].clips?.length === 58);
   }, null, { timeout: 60000 });
+  await expect(page.locator('#fighter-loading')).toBeHidden();
   const pairedDebug = await page.evaluate(() => window.__fightroomDebug());
   for (const actor of Object.values(pairedDebug)) expect(actor.currentClip).toBe('rest');
   await page.screenshot({ path: 'artifacts/arena-desktop.png', fullPage: true });
