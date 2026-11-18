@@ -4,6 +4,12 @@ concurrency:
   cancel-in-progress: true
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - arena-combat-foundation
+    paths:
+      - "arena/**"
+      - ".github/workflows/arena-browser-qa.yml"
   pull_request:
     paths:
       - "arena/**"
