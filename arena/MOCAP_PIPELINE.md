@@ -62,3 +62,11 @@ The free KungFu-Fiesta video/pose dataset is CC BY-NC 4.0 and is therefore not s
 2. Verify the license file, dataset slug, frame rate, frame count and SHA-256 manifest.
 3. Map both skeletons to the FIGHTROOM humanoid rig; validate paired root transforms and contact distance.
 4. Build paired clips for the licensed action only, then run visual retarget QA before adding any additional capture.
+
+
+## Paired motion package adapter (implemented 2026-11-18)
+
+- `paired-motion.js` validates a two-subject capture package before it can be used: shared-world coordinate declaration, both actors present, finite XYZ joint samples, stable skeleton joint sets, declared frame count and FPS.
+- It samples both subjects at the exact same fractional frame and reports the relative root transform/distance. This prevents accidental per-actor timeline drift or independent root normalization.
+- Seven automated tests cover valid pairs, missing actor, invalid coordinates, skeleton changes, frame-count/FPS errors, synchronized interpolation and duration clamping.
+- This is an import/validation foundation only. It does not include or imply ownership of the paid RTK capture and does not yet drive a live paired animation in the game. Actual licensed BVH/frames assets and retarget/playback QA remain required.
