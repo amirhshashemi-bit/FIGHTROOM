@@ -83,3 +83,18 @@ test('guard profile changes posture for high, body and distance states',()=>{
  assert.equal(getFighterGuardProfile(profile,'long').mode,'long');
  assert.equal(getFighterGuardProfile(profile,'unknown').mode,'high');
 });
+
+test('BJJ and Jiu-Jitsu profiles receive grappling-specific guards',()=>{
+ for(const style of ['BJJ and counter striking','Brazilian Jiu-Jitsu','Jiu Jitsu','Grappling all-rounder']){
+  assert.equal(getFighterGuardProfile({style,stance:'Southpaw'}).kind,'wrestling',style);
+  assert.equal(getFighterGuardProfile({style,stance:'Southpaw'}).lead,'right',style);
+ }
+});
+test('every roster profile resolves to a supported guard and lead stance',async()=>{
+ const {ROSTER}=await import('./roster.js');
+ for(const fighter of ROSTER){
+  const guard=getFighterGuardProfile(fighter);
+  assert.ok(['boxing','kickboxing','muay-thai','long-range','wrestling'].includes(guard.kind),fighter.id);
+  assert.ok(['left','right'].includes(guard.lead),fighter.id);
+ }
+});
