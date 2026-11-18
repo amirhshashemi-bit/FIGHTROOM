@@ -222,6 +222,11 @@ creatorToggle?.addEventListener('click',()=>{
  const expanded=creatorPanel.classList.toggle('mobile-expanded');
  creatorToggle.textContent=expanded?'CLOSE CUSTOMIZATION':'CUSTOMIZE FIGHTER · MOVE STORE';
 });
+const rosterToggle=byId('toggle-roster'),rosterPanel=document.querySelector('.roster-toolbar');
+rosterToggle?.addEventListener('click',()=>{
+ const expanded=rosterPanel.classList.toggle('mobile-expanded');
+ rosterToggle.textContent=expanded?'CLOSE FIGHTER SELECT':'FIGHTER SELECT · MOCAP IMPORT';
+});
 updateUI();
 window.addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
