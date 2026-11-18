@@ -7,11 +7,12 @@
     "test:advanced": "node --test advanced-systems.test.js",
     "test:roster": "node --test roster.test.js",
     "test:grappling": "node --test ground-combat.test.js",
-    "test": "npm run test:combat && npm run test:advanced && npm run test:roster && npm run test:creator && npm run test:rig && npm run test:premium && npm run test:grappling && npm run test:ground-presentation && npm run test:mocap-retarget",
+    "test": "npm run test:combat && npm run test:advanced && npm run test:roster && npm run test:creator && npm run test:rig && npm run test:premium && npm run test:grappling && npm run test:ground-presentation && npm run test:contact && npm run test:mocap-retarget",
     "test:creator": "node --test character-creator.test.js",
     "test:rig": "node --test character-rig.test.js glb-rig-inspector.test.js mocap-runtime.test.js",
     "test:premium": "node --test premium-access.test.js",
     "test:ground-presentation": "node --test ground-presentation.test.js",
-    "test:mocap-retarget": "node --test mocap-retarget.test.js"
+    "test:mocap-retarget": "node --test mocap-retarget.test.js",
+    "test:contact": "node --test contact-physics.test.js"
   }
 }
