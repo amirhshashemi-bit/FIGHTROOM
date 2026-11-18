@@ -16,3 +16,14 @@ test('rejects incomplete skeleton maps rather than silently loading broken motio
  const map=buildRetargetNameMap(['Hips','Head','LeftArm'],['Hips','Head','LeftArm']);
  assert.equal(validateRetargetMap(map).compatible,false);
 });
+
+test('retargets onto Innerscene female base bone names',()=>{
+ const target=['root','spine01','head','upperarm01.L','upperarm01.R','upperleg01.L','upperleg01.R'];
+ const source=['Hips','Spine','Head','LeftArm','RightArm','LeftUpLeg','RightUpLeg'];
+ const map=buildRetargetNameMap(target,source),valid=validateRetargetMap(map);
+ assert.equal(valid.compatible,true);
+ assert.equal(valid.mappedCount,7);
+ assert.equal(map.root,'Hips');
+ assert.equal(map['upperarm01.L'],'LeftArm');
+ assert.equal(map['upperleg01.R'],'RightUpLeg');
+});
